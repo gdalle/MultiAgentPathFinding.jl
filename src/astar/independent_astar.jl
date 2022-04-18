@@ -1,4 +1,4 @@
-function independent_astar(mapf)
+function independent_astar(mapf::MAPF)
     graph, edge_weights = mapf.graph, mapf.edge_weights
     A = nb_agents(mapf)
     solution = Vector{Path}(undef, A)
@@ -13,7 +13,7 @@ function independent_astar(mapf)
     return solution
 end
 
-function independent_astar(mapf, constraints)
+function independent_astar(mapf::MAPF, constraints)
     graph, edge_weights = mapf.graph, mapf.edge_weights
     A = nb_agents(mapf)
     solution = Vector{Path}(undef, A)

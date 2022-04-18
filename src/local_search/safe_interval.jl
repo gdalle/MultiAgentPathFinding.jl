@@ -188,7 +188,7 @@ function SIPPS(
     return Path()
 end
 
-function cooperative_SIPPS!(solution, agents, mapf)
+function cooperative_SIPPS!(solution::Solution, agents, mapf::MAPF)
     forbidden_vertices = compute_forbidden_vertices(solution, mapf)
     graph, edge_weights = mapf.graph, mapf.edge_weights
     for a in agents

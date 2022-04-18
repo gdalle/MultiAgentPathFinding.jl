@@ -19,7 +19,7 @@ end
 
 nb_agents(mapf::MAPF) = length(mapf.sources)
 
-function compute_distances(graph, destinations, edge_weights)
+function compute_distances(graph::AbstractGraph, destinations, edge_weights)
     distances_to_destinations = Dict{Int,Vector{Float64}}()
     rev_graph = is_directed(graph) ? reverse(graph) : graph
     for d in unique(destinations)
@@ -29,7 +29,7 @@ function compute_distances(graph, destinations, edge_weights)
     return distances_to_destinations
 end
 
-function compute_group_memberships(graph, conflict_groups) where {V}
+function compute_group_memberships(graph::AbstractGraph, conflict_groups)
     group_memberships = [Int[] for v in vertices(graph)]
     for (g, group) in enumerate(conflict_groups)
         for v in group

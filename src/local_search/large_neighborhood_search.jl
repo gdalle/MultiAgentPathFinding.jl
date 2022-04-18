@@ -1,8 +1,8 @@
-function random_neighborhood(mapf, N)
+function random_neighborhood(mapf::MAPF, N)
     return sample(1:nb_agents(mapf), N; replace=false)
 end
 
-function conflicting_neighborhood(solution, mapf)
+function conflicting_neighborhood(solution::Solution, mapf::MAPF)
     A = nb_agents(mapf)
     neighborhood = Set{Int}()
     for a = 1:A
@@ -25,7 +25,7 @@ function remove_agents!(solution, agents)
     return backup
 end
 
-function large_neighborhood_search!(solution, mapf; N=1, steps=10)
+function large_neighborhood_search!(solution::Solution, mapf::MAPF; N=1, steps=10)
     @assert is_feasible(solution, mapf)
     cost = flowtime(solution, mapf)
     @showprogress "LNS steps: " for _ in 1:steps
@@ -44,7 +44,7 @@ function large_neighborhood_search!(solution, mapf; N=1, steps=10)
     return solution
 end
 
-function large_neighborhood_search(mapf; N=1, steps=10)
+function large_neighborhood_search(mapf::MAPF; N=1, steps=10)
     solution = cooperative_astar(mapf, shuffle(1:nb_agents(mapf)))
     large_neighborhood_search!(solution, mapf; N=N, steps=steps)
     return solution

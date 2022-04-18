@@ -6,7 +6,7 @@ Base.@kwdef struct CBSNode
     conflict_heuristic::Int
 end
 
-function cbs_low_level(node, additional_constraint, mapf)
+function cbs_low_level(node, additional_constraint, mapf::MAPF)
     forbidden_vertices = Reservation()
     a, t, g = additional_constraint
     for v in mapf.conflict_groups[g]
@@ -41,7 +41,7 @@ function cbs_low_level(node, additional_constraint, mapf)
     return path
 end
 
-function conflict_based_search(mapf; greedy=true)
+function conflict_based_search(mapf::MAPF; greedy=true)
     root_solution = independent_astar(mapf)
     root_cost = flowtime(root_solution, mapf)
     root_conflict_heuristic = nb_conflicting_pairs(root_solution, mapf)
@@ -54,10 +54,10 @@ function conflict_based_search(mapf; greedy=true)
     )
 
     if greedy
-        open_queue = PriorityQueue{CBSNode,Tuple{Int,Int}}()
+        open_queue = VectorPriorityQueue{CBSNode,Tuple{Int,Int}}()
         enqueue!(open_queue, root, (root.conflict_heuristic, root.cost))
     else
-        open_queue = PriorityQueue{CBSNode,Int}()
+        open_queue = VectorPriorityQueue{CBSNode,Int}()
         enqueue!(open_queue, root, root.cost)
     end
 

@@ -6,6 +6,6 @@
 [![Coverage](https://codecov.io/gh/gdalle/MultiAgentPathFinding.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/gdalle/MultiAgentPathFinding.jl)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
-Fast algorithms for Multi-Agent PathFinding in Julia.
+Fast algorithms for Multi-Agent Path Finding in Julia.
 
 If you're looking for exact methods, check out <https://github.com/Shushman/MultiAgentPathFinding.jl>.

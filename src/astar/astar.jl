@@ -10,7 +10,7 @@ function temporal_astar(
     # Initialize storage
     came_from = Dict{Tuple{Int,V},Tuple{Int,V}}()
     dist = Dict{Tuple{Int,V},W}()
-    open_set = MyPriorityQueue{Tuple{Int,V},W}()
+    open_set = VectorPriorityQueue{Tuple{Int,V},W}()
     closed = Set{Tuple{Int,V}}()
 
     # Add first node to storage
