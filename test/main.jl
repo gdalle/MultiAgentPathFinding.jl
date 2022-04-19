@@ -38,21 +38,25 @@ solution_coop = cooperative_astar(mapf, collect(1:nb_agents(mapf)));
 is_feasible(solution_coop, mapf)
 flowtime(solution_coop, mapf)
 
-solution_lns1 = large_neighborhood_search!(
+solution_lns = large_neighborhood_search!(
     copy(solution_indep_feasible), mapf; N=5, steps=1000
 );
-is_feasible(solution_lns1, mapf)
-flowtime(solution_lns1, mapf)
+is_feasible(solution_lns, mapf)
+flowtime(solution_lns, mapf)
 
-tmax = maximum(t for path in solution_lns1 for (t, v) in path)
+tmax = maximum(t for path in solution_lns for (t, v) in path)
 
 ## (I)LP
 
-_, _, solution_lp = solve_lp(mapf, T=50, integer=false);
+_, _, solution_lp = solve_lp(mapf, T=tmax+10, integer=false, capacity=true);
 is_feasible(solution_lp, mapf)
 flowtime(solution_lp, mapf)
 
-_, _, solution_ilp = solve_lp(mapf, T=50, integer=true);
+_, _, solution_lp_indep = solve_lp(mapf, T=tmax+10, integer=true, capacity=false);
+is_feasible(solution_lp_indep, mapf)
+flowtime(solution_lp_indep, mapf)
+
+_, _, solution_ilp = solve_lp(mapf, T=tmax+10, integer=true, capacity=true);
 is_feasible(solution_ilp, mapf)
 flowtime(solution_ilp, mapf)
 

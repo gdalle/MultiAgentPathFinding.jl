@@ -62,10 +62,10 @@ function solve_lp(mapf::MAPF; T::Integer, integer=false, capacity=true)
     optimize!(model)
 
     stat = termination_status(model)
-    val = objective_value(model)
     solution = Solution()
 
     if stat == MOI.OPTIMAL
+        val = objective_value(model)
         yopt = value.(y)
         for a = 1:A
             path = Path()
@@ -77,6 +77,8 @@ function solve_lp(mapf::MAPF; T::Integer, integer=false, capacity=true)
             end
             push!(solution, path)
         end
+    else
+        val = Inf
     end
 
     return stat, val, solution
