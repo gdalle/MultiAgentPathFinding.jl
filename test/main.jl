@@ -24,37 +24,37 @@ pyenv.reset();
 
 mapf = generate_mapf(pyenv);
 
+## Local search
+
+solution_indep = independent_astar(mapf);
+is_feasible(solution_indep, mapf)
+flowtime(solution_indep, mapf)
+
+solution_indep_feasible = feasibility_search!(copy(solution_indep), mapf);
+is_feasible(solution_indep_feasible, mapf)
+flowtime(solution_indep_feasible, mapf)
+
+solution_coop = cooperative_astar(mapf, collect(1:nb_agents(mapf)));
+is_feasible(solution_coop, mapf)
+flowtime(solution_coop, mapf)
+
+solution_lns1 = large_neighborhood_search!(
+    copy(solution_indep_feasible), mapf; N=5, steps=1000
+);
+is_feasible(solution_lns1, mapf)
+flowtime(solution_lns1, mapf)
+
+tmax = maximum(t for path in solution_lns1 for (t, v) in path)
+
 ## (I)LP
 
 _, _, solution_lp = solve_lp(mapf, T=50, integer=false);
 is_feasible(solution_lp, mapf)
 flowtime(solution_lp, mapf)
 
-_, _, solution_ilp = solve_lp(mapf, T=50, integer=true);  # SCIP crashes here
+_, _, solution_ilp = solve_lp(mapf, T=50, integer=true);
 is_feasible(solution_ilp, mapf)
 flowtime(solution_ilp, mapf)
-
-## Local search
-
-# solution_indep = independent_astar(mapf);
-# is_feasible(solution_indep, mapf)
-# flowtime(solution_indep, mapf)
-
-# solution_indep_feasible = feasibility_search!(copy(solution_indep), mapf);
-# is_feasible(solution_indep_feasible, mapf)
-# flowtime(solution_indep_feasible, mapf)
-
-# solution_coop = cooperative_astar(mapf, collect(1:nb_agents(mapf)));
-# is_feasible(solution_coop, mapf)
-# flowtime(solution_coop, mapf)
-
-# solution_lns1 = large_neighborhood_search!(
-#     copy(solution_indep_feasible), mapf; N=5, steps=1000
-# );
-# is_feasible(solution_lns1, mapf)
-# flowtime(solution_lns1, mapf)
-
-# tmax = maximum(t for path in solution_lns1 for (t, v) in path)
 
 ## Animation
 
