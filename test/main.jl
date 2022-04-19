@@ -1,8 +1,6 @@
 ## Imports
 
-using GLMakie
 using MultiAgentPathFinding
-using ProgressMeter
 using PythonCall
 
 ## Test
@@ -26,29 +24,41 @@ pyenv.reset();
 
 mapf = generate_mapf(pyenv);
 
-## Policies
+## (I)LP
 
-solution_indep = independent_astar(mapf);
-is_feasible(solution_indep, mapf)
-flowtime(solution_indep, mapf)
+_, _, solution_lp = solve_lp(mapf, T=50, integer=false);
+is_feasible(solution_lp, mapf)
+flowtime(solution_lp, mapf)
 
-solution_indep_feasible = feasibility_search!(copy(solution_indep), mapf);
-is_feasible(solution_indep_feasible, mapf)
-flowtime(solution_indep_feasible, mapf)
+_, _, solution_ilp = solve_lp(mapf, T=50, integer=true);  # SCIP crashes here
+is_feasible(solution_ilp, mapf)
+flowtime(solution_ilp, mapf)
 
-solution_coop = cooperative_astar(mapf, collect(1:nb_agents(mapf)));
-is_feasible(solution_coop, mapf)
-flowtime(solution_coop, mapf)
+## Local search
 
-solution_lns1 = large_neighborhood_search!(
-    copy(solution_indep_feasible), mapf; N=5, steps=1000
-);
-is_feasible(solution_lns1, mapf)
-flowtime(solution_lns1, mapf)
+# solution_indep = independent_astar(mapf);
+# is_feasible(solution_indep, mapf)
+# flowtime(solution_indep, mapf)
 
-tmax = maximum(t for path in solution_lns1 for (t, v) in path)
+# solution_indep_feasible = feasibility_search!(copy(solution_indep), mapf);
+# is_feasible(solution_indep_feasible, mapf)
+# flowtime(solution_indep_feasible, mapf)
+
+# solution_coop = cooperative_astar(mapf, collect(1:nb_agents(mapf)));
+# is_feasible(solution_coop, mapf)
+# flowtime(solution_coop, mapf)
+
+# solution_lns1 = large_neighborhood_search!(
+#     copy(solution_indep_feasible), mapf; N=5, steps=1000
+# );
+# is_feasible(solution_lns1, mapf)
+# flowtime(solution_lns1, mapf)
+
+# tmax = maximum(t for path in solution_lns1 for (t, v) in path)
 
 ## Animation
+
+# using GLMakie
 
 # fig, (A, XY, M) = plot_network(mapf.graph);
 # fig
@@ -59,7 +69,3 @@ tmax = maximum(t for path in solution_lns1 for (t, v) in path)
 #     A[], XY[], M[] = agent_coords(mapf.graph, solution, t)
 #     sleep(1 / framerate)
 # end
-
-## (I)LP
-
-solve_lp(mapf, T=50, integer=true)

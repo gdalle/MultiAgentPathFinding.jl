@@ -1,6 +1,5 @@
 module MultiAgentPathFinding
 
-using Cbc
 using DataGraphs
 using FillArrays
 using GLMakie
@@ -10,6 +9,7 @@ using LinearAlgebra
 using ProgressMeter
 using PythonCall
 using Random
+using SCIP
 using UnicodePlots
 using UnPack
 

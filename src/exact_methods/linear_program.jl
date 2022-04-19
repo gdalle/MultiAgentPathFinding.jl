@@ -1,17 +1,18 @@
-function solve_lp(mapf::MAPF; T::Integer, integer=false)
+function solve_lp(mapf::MAPF; T::Integer, integer=false, capacity=true)
     @assert all(<=(T), mapf.starting_times)
 
-    A = nb_agents(mapf)
-    G = mapf.graph
-    V, E = nv(G), ne(G)
-    W = [mapf.edge_weights[src(ed), dst(ed)] for ed in edges(mapf.graph)]
+    g = mapf.graph
+    w_vec = [mapf.edge_weights[src(ed), dst(ed)] for ed in edges(g)]
 
-    model = Model(Cbc.Optimizer)
+    A = nb_agents(mapf)
+    V, E = nv(g), ne(g)
+
+    model = Model(SCIP.Optimizer)
 
     @variable(model, x[1:A, 1:(T - 1), 1:E])
     @variable(model, y[1:A, 1:T, 1:V])
 
-    @objective(model, Min, dot(W, sum(x; dims=(1, 2))))
+    @objective(model, Min, dot(w_vec, sum(x; dims=(1, 2))))
 
     if integer
         set_binary.(x)
@@ -21,7 +22,7 @@ function solve_lp(mapf::MAPF; T::Integer, integer=false)
         @constraint(model, 0 .<= y .<= 1)
     end
 
-    @showprogress for a in 1:A
+    for a in 1:A
         s = mapf.sources[a]
         d = mapf.destinations[a]
         t0 = mapf.starting_times[a]
@@ -36,9 +37,9 @@ function solve_lp(mapf::MAPF; T::Integer, integer=false)
         @constraint(model, y[a, T, d] == 1)
     end
 
-    @showprogress for v in 1:V
-        e_in = [e for (e, ed) in enumerate(edges(G)) if dst(ed) == v]
-        e_out = [e for (e, ed) in enumerate(edges(G)) if src(ed) == v]
+    for v in 1:V
+        e_in = [e for (e, ed) in enumerate(edges(g)) if dst(ed) == v]
+        e_out = [e for (e, ed) in enumerate(edges(g)) if src(ed) == v]
         for a in 1:A
             t0 = mapf.starting_times[a]
             for t in t0:(T - 1)
@@ -50,13 +51,33 @@ function solve_lp(mapf::MAPF; T::Integer, integer=false)
         end
     end
 
-    @showprogress for group in mapf.conflict_groups
-        for t in 1:T
-            @constraint(model, sum(@view y[:, t, group]) <= 1)
+    if capacity
+        for group in mapf.conflict_groups
+            for t in 1:T
+                @constraint(model, sum(@view y[:, t, group]) <= 1)
+            end
         end
     end
 
     optimize!(model)
 
-    return termination_status(model), objective_value(model)
+    stat = termination_status(model)
+    val = objective_value(model)
+    solution = Solution()
+
+    if stat == MOI.OPTIMAL
+        yopt = value.(y)
+        for a = 1:A
+            path = Path()
+            t0 = mapf.starting_times[a]
+            for t = t0:T
+                v = argmax(@view yopt[a, t, :])
+                push!(path, (t, v))
+                v == mapf.destinations[a] && break
+            end
+            push!(solution, path)
+        end
+    end
+
+    return stat, val, solution
 end

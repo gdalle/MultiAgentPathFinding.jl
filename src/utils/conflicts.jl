@@ -1,4 +1,4 @@
-function find_conflict(a, b, solution, mapf::MAPF)
+function find_conflict(a::Integer, b::Integer, solution::Solution, mapf::MAPF)
     path_a = solution[a]
     path_b = solution[b]
     t0b = mapf.starting_times[b]
@@ -16,11 +16,11 @@ function find_conflict(a, b, solution, mapf::MAPF)
     return nothing
 end
 
-function have_conflict(a, b, solution, mapf::MAPF)
+function have_conflict(a::Integer, b::Integer, solution::Solution, mapf::MAPF)
     return !isnothing(find_conflict(a, b, solution, mapf))
 end
 
-function nb_conflicts(solution, a, mapf)
+function nb_conflicts(solution::Solution, a::Integer, mapf::MAPF)
     A = nb_agents(mapf)
     c = 0
     for b in 1:A
@@ -32,7 +32,7 @@ function nb_conflicts(solution, a, mapf)
     return c
 end
 
-function nb_conflicting_pairs(solution, mapf::MAPF)
+function nb_conflicting_pairs(solution::Solution, mapf::MAPF)
     p = 0
     for a in 1:nb_agents(mapf), b in 1:(a - 1)
         p += have_conflict(a, b, solution, mapf)
@@ -40,7 +40,7 @@ function nb_conflicting_pairs(solution, mapf::MAPF)
     return p
 end
 
-function find_conflict(solution, mapf::MAPF)
+function find_conflict(solution::Solution, mapf::MAPF)
     A = nb_agents(mapf)
     for a in 1:A, b in 1:(a - 1)
         conflict = find_conflict(a, b, solution, mapf)
@@ -49,6 +49,6 @@ function find_conflict(solution, mapf::MAPF)
     return nothing
 end
 
-function has_conflict(solution, mapf::MAPF)
+function has_conflict(solution::Solution, mapf::MAPF)
     return !isnothing(find_conflict(solution, mapf))
 end
