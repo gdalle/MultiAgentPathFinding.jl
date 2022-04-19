@@ -2,7 +2,7 @@ const FlatlandNetwork = DataDiGraph{
     Int,
     NTuple{4,Int},
     Nothing,
-    Nothing,
+    Float64,
     @NamedTuple{grid::Matrix{UInt16}, agents::Vector{Agent}}
 }
 
@@ -17,7 +17,9 @@ function build_network(pyenv::Py, agents::Vector{Agent})
     cell_grid = pyconvert(Matrix{UInt16}, pyenv.rail.grid)
 
     # Initialize network
-    network = DataDiGraph{Int}(; VL=NTuple{4,Int}, graph_data=(grid=cell_grid, agents=agents))
+    network = DataDiGraph{Int}(;
+        VL=NTuple{4,Int}, ED=Float64, graph_data=(grid=cell_grid, agents=agents)
+    )
 
     # Create vertices from non empty grid cells
     for i in 1:height, j in 1:width
@@ -52,30 +54,33 @@ function build_network(pyenv::Py, agents::Vector{Agent})
     for v in vertices(network)
         label_s = get_label(network, v)
         (i, j, direction, kind) = label_s
-        # From real vertices
-        if kind == REAL
-            add_edge!(network, label_s, label_s)
+        if kind == REAL  # from real vertices
             cell = cell_grid[i, j]
             transition_map = bitstring(cell)
-            # ... to real vertices
+            # to themselves
+            add_edge!(network, label_s, label_s, 1.0)
+            # to other real vertices
             for out_direction in CARDINAL_POINTS
                 if transition_exists(transition_map, direction, out_direction)
                     i2, j2 = neighbor_cell(i, j, out_direction)
                     label_d = (i2, j2, out_direction, REAL)
-                    add_edge!(network, label_s, label_d)
+                    add_edge!(network, label_s, label_d, 1.0)
                 end
             end
-            # ... to arrival vertices
+            # to arrival vertices
             if (i, j) in target_positions
                 label_d = (i, j, NO_DIRECTION, ARRIVAL)
-                add_edge!(network, label_s, label_d)
+                add_edge!(network, label_s, label_d, 0.0)
             end
-            # From departure vertices
-        elseif kind == DEPARTURE
-            add_edge!(network, label_s, label_s)
-            # ... to real vertices
+        elseif kind == DEPARTURE  # from departure vertices
+            # to themselves
+            add_edge!(network, label_s, label_s, 1.0)
+            # to real vertices
             label_d = (i, j, direction, REAL)
-            add_edge!(network, label_s, label_d)
+            add_edge!(network, label_s, label_d, 0.0)
+        elseif kind == ARRIVAL  # from arrival vertices
+            # to themselves
+            add_edge!(network, label_s, label_s, 0.0)
         end
     end
     return network
@@ -121,7 +126,7 @@ function generate_mapf(pyenv::Py)
         destinations=destinations,
         starting_times=starting_times,
         conflict_groups=conflict_groups,
-        edge_weights=Ones{Float64}(nv(network), nv(network)),
+        edge_weights=weights(network),
     )
     return mapf
 end

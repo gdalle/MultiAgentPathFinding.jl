@@ -1,15 +1,18 @@
 module MultiAgentPathFinding
 
+using Cbc
 using DataGraphs
 using FillArrays
+using GLMakie
 using Graphs
+using JuMP
+using LinearAlgebra
 using ProgressMeter
 using PythonCall
 using Random
 using UnicodePlots
 using UnPack
 
-import Makie
 import StatsBase: sample
 
 include("mapf.jl")
@@ -23,6 +26,7 @@ include("astar/independent_astar.jl")
 include("astar/cooperative_astar.jl")
 
 include("exact_methods/conflict_based_search.jl")
+include("exact_methods/linear_program.jl")
 
 include("local_search/large_neighborhood_search.jl")
 include("local_search/feasibility_search.jl")
@@ -48,5 +52,6 @@ export conflict_based_search
 export large_neighborhood_search, large_neighborhood_search!
 export generate_mapf
 export plot_network, agent_coords
+export solve_lp
 
 end # module
