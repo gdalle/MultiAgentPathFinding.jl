@@ -1,19 +1,20 @@
 using MultiAgentPathFinding
 
-map_path = joinpath("data", "wc3maps512-map", "divideandconquer.map")
-scen_path = joinpath("data", "wc3maps512-scen", "divideandconquer.map.scen")
+map_path = joinpath("data", "room-map", "64room_000.map")
+scen_path = joinpath("data", "room-scen", "64room_000.map.scen")
 
 map_matrix = read_map(map_path);
 scenario = read_scenario(scen_path);
 
 display_map(map_matrix)
+
 g = GridGraph(map_matrix)
 
-ne(g)
-
-agent = scenario[200, :]
-(is, js) = size(g, 1) - agent.start_y + 1, agent.start_x
-(id, jd) = size(g, 1) - agent.goal_y + 1, agent.goal_x
+agent = scenario[rand(1:size(scenario, 1)), :]
+(is, js) = agent.start_i, agent.start_j
+(id, jd) = agent.goal_i, agent.goal_j
 path = shortest_path_grid(g, (is, js), (id, jd))
 
 display_map(map_matrix; path=path)
+
+mapf = benchmark_mapf(map_matrix, scenario)

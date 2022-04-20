@@ -26,18 +26,18 @@ function neighbor_cell(i::Integer, j::Integer, out_direction::Integer)
     end
 end
 
-function vertices_on_cell(network::FlatlandNetwork, i::Integer, j::Integer)
+function vertices_on_cell(g::FlatlandGraph, i::Integer, j::Integer)
     return [
-        get_vertex(network, (i, j, direction, REAL)) for
-        direction in CARDINAL_POINTS if haskey(network, (i, j, direction, REAL))
+        get_vertex(g, (i, j, direction, REAL)) for
+        direction in CARDINAL_POINTS if haskey(g, (i, j, direction, REAL))
     ]
 end
 
-function mirror_vertex(network::FlatlandNetwork, v::Integer)
-    (i, j, direction, kind) = get_label(network, v)
+function mirror_vertex(g::FlatlandGraph, v::Integer)
+    (i, j, direction, kind) = get_label(g, v)
     if kind == REAL
         i2, j2 = neighbor_cell(i, j, reverse_direction(direction))
-        return get_vertex(network, (i2, j2, reverse_direction(direction), REAL))
+        return get_vertex(g, (i2, j2, reverse_direction(direction), REAL))
     end
 end
 

@@ -2,6 +2,7 @@ module MultiAgentPathFinding
 
 using DataGraphs
 using DataFrames
+using DataFramesMeta
 using FillArrays
 using GLMakie
 using Graphs
@@ -37,12 +38,14 @@ include("local_search/permutation_search.jl")
 
 include("flatland/constants.jl")
 include("flatland/agent.jl")
-include("flatland/network.jl")
+include("flatland/graph.jl")
 include("flatland/utils.jl")
-include("flatland/plots.jl")
+include("flatland/mapf.jl")
+include("flatland/plot.jl")
 
 include("benchmarks/read.jl")
 include("benchmarks/graph.jl")
+include("benchmarks/mapf.jl")
 include("benchmarks/plot.jl")
 
 export Path, Solution
@@ -63,10 +66,11 @@ export solve_lp
 export local_search_permutations, feasibility_search!
 export large_neighborhood_search, large_neighborhood_search!
 
-export generate_mapf
-export plot_network, agent_coords
+export flatland_mapf
+export plot_flatland_graph, flatland_agent_coords
 
 export read_map, read_scenario, display_map
 export GridGraph, shortest_path_grid
+export benchmark_mapf
 
 end # module

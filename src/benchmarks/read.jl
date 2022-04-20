@@ -25,24 +25,39 @@ function read_scenario(path)
         map=String[],
         width=Int[],
         height=Int[],
-        start_x=Int[],
-        start_y=Int[],
-        goal_x=Int[],
-        goal_y=Int[],
+        start_i=Int[],
+        start_j=Int[],
+        goal_i=Int[],
+        goal_j=Int[],
         optimal_length=Float64[],
     )
     for line in @view lines[2:end]
         line_split = split(line, "\t")
+        bucket = parse(Int, line_split[1]) + 1
+        map = line_split[2]
+        width = parse(Int, line_split[3])
+        height = parse(Int, line_split[4])
+        start_x = parse(Int, line_split[5]) + 1
+        start_y = parse(Int, line_split[6]) + 1
+        goal_x = parse(Int, line_split[7]) + 1
+        goal_y = parse(Int, line_split[8]) + 1
+        optimal_length = parse(Float64, line_split[9])
+
+        start_i = height - start_y + 1
+        start_j = start_x
+        goal_i = height - goal_y + 1
+        goal_j = goal_x
+
         line_tup = (
-            bucket=parse(Int, line_split[1]) + 1,
-            map=line_split[2],
-            width=parse(Int, line_split[3]),
-            height=parse(Int, line_split[4]),
-            start_x=parse(Int, line_split[5]) + 1,
-            start_y=parse(Int, line_split[6]) + 1,
-            goal_x=parse(Int, line_split[7]) + 1,
-            goal_y=parse(Int, line_split[8]) + 1,
-            optimal_length=parse(Float64, line_split[9]),
+            bucket=bucket,
+            map=map,
+            width=width,
+            height=height,
+            start_i=start_i,
+            start_j=start_j,
+            goal_i=goal_i,
+            goal_j=goal_j,
+            optimal_length=optimal_length,
         )
         push!(scenario, line_tup)
     end

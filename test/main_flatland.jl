@@ -22,7 +22,7 @@ pyenv = rail_env.RailEnv(;
 )
 pyenv.reset();
 
-mapf = generate_mapf(pyenv);
+mapf = flatland_mapf(pyenv);
 
 ## Local search
 
@@ -64,12 +64,12 @@ flowtime(solution_ilp, mapf)
 
 # using GLMakie
 
-# fig, (A, XY, M) = plot_network(mapf.graph);
+# fig, (A, XY, M) = plot_flatland_graph(mapf.graph);
 # fig
 # solution = copy(solution_lns1);
 # tmax = maximum(t for path in solution for (t, v) in path)
 # framerate = 5
 # @showprogress for t in 1:tmax
-#     A[], XY[], M[] = agent_coords(mapf.graph, solution, t)
+#     A[], XY[], M[] = flatland_agent_coords(mapf.graph, solution, t)
 #     sleep(1 / framerate)
 # end

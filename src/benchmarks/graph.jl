@@ -123,6 +123,9 @@ function shortest_path_grid(g::GridGraph, (is, js), (id, jd))
     w = weights(g)
     s = node_index(g, is, js)
     d = node_index(g, id, jd)
-    path = a_star(g, s, d, w)
+    heuristic(v) = sum(abs, (id, jd) .- node_coord(g, v))
+    path = a_star(g, s, d, w, heuristic)
     return path
 end
+
+reverse(g::GridGraph) = g

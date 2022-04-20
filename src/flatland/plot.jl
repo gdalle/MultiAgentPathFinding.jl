@@ -1,12 +1,12 @@
-function rail_coords(network::FlatlandNetwork)
-    agents = get_agents(network)
+function rail_coords(g::FlatlandGraph)
+    agents = get_agents(g)
 
     P1 = Dict(NORTH => (0, -0.5), EAST => (-0.5, 0), SOUTH => (0, 0.5), WEST => (0.5, 0))
     P2 = Dict(NORTH => (0, -0.3), EAST => (-0.3, 0), SOUTH => (0, 0.3), WEST => (0.3, 0))
     P3 = Dict(NORTH => (0, 0.3), EAST => (0.3, 0), SOUTH => (0, -0.3), WEST => (-0.3, 0))
     P4 = Dict(NORTH => (0, 0.5), EAST => (0.5, 0), SOUTH => (0, -0.5), WEST => (-0.5, 0))
 
-    grid = get_grid(network)
+    grid = get_grid(g)
     h, w = size(grid)
     X_lines, Y_lines = Float64[], Float64[]
     X_limits, Y_limits = Float64[], Float64[]
@@ -42,8 +42,8 @@ function rail_coords(network::FlatlandNetwork)
     return (X_lines, Y_lines), (X_limits, Y_limits), (X_stations, Y_stations)
 end
 
-function agent_coords(network::FlatlandNetwork, solution, t)
-    h, w = get_height(network), get_width(network)
+function flatland_agent_coords(g::FlatlandGraph, solution, t)
+    h, w = get_height(g), get_width(g)
     XY = Tuple{Float64,Float64}[]
     M, A = Symbol[], Int[]
 
@@ -51,7 +51,7 @@ function agent_coords(network::FlatlandNetwork, solution, t)
         path = solution[a]
         for (s, v) in path
             if s == t
-                i, j, direction, kind = get_label(network, v)
+                i, j, direction, kind = get_label(g, v)
                 if kind == REAL
                     x, y = j, h - i + 1
                     if direction == NORTH
@@ -87,9 +87,9 @@ function add_agents!(ax)
     return A, XY, M
 end
 
-function plot_network(network::FlatlandNetwork)
-    xy_lines, xy_limits, xy_stations = rail_coords(network)
-    h, w = get_height(network), get_width(network)
+function plot_flatland_graph(g::FlatlandGraph)
+    xy_lines, xy_limits, xy_stations = rail_coords(g)
+    h, w = get_height(g), get_width(g)
     fig = Figure(; figure_padding=1)
     ax = Axis(fig[1, 1]; xticks=1:w, yticks=(1:h, string.(h:-1:1)))
     Makie.lines!(ax, xy_lines...; color="black")
