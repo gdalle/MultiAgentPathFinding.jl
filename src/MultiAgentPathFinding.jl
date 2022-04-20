@@ -12,6 +12,7 @@ using ProgressMeter
 using PythonCall
 using Random
 using SCIP
+using SparseArrays
 using UnicodePlots
 using UnPack
 
@@ -42,6 +43,7 @@ include("flatland/plots.jl")
 
 include("benchmarks/read.jl")
 include("benchmarks/graph.jl")
+include("benchmarks/plot.jl")
 
 export Path, Solution
 export MAPF, nb_agents
@@ -65,5 +67,6 @@ export generate_mapf
 export plot_network, agent_coords
 
 export read_map, read_scenario, display_map
+export GridGraph, shortest_path_grid
 
 end # module
