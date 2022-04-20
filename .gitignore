@@ -4,3 +4,7 @@
 /Manifest.toml
 /docs/build/
 .CondaPkg
+
+*.zip
+*.scen
+*.map

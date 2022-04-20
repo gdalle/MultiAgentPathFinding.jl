@@ -1,9 +1,11 @@
 module MultiAgentPathFinding
 
 using DataGraphs
+using DataFrames
 using FillArrays
 using GLMakie
 using Graphs
+using Images
 using JuMP
 using LinearAlgebra
 using ProgressMeter
@@ -38,20 +40,30 @@ include("flatland/network.jl")
 include("flatland/utils.jl")
 include("flatland/plots.jl")
 
+include("benchmarks/read.jl")
+include("benchmarks/graph.jl")
+
 export Path, Solution
 export MAPF, nb_agents
+
+export flowtime
 export VectorPriorityQueue
+export find_conflict, has_conflict, is_feasible
+
 export temporal_astar
 export independent_astar
 export compute_forbidden_vertices
 export cooperative_astar!, cooperative_astar
-export local_search_permutations, feasibility_search!
-export flowtime
-export find_conflict, has_conflict, is_feasible
+
 export conflict_based_search
+export solve_lp
+
+export local_search_permutations, feasibility_search!
 export large_neighborhood_search, large_neighborhood_search!
+
 export generate_mapf
 export plot_network, agent_coords
-export solve_lp
+
+export read_map, read_scenario, display_map
 
 end # module

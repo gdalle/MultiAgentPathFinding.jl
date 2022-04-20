@@ -8,4 +8,17 @@
 
 Fast algorithms for Multi-Agent Path Finding in Julia.
 
+## Getting started
+
+To install this package, open a Julia Pkg REPL and run
+```julia
+pkg> add https://github.com/gdalle/MultiAgentPathFinding.jl
+```
+
+To use the MAPF benchmarks for testing, go to <https://movingai.com/benchmarks/grids.html>, then download and extract zip files corresponding to maps and benchmark problems into the `data/` folder.
+File format is described [here](https://webdocs.cs.ualberta.ca/~nathanst/papers/benchmarks.pdf).
+We don't provide decoding utilities for the [terrain maps](https://movingai.com/benchmarks/weighted/index.html).
+
+## Related projects
+
 If you're looking for exact methods, check out <https://github.com/Shushman/MultiAgentPathFinding.jl>.
