@@ -17,4 +17,6 @@ path = shortest_path_grid(g, (is, js), (id, jd))
 
 display_map(map_matrix; path=path)
 
-mapf = benchmark_mapf(map_matrix, scenario)
+mapf = benchmark_mapf(map_matrix, scenario; bucket=3)
+
+cooperative_astar(mapf)

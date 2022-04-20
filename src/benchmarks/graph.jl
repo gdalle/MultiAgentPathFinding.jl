@@ -34,8 +34,6 @@ Graphs.is_directed(::GridGraph) = true
 Graphs.is_directed(::Type{<:GridGraph}) = true
 
 Base.size(g::GridGraph, args...) = size(g.grid, args...)
-height(g::GridGraph) = size(g, 1)
-width(g::GridGraph) = size(g, 2)
 
 Graphs.nv(g::GridGraph) = prod(size(g))
 Graphs.vertices(g::GridGraph) = 1:nv(g)
@@ -101,7 +99,7 @@ function Graphs.weights(g::GridGraph)
     E = edges(g)
     I = [src(ed) for ed in E]
     J = [dst(ed) for ed in E]
-    V = Float16[]
+    V = Float64[]
     for ed in E
         s, d = src(ed), dst(ed)
         is, js = node_coord(g, s)

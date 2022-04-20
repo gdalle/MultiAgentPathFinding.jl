@@ -21,7 +21,7 @@ end
 function cooperative_astar!(solution::Solution, agents, mapf::MAPF)
     forbidden_vertices = compute_forbidden_vertices(solution, mapf)
     graph, edge_weights = mapf.graph, mapf.edge_weights
-    for a in agents
+    @showprogress for a in agents
         s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
         dist = mapf.distances_to_destinations[d]
         heuristic(v) = dist[v]
@@ -39,7 +39,7 @@ function cooperative_astar!(solution::Solution, agents, mapf::MAPF)
     end
 end
 
-function cooperative_astar(mapf::MAPF, permutation)
+function cooperative_astar(mapf::MAPF, permutation=1:nb_agents(mapf))
     solution = [Path() for a in 1:nb_agents(mapf)]
     cooperative_astar!(solution, permutation, mapf)
     return solution

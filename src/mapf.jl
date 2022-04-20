@@ -2,20 +2,39 @@ const Path = Vector{Tuple{Int,Int}}  # vector of tuples (t, v)
 const Solution = Vector{Path}  # one path for each agent a
 const Reservation = Set{Tuple{Int,Int}}
 
-Base.@kwdef struct MAPF{G<:AbstractGraph{Int},EW<:AbstractMatrix{Float64}}
+struct MAPF{G<:AbstractGraph{Int},EW<:AbstractMatrix{Float64}}
     graph::G
     sources::Vector{Int}
     destinations::Vector{Int}
     starting_times::Vector{Int}
-    edge_weights::EW = weights(graph)
-    distances_to_destinations::Dict{Int,Vector{Float64}} = compute_distances(
-        graph, destinations, edge_weights
-    )
-    conflict_groups::Vector{Vector{Int}} = [[v] for v in 1:nv(graph)]
-    group_memberships::Vector{Vector{Int}} = compute_group_memberships(
-        graph, conflict_groups
+    edge_weights::EW
+    distances_to_destinations::Dict{Int,Vector{Float64}}
+    conflict_groups::Vector{Vector{Int}}
+    group_memberships::Vector{Vector{Int}}
+end
+
+function MAPF(;
+    graph,
+    sources,
+    destinations,
+    starting_times,
+    edge_weights=weights(graph),
+    distances_to_destinations=compute_distances(graph, destinations, edge_weights),
+    conflict_groups=[[v] for v in 1:nv(graph)],
+    group_memberships=compute_group_memberships(graph, conflict_groups),
+)
+    return MAPF(
+        graph,
+        sources,
+        destinations,
+        starting_times,
+        edge_weights,
+        distances_to_destinations,
+        conflict_groups,
+        group_memberships,
     )
 end
+
 
 nb_agents(mapf::MAPF) = length(mapf.sources)
 
