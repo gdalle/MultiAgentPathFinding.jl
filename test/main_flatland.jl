@@ -1,5 +1,9 @@
 ## Imports
 
+using DataFrames
+using Flux
+# using GLMakie
+using InferOpt
 using MultiAgentPathFinding
 using PythonCall
 using ProgressMeter
@@ -63,8 +67,6 @@ tmax = maximum(t for path in solution_lns for (t, v) in path)
 
 ## Animation
 
-# using GLMakie
-
 # fig, (A, XY, M) = plot_flatland_graph(mapf);
 # fig
 # solution = copy(solution_lns);
@@ -77,4 +79,31 @@ tmax = maximum(t for path in solution_lns for (t, v) in path)
 
 ## Learning
 
+T = 300
+
 X = agents_embedding(mapf)
+y = solution_to_vec(solution_indep, mapf, T=T)
+
+function maximizer(θ; mapf)
+    permutation = sortperm(θ; rev=true)
+    solution = cooperative_astar(mapf, permutation)
+    ŷ = solution_to_vec(solution, mapf; T=T)
+    return ŷ
+end
+
+encoder = Chain(Dense(size(X, 1), 1), vec)
+model = Perturbed(maximizer; ε=1.0, M=2)
+squared_loss(y, ŷ) = sum(abs2, y - ŷ);
+opt = ADAM();
+
+par = Flux.params(encoder)
+
+@showprogress for epoch in 1:100
+    gs = gradient(par) do
+        squared_loss(model(encoder(X); mapf=mapf), y)
+    end
+    Flux.update!(opt, par, gs)
+end;
+
+
+encoder[1].weight

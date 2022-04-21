@@ -25,6 +25,7 @@ include("mapf.jl")
 include("utils/eval_sol.jl")
 include("utils/priority_queue.jl")
 include("utils/conflicts.jl")
+include("utils/vectorize.jl")
 
 include("astar/astar.jl")
 include("astar/independent_astar.jl")
@@ -56,7 +57,9 @@ export MAPF, nb_agents
 
 export flowtime
 export VectorPriorityQueue
-export find_conflict, has_conflict, is_feasible
+export find_conflict, conflict_exists, count_conflicts
+export is_feasible
+export path_to_vec, solution_to_vec
 
 export temporal_astar
 export independent_astar
