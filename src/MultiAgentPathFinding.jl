@@ -27,9 +27,9 @@ include("utils/priority_queue.jl")
 include("utils/conflicts.jl")
 include("utils/vectorize.jl")
 
-include("astar/astar.jl")
-include("astar/independent_astar.jl")
+include("astar/temporal_astar.jl")
 include("astar/cooperative_astar.jl")
+include("astar/independent_shortest_paths.jl")
 
 include("exact_methods/conflict_based_search.jl")
 include("exact_methods/linear_program.jl")
@@ -39,6 +39,7 @@ include("local_search/feasibility_search.jl")
 include("local_search/permutation_search.jl")
 
 include("learning/features_agents.jl")
+include("learning/features_edges.jl")
 
 include("flatland/constants.jl")
 include("flatland/agent.jl")
@@ -62,7 +63,7 @@ export is_feasible
 export path_to_vec, solution_to_vec
 
 export temporal_astar
-export independent_astar
+export independent_astar, independent_shortest_paths
 export compute_forbidden_vertices
 export cooperative_astar!, cooperative_astar
 
@@ -73,6 +74,7 @@ export local_search_permutations, feasibility_search!
 export large_neighborhood_search, large_neighborhood_search!
 
 export agents_embedding
+export edges_embedding
 
 export flatland_mapf
 export plot_flatland_graph, flatland_agent_coords

@@ -24,6 +24,7 @@ const Reservation = Set{Tuple{Int,Int}}
 """
 struct MAPF{G<:AbstractGraph{Int},EW<:AbstractMatrix{Float64}}
     graph::G
+    rev_graph::G
     sources::Vector{Int}
     destinations::Vector{Int}
     starting_times::Vector{Int}
@@ -43,8 +44,11 @@ function MAPF(;
     conflict_groups=[[v] for v in 1:nv(graph)],
     group_memberships=compute_group_memberships(graph, conflict_groups),
 )
+    @assert is_directed(graph)
+    rev_graph = reverse(graph)
     return MAPF(
         graph,
+        rev_graph,
         sources,
         destinations,
         starting_times,
@@ -55,14 +59,14 @@ function MAPF(;
     )
 end
 
-
 nb_agents(mapf::MAPF) = length(mapf.sources)
 
 function compute_distances(graph::AbstractGraph, destinations, edge_weights)
     distances_to_destinations = Dict{Int,Vector{Float64}}()
     rev_graph = is_directed(graph) ? reverse(graph) : graph
+    rev_edge_weights = edge_weights'
     for d in unique(destinations)
-        dijkstra_state = dijkstra_shortest_paths(rev_graph, d, edge_weights)
+        dijkstra_state = dijkstra_shortest_paths(rev_graph, d, rev_edge_weights)
         distances_to_destinations[d] = dijkstra_state.dists
     end
     return distances_to_destinations

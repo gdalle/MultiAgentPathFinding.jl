@@ -18,19 +18,18 @@ function compute_forbidden_vertices(solution::Solution, mapf::MAPF)
     return forbidden_vertices
 end
 
-function cooperative_astar!(solution::Solution, agents, mapf::MAPF)
+function cooperative_astar!(solution::Solution, agents::AbstractVector{Int}, mapf::MAPF;)
     forbidden_vertices = compute_forbidden_vertices(solution, mapf)
-    graph, edge_weights = mapf.graph, mapf.edge_weights
     @showprogress for a in agents
         s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
         dist = mapf.distances_to_destinations[d]
         heuristic(v) = dist[v]
         path = temporal_astar(
-            graph,
+            mapf.graph,
             s,
             d,
             t0;
-            edge_weights=edge_weights,
+            edge_weights=mapf.edge_weights,
             heuristic=heuristic,
             forbidden_vertices=forbidden_vertices,
         )

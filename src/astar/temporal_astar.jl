@@ -4,7 +4,7 @@ function temporal_astar(
     d::Integer,
     t0::Integer;
     edge_weights::AbstractMatrix{W}=weights(g),
-    heuristic=v -> 0,
+    heuristic=v -> 0.,
     forbidden_vertices=Set{Tuple{Int,V}}(),
 ) where {V,W}
     # Initialize storage
