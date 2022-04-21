@@ -13,8 +13,8 @@ using ProgressMeter
 using PythonCall
 using Random
 using SCIP
+using Statistics
 using SparseArrays
-using StatsBase
 using UnicodePlots
 using UnPack
 
@@ -55,7 +55,7 @@ include("benchmarks/plot.jl")
 export Path, Solution
 export MAPF, nb_agents
 
-export flowtime
+export flowtime, max_time
 export VectorPriorityQueue
 export find_conflict, conflict_exists, count_conflicts
 export is_feasible

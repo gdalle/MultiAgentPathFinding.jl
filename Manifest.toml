@@ -673,12 +673,6 @@ git-tree-sha1 = "464bdef044df52e6436f8c018bea2d48c40bb27b"
 uuid = "82e4d734-157c-48bb-816b-45c225c6df19"
 version = "0.6.1"
 
-[[deps.ImageInTerminal]]
-deps = ["Crayons", "ImageBase", "ImageCore", "Requires"]
-git-tree-sha1 = "2bd30630d417699c925fa7f16d51282d7343e3eb"
-uuid = "d8c32880-2388-543b-8c61-d9f865259254"
-version = "0.4.8"
-
 [[deps.ImageMagick]]
 deps = ["FileIO", "ImageCore", "ImageMagick_jll", "InteractiveUtils", "Libdl", "Pkg", "Random"]
 git-tree-sha1 = "5bc1cb62e0c5f1005868358db0692c994c3a13c6"

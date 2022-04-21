@@ -3,7 +3,8 @@ function constant_features(a::Integer, mapf::MAPF)
     s = mapf.sources[a]
     d = mapf.destinations[a]
     dist = mapf.distances_to_destinations[d][s]
-    return Float64[t0, dist]
+    return Float64[a, randn(), randn()]
+    # return Float64[a, t0, dist]
 end
 
 function path_features(a::Integer, solution::Solution, mapf::MAPF)
@@ -29,16 +30,16 @@ end
 function all_features(a::Integer, solution, mapf::MAPF)
     return vcat(
         constant_features(a, mapf),
-        path_features(a, solution, mapf),
-        conflict_features(a, solution, mapf),
+        # path_features(a, solution, mapf),
+        # conflict_features(a, solution, mapf),
     )
 end
 
 function agents_embedding(mapf::MAPF)
     solution = independent_astar(mapf)
     x = reduce(hcat, all_features(a, solution, mapf) for a in 1:nb_agents(mapf))
-    # s = std(x; dims=2)
-    # s[isapprox.(s, 0.0)] .= 1  # columns with zero variance
-    # x = (x .- mean(x; dims=2)) ./ s
+    s = std(x; dims=2)
+    s[isapprox.(s, 0.0)] .= 1  # columns with zero variance
+    x = (x .- mean(x; dims=2)) ./ s
     return x
 end

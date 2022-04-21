@@ -45,3 +45,6 @@ end
 
 is_feasible(::Nothing, ::MAPF) = false
 flowtime(::Nothing, ::MAPF) = Inf
+
+max_time(path::Path) = maximum(t for (t, v) in path)
+max_time(solution::Solution) = maximum(max_time(path) for path in solution)
