@@ -1,4 +1,4 @@
-function update_forbidden_vertices!(forbidden_vertices, path, mapf::MAPF)
+function update_forbidden_vertices!(forbidden_vertices, path::Path, mapf::MAPF)
     for (t, v) in path
         for g in mapf.group_memberships[v]
             for w in mapf.conflict_groups[g]

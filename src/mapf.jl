@@ -1,7 +1,27 @@
+"""
+    Path
+
+Vector of tuples `(t,v)` corresponding to a timed path through a graph.
+"""
 const Path = Vector{Tuple{Int,Int}}  # vector of tuples (t, v)
+
+"""
+    Solution
+
+Vector of `Path`s, one for each agent of a [`MAPF`](@ref) problem.
+"""
 const Solution = Vector{Path}  # one path for each agent a
+
+"""
+    Reservation
+
+Set of tuples `(t,v)` corresponding to already-occupied vertices.
+"""
 const Reservation = Set{Tuple{Int,Int}}
 
+"""
+    MAPF{G,EW}
+"""
 struct MAPF{G<:AbstractGraph{Int},EW<:AbstractMatrix{Float64}}
     graph::G
     sources::Vector{Int}

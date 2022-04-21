@@ -63,14 +63,18 @@ tmax = maximum(t for path in solution_lns for (t, v) in path)
 
 ## Animation
 
-using GLMakie
+# using GLMakie
 
-fig, (A, XY, M) = plot_flatland_graph(mapf);
-fig
-solution = copy(solution_lns);
-framerate = 5
-tmax = maximum(t for path in solution for (t, v) in path)
-@showprogress for t in 1:tmax
-    A[], XY[], M[] = flatland_agent_coords(mapf, solution, t)
-    sleep(1 / framerate)
-end
+# fig, (A, XY, M) = plot_flatland_graph(mapf);
+# fig
+# solution = copy(solution_lns);
+# framerate = 5
+# tmax = maximum(t for path in solution for (t, v) in path)
+# @showprogress for t in 1:tmax
+#     A[], XY[], M[] = flatland_agent_coords(mapf, solution, t)
+#     sleep(1 / framerate)
+# end
+
+## Learning
+
+X = agents_embedding(mapf)

@@ -14,6 +14,7 @@ using PythonCall
 using Random
 using SCIP
 using SparseArrays
+using StatsBase
 using UnicodePlots
 using UnPack
 
@@ -35,6 +36,8 @@ include("exact_methods/linear_program.jl")
 include("local_search/large_neighborhood_search.jl")
 include("local_search/feasibility_search.jl")
 include("local_search/permutation_search.jl")
+
+include("learning/features_agents.jl")
 
 include("flatland/constants.jl")
 include("flatland/agent.jl")
@@ -65,6 +68,8 @@ export solve_lp
 
 export local_search_permutations, feasibility_search!
 export large_neighborhood_search, large_neighborhood_search!
+
+export agents_embedding
 
 export flatland_mapf
 export plot_flatland_graph, flatland_agent_coords

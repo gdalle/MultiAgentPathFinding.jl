@@ -1,54 +1,104 @@
-function find_conflict(a::Integer, b::Integer, solution::Solution, mapf::MAPF)
-    path_a = solution[a]
-    path_b = solution[b]
-    t0b = mapf.starting_times[b]
-    for (ta, va) in path_a
-        kb = ta + 1 - t0b
-        if 1 <= kb <= length(path_b)
-            (tb, vb) = path_b[kb]
-            for ga in mapf.group_memberships[va]
-                if vb in mapf.conflict_groups[ga]
-                    return (a=a, b=b, t=ta, g=ga)
-                end
-            end
+## Between vertices
+
+function conflicting_vertices(v1::Integer, v2::Integer, mapf::MAPF)
+    for g1 in mapf.group_memberships[v1]
+        if v2 in mapf.conflict_groups[g1]
+            return true
+        end
+    end
+    return false
+end
+
+## Between paths
+
+function find_conflict(path1::Path, path2::Path, mapf::MAPF; tol=0)
+    for (t1, v1) in path1, (t2, v2) in path2
+        if (abs(t1 - t2) <= tol) && conflicting_vertices(v1, v2, mapf)
+            return (t1, v1), (t2, v2)
         end
     end
     return nothing
 end
 
-function have_conflict(a::Integer, b::Integer, solution::Solution, mapf::MAPF)
-    return !isnothing(find_conflict(a, b, solution, mapf))
+function conflict_exists(path1::Path, path2::Path, mapf::MAPF; tol=0)
+    return !isnothing(find_conflict(path1, path2, mapf; tol=tol))
 end
 
-function nb_conflicts(solution::Solution, a::Integer, mapf::MAPF)
-    A = nb_agents(mapf)
+function count_conflicts(path1::Path, path2::Path, mapf::MAPF; tol=0)
     c = 0
-    for b in 1:A
-        b != a || continue
-        if have_conflict(a, b, solution, mapf)
+    for (t1, v1) in path1, (t2, v2) in path2
+        if (abs(t1 - t2) <= tol) && conflicting_vertices(v1, v2, mapf)
             c += 1
         end
     end
     return c
 end
 
-function nb_conflicting_pairs(solution::Solution, mapf::MAPF)
-    p = 0
-    for a in 1:nb_agents(mapf), b in 1:(a - 1)
-        p += have_conflict(a, b, solution, mapf)
-    end
-    return p
+## Between agents
+
+function find_conflict(a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol=0)
+    path1, path2 = solution[a1], solution[a2]
+    return find_conflict(path1, path2, mapf; tol=tol)
 end
 
-function find_conflict(solution::Solution, mapf::MAPF)
-    A = nb_agents(mapf)
-    for a in 1:A, b in 1:(a - 1)
-        conflict = find_conflict(a, b, solution, mapf)
-        isnothing(conflict) || return conflict
+function conflict_exists(a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol=0)
+    path1, path2 = solution[a1], solution[a2]
+    return conflict_exists(path1, path2, mapf; tol=tol)
+end
+
+function count_conflicts(a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol=0)
+    path1, path2 = solution[a1], solution[a2]
+    return count_conflicts(path1, path2, mapf; tol=tol)
+end
+
+## Between one agent and the rest
+
+function find_conflict(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
+    for a2 = 1:nb_agents(mapf)
+        if a2 != a1
+            conflict = find_conflict(a1, a2, solution, mapf; tol=tol)
+            if !isnothing(conflict)
+                return conflict
+            end
+        end
     end
     return nothing
 end
 
-function has_conflict(solution::Solution, mapf::MAPF)
-    return !isnothing(find_conflict(solution, mapf))
+function conflict_exists(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
+    return !isnothing(find_conflict(a1, solution, mapf; tol=tol))
+end
+
+function count_conflicts(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
+    c = 0
+    for a2 = 1:nb_agents(mapf)
+        if a2 != a1
+            c += count_conflicts(a1, a2, solution, mapf; tol=tol)
+        end
+    end
+    return c
+end
+
+## In the whole solution
+
+function find_conflict(solution::Solution, mapf::MAPF; tol=0)
+    for a1 = 1:nb_agents(mapf), a2 = 1:a1-1
+        conflict = find_conflict(a1, a2, solution, mapf; tol=tol)
+        if !isnothing(conflict)
+            return conflict
+        end
+    end
+    return nothing
+end
+
+function conflict_exists(solution::Solution, mapf::MAPF; tol=0)
+    return !isnothing(find_conflict(solution, mapf; tol=tol))
+end
+
+function count_conflicts(solution::Solution, mapf::MAPF; tol=0)
+    c = 0
+    for a1 = 1:nb_agents(mapf), a2 = 1:a1-1
+        c += count_conflicts(a1, a2, solution, mapf; tol=tol)
+    end
+    return c
 end

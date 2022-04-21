@@ -26,20 +26,21 @@ function is_feasible(solution::Solution, mapf::MAPF)
             end
         end
     end
-    return !has_conflict(solution, mapf)
+    return !conflict_exists(solution, mapf)
+end
+
+function path_weight(path::Path, mapf::MAPF)
+    w = mapf.edge_weights
+    c = 0.
+    for k in 1:(length(path) - 1)
+        (_, v1), (_, v2) = path[k], path[k + 1]
+        c += w[v1, v2]
+    end
+    return c
 end
 
 function flowtime(solution::Solution, mapf::MAPF)
-    f = 0.0
-    w = mapf.edge_weights
-    for a in 1:nb_agents(mapf)
-        path = solution[a]
-        for k in 1:(length(path) - 1)
-            (_, v1), (_, v2) = path[k], path[k + 1]
-            f += w[v1, v2]
-        end
-    end
-    return f
+    return sum(path_weight(path, mapf) for path in solution)
 end
 
 is_feasible(::Nothing, ::MAPF) = false
