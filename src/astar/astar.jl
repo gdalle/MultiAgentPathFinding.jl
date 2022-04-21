@@ -11,7 +11,6 @@ function temporal_astar(
     came_from = Dict{Tuple{Int,V},Tuple{Int,V}}()
     dist = Dict{Tuple{Int,V},W}()
     open_set = VectorPriorityQueue{Tuple{Int,V},W}()
-    closed = Set{Tuple{Int,V}}()
 
     # Add first node to storage
     first_node = (t0, s)
@@ -25,7 +24,6 @@ function temporal_astar(
     while !isempty(open_set)
         (t, v) = dequeue!(open_set)
         nodes_explored += 1
-        push!(closed, (t, v))
 
         (t, v) in forbidden_vertices && continue
 
@@ -40,7 +38,6 @@ function temporal_astar(
 
         else  # explore neighbors (possibly including v)
             for w in outneighbors(g, v)
-                (t + 1, w) in closed && continue
                 (t + 1, w) in forbidden_vertices && continue
 
                 new_dist = dist[(t, v)] + edge_weights[v, w]

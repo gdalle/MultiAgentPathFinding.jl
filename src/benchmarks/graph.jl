@@ -126,4 +126,4 @@ function shortest_path_grid(g::GridGraph, (is, js), (id, jd))
     return path
 end
 
-reverse(g::GridGraph) = g
+Graphs.reverse(g::GridGraph) = g

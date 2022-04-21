@@ -1,5 +1,5 @@
-function rail_coords(g::FlatlandGraph)
-    agents = get_agents(g)
+function rail_coords(mapf::MAPF)
+    g::FlatlandGraph = mapf.graph
 
     P1 = Dict(NORTH => (0, -0.5), EAST => (-0.5, 0), SOUTH => (0, 0.5), WEST => (0.5, 0))
     P2 = Dict(NORTH => (0, -0.3), EAST => (-0.3, 0), SOUTH => (0, 0.3), WEST => (0.3, 0))
@@ -12,7 +12,8 @@ function rail_coords(g::FlatlandGraph)
     X_limits, Y_limits = Float64[], Float64[]
     X_stations, Y_stations = Float64[], Float64[]
 
-    stations = station_positions(agents)
+    station_vertices = union(mapf.sources, mapf.destinations)
+    station_coords = [get_label(g, v)[1:2] for v in station_vertices]
 
     for i in 1:h, j in 1:w
         cell = grid[i, j]
@@ -33,7 +34,7 @@ function rail_coords(g::FlatlandGraph)
                 end
             end
 
-            if (i, j) in stations
+            if (i, j) in station_coords
                 append!(X_stations, j .+ 0.7 * [-0.5, 0.5, 0.5, -0.5, -0.5, NaN])
                 append!(Y_stations, (h - i + 1) .+ 0.7 * [-0.5, -0.5, 0.5, 0.5, -0.5, NaN])
             end
@@ -42,7 +43,8 @@ function rail_coords(g::FlatlandGraph)
     return (X_lines, Y_lines), (X_limits, Y_limits), (X_stations, Y_stations)
 end
 
-function flatland_agent_coords(g::FlatlandGraph, solution, t)
+function flatland_agent_coords(mapf::MAPF, solution::Solution, t::Integer)
+    g::FlatlandGraph = mapf.graph
     h, w = get_height(g), get_width(g)
     XY = Tuple{Float64,Float64}[]
     M, A = Symbol[], Int[]
@@ -87,11 +89,12 @@ function add_agents!(ax)
     return A, XY, M
 end
 
-function plot_flatland_graph(g::FlatlandGraph)
-    xy_lines, xy_limits, xy_stations = rail_coords(g)
+function plot_flatland_graph(mapf::MAPF)
+    g::FlatlandGraph = mapf.graph
+    xy_lines, xy_limits, xy_stations = rail_coords(mapf)
     h, w = get_height(g), get_width(g)
     fig = Figure(; figure_padding=1)
-    ax = Axis(fig[1, 1]; xticks=1:w, yticks=(1:h, string.(h:-1:1)))
+    ax = GLMakie.Axis(fig[1, 1]; xticks=1:w, yticks=(1:h, string.(h:-1:1)))
     Makie.lines!(ax, xy_lines...; color="black")
     ax.aspect = DataAspect()
     scatter!(ax, xy_limits...; color="black", marker=:cross)
