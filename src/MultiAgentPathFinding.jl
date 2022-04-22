@@ -9,9 +9,11 @@ using Graphs
 using Images
 using JuMP
 using LinearAlgebra
+using OffsetArrays
 using ProgressMeter
 using PythonCall
 using Random
+using Requires
 using SCIP
 using Statistics
 using SparseArrays
@@ -27,9 +29,9 @@ include("utils/priority_queue.jl")
 include("utils/conflicts.jl")
 include("utils/vectorize.jl")
 
-include("astar/temporal_astar.jl")
-include("astar/cooperative_astar.jl")
-include("astar/independent_shortest_paths.jl")
+include("paths/temporal_astar.jl")
+include("paths/cooperative_astar.jl")
+include("paths/independent_shortest_paths.jl")
 
 include("exact_methods/conflict_based_search.jl")
 include("exact_methods/linear_program.jl")
@@ -63,7 +65,7 @@ export is_feasible
 export path_to_vec, solution_to_vec
 
 export temporal_astar
-export independent_astar, independent_shortest_paths
+export independent_astar, independent_dijkstra, independent_topological_sort
 export compute_forbidden_vertices
 export cooperative_astar!, cooperative_astar
 

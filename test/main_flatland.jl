@@ -1,5 +1,6 @@
 ## Imports
 
+using BenchmarkTools
 using GLMakie
 using Graphs
 using MultiAgentPathFinding
@@ -13,13 +14,13 @@ rail_generators = pyimport("flatland.envs.rail_generators")
 line_generators = pyimport("flatland.envs.line_generators")
 rail_env = pyimport("flatland.envs.rail_env")
 
-rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=4)
+rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=20)
 line_generator = line_generators.sparse_line_generator()
 
 pyenv = rail_env.RailEnv(;
-    width=30,
-    height=30,
-    number_of_agents=20,
+    width=80,
+    height=80,
+    number_of_agents=200,
     rail_generator=rail_generator,
     line_generator=line_generator,
     random_seed=11,
@@ -28,14 +29,22 @@ pyenv = rail_env.RailEnv(;
 pyenv.reset();
 mapf = flatland_mapf(pyenv);
 
-g = mapf.graph
-
-
 ## Local search
 
-solution_indep = independent_astar(mapf);
+@time solution_indep = independent_astar(mapf);
+@profview independent_astar(mapf);
 is_feasible(solution_indep, mapf)
 flowtime(solution_indep, mapf)
+
+@time solution_indep2 = independent_dijkstra(mapf);
+@profview independent_dijkstra(mapf);
+is_feasible(solution_indep2, mapf)
+flowtime(solution_indep2, mapf)
+
+@time solution_indep3 = independent_topological_sort(mapf; T=500);
+@profview independent_topological_sort(mapf; T=500);
+is_feasible(solution_indep3, mapf)
+flowtime(solution_indep3, mapf)
 
 solution_indep_feasible = feasibility_search!(copy(solution_indep), mapf);
 is_feasible(solution_indep_feasible, mapf)
