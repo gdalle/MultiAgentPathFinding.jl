@@ -18,7 +18,12 @@ function compute_forbidden_vertices(solution::Solution, mapf::MAPF)
     return forbidden_vertices
 end
 
-function cooperative_astar!(solution::Solution, agents::AbstractVector{Int}, mapf::MAPF;)
+function cooperative_astar!(
+    solution::Solution,
+    agents::AbstractVector{Int},
+    mapf::MAPF,
+    edge_weights::AbstractVector=mapf.edge_weights,
+)
     forbidden_vertices = compute_forbidden_vertices(solution, mapf)
     @showprogress for a in agents
         s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
@@ -29,7 +34,8 @@ function cooperative_astar!(solution::Solution, agents::AbstractVector{Int}, map
             s,
             d,
             t0;
-            edge_weights=mapf.edge_weights,
+            edge_indices=mapf.edge_indices,
+            edge_weights=edge_weights,
             heuristic=heuristic,
             forbidden_vertices=forbidden_vertices,
         )
@@ -38,8 +44,12 @@ function cooperative_astar!(solution::Solution, agents::AbstractVector{Int}, map
     end
 end
 
-function cooperative_astar(mapf::MAPF, permutation=1:nb_agents(mapf))
+function cooperative_astar(
+    mapf::MAPF,
+    permutation::AbstractVector{Int}=1:nb_agents(mapf),
+    edge_weights::AbstractVector=mapf.edge_weights,
+)
     solution = [Path() for a in 1:nb_agents(mapf)]
-    cooperative_astar!(solution, permutation, mapf)
+    cooperative_astar!(solution, permutation, mapf, edge_weights)
     return solution
 end

@@ -30,7 +30,7 @@ function all_features_edge(s::Integer, d::Integer, solution::Solution, mapf::MAP
 end
 
 function edges_embedding(mapf::MAPF)
-    solution = independent_astar(mapf)
+    solution = independent_dijkstra(mapf)
     x = reduce(
         hcat,
         all_features_edge(src(ed), dst(ed), solution, mapf) for ed in edges(mapf.graph)

@@ -1,11 +1,16 @@
-function independent_dijkstra(mapf::MAPF; edge_weights=mapf.edge_weights)
-    @assert minimum(findnz(edge_weights)[3]) >= -eps()
+function independent_dijkstra(mapf::MAPF, edge_weights::AbstractVector=mapf.edge_weights)
+    @assert minimum(edge_weights) >= -eps()
+
+    dijkstra_states = Dict(
+        d => my_dijkstra_shortest_paths(
+            mapf.rev_graph,
+            d;
+            edge_indices=mapf.rev_edge_indices,
+            edge_weights=edge_weights,
+        ) for d in unique(mapf.destinations)
+    )
+
     A = nb_agents(mapf)
-    unique_destinations = unique(mapf.destinations)
-    dijkstra_states = Dict()
-    for d in unique_destinations
-        dijkstra_states[d] = dijkstra_shortest_paths(mapf.rev_graph, d, edge_weights')
-    end
     solution = Vector{Path}(undef, A)
     for a in 1:A
         s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
@@ -19,12 +24,40 @@ function independent_dijkstra(mapf::MAPF; edge_weights=mapf.edge_weights)
         end
         solution[a] = path
     end
+
     return solution
 end
 
-function independent_topological_sort(mapf::MAPF; T, edge_weights=mapf.edge_weights)
+function independent_dijkstra(mapf::MAPF, edge_weights::AbstractMatrix)
+    @assert minimum(edge_weights) >= -eps()
+    A = nb_agents(mapf)
+    solution = Vector{Path}(undef, A)
+    for a in 1:A
+        s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
+        dijkstra_state = my_dijkstra_shortest_paths(
+            mapf.rev_graph,
+            d;
+            edge_indices=mapf.rev_edge_indices,
+            edge_weights=view(edge_weights, :, a),
+        )
+        parents = dijkstra_state.parents
+        t, v = t0, s
+        path = [(t, v)]
+        while v != d
+            v = parents[v]
+            t += 1
+            push!(path, (t, v))
+        end
+        solution[a] = path
+    end
+
+    return solution
+end
+
+function independent_topological_sort(
+    mapf::MAPF, edge_weights::AbstractVector=mapf.edge_weights; T::Integer
+)
     rev_g = mapf.rev_graph
-    rev_edge_weights = Matrix(edge_weights')
 
     V = nv(rev_g)
     A = nb_agents(mapf)
@@ -42,7 +75,7 @@ function independent_topological_sort(mapf::MAPF; T, edge_weights=mapf.edge_weig
             parents[t, v] = 0
             for u in inneighbors(rev_g, v)
                 dist_du = dists[t - 1, u]
-                weight_uv = rev_edge_weights[u, v]
+                weight_uv = edge_weights[mapf.rev_edge_indices[u, v]]
                 if dist_du + weight_uv < dists[t, v]
                     dists[t, v] = dist_du + weight_uv
                     parents[t, v] = u
@@ -67,8 +100,7 @@ function independent_topological_sort(mapf::MAPF; T, edge_weights=mapf.edge_weig
     return solution
 end
 
-function independent_astar(mapf::MAPF)
-    graph, edge_weights = mapf.graph, mapf.edge_weights
+function independent_astar(mapf::MAPF, edge_weights::AbstractVector=mapf.edge_weights)
     A = nb_agents(mapf)
     solution = Vector{Path}(undef, A)
     for a in 1:A
@@ -76,14 +108,21 @@ function independent_astar(mapf::MAPF)
         dist = mapf.distances_to_destinations[d]
         heuristic(v) = dist[v]
         solution[a] = temporal_astar(
-            graph, s, d, t0; edge_weights=edge_weights, heuristic=heuristic
+            mapf.graph,
+            s,
+            d,
+            t0;
+            edge_indices=mapf.edge_indices,
+            edge_weights=edge_weights,
+            heuristic=heuristic,
         )
     end
     return solution
 end
 
-function independent_astar(mapf::MAPF, constraints)
-    graph, edge_weights = mapf.graph, mapf.edge_weights
+function independent_astar(
+    mapf::MAPF, constraints, edge_weights::AbstractVector=mapf.edge_weights
+)
     A = nb_agents(mapf)
     solution = Vector{Path}(undef, A)
     for a in 1:A
@@ -92,10 +131,11 @@ function independent_astar(mapf::MAPF, constraints)
         heuristic(v) = dist[v]
         forbidden_vertices = constraints[a]
         solution[a] = temporal_astar(
-            graph,
+            mapf.graph,
             s,
             d,
             t0;
+            edge_indices=mapf.edge_indices,
             edge_weights=edge_weights,
             forbidden_vertices=forbidden_vertices,
             heuristic=heuristic,

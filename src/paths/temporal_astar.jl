@@ -3,7 +3,8 @@ function temporal_astar(
     s::Integer,
     d::Integer,
     t0::Integer;
-    edge_weights::AbstractMatrix{W}=weights(g),
+    edge_indices::Dict,
+    edge_weights::Vector{W},
     heuristic=v -> 0.,
     forbidden_vertices=Set{Tuple{Int,V}}(),
 ) where {V,W}
@@ -40,7 +41,9 @@ function temporal_astar(
             for w in outneighbors(g, v)
                 (t + 1, w) in forbidden_vertices && continue
 
-                new_dist = dist[(t, v)] + edge_weights[v, w]
+                e_vw = edge_indices[(v, w)]
+                weight_vw = edge_weights[e_vw]
+                new_dist = dist[(t, v)] + weight_vw
                 old_dist = get(dist, (t + 1, w), Inf)
                 rest_dist = heuristic(w)
                 if rest_dist < typemax(W) && new_dist < old_dist

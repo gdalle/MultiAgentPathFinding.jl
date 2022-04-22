@@ -1,7 +1,6 @@
 ## Imports
 
 using BenchmarkTools
-using GLMakie
 using Graphs
 using MultiAgentPathFinding
 using PythonCall
@@ -32,17 +31,14 @@ mapf = flatland_mapf(pyenv);
 ## Local search
 
 @time solution_indep = independent_astar(mapf);
-@profview independent_astar(mapf);
 is_feasible(solution_indep, mapf)
 flowtime(solution_indep, mapf)
 
 @time solution_indep2 = independent_dijkstra(mapf);
-@profview independent_dijkstra(mapf);
 is_feasible(solution_indep2, mapf)
 flowtime(solution_indep2, mapf)
 
 @time solution_indep3 = independent_topological_sort(mapf; T=500);
-@profview independent_topological_sort(mapf; T=500);
 is_feasible(solution_indep3, mapf)
 flowtime(solution_indep3, mapf)
 

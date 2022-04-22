@@ -33,7 +33,6 @@ function flatland_mapf(pyenv::Py)
         destinations=destinations,
         starting_times=starting_times,
         conflict_groups=conflict_groups,
-        edge_weights=weights(g),
     )
     return mapf
 end
