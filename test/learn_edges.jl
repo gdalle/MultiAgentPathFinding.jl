@@ -35,7 +35,7 @@ mapf = flatland_mapf(pyenv);
 
 ## Data generation
 
-nb_instances = 10
+nb_instances = 100
 
 instances = Vector{typeof(flatland_mapf(pyenv))}(undef, nb_instances);
 @showprogress "Generating instances: " for k in 1:nb_instances
@@ -46,15 +46,12 @@ end
 solutions = Vector{Solution}(undef, nb_instances);
 @threads for k in 1:nb_instances
     @info "Instance $k solved by thread $(threadid())"
-    # solutions[k] = large_neighborhood_search(instances[k]; N=10, steps=100, progress=false)
-    solutions[k] = cooperative_astar(instances[k])
+    solutions[k] = large_neighborhood_search(instances[k]; N=10, steps=100, progress=false)
 end
 
-solutions_indep = Vector{Solution}(undef, nb_instances);
-@threads for k in 1:nb_instances
-    @info "Instance $k solved by thread $(threadid())"
-    # solutions[k] = large_neighborhood_search(instances[k]; N=10, steps=100, progress=false)
-    solutions_indep[k] = independent_astar(instances[k])
+solutions_naive = Vector{Solution}(undef, nb_instances);
+@showprogress for k in 1:nb_instances
+    solutions_naive[k] = cooperative_astar(instances[k])
 end
 
 A = nb_agents(instances[1])
@@ -76,17 +73,14 @@ repeat_agents(z::AbstractArray) = repeat(z; outer=(1, A))
 encoder = Chain(Dense(size(X[1], 1), 1), vec, turn_negative, repeat_agents)
 par = Flux.params(encoder)
 
-fenchel_young_loss = FenchelYoungLoss(Perturbed(maximizer; ε=0.02, M=2));
-squared_loss(ŷ, y) = sum(abs2, y - ŷ);
+fenchel_young_loss = FenchelYoungLoss(Perturbed(maximizer; ε=0.1, M=5));
 
-Ω = 10
 opt = ADAGrad();
 
 k = 1
 θ = encoder(X[k])
 maximizer(encoder(X[k]); mapf=instances[k])
 fenchel_young_loss(encoder(X[k]), Y[k]; mapf=instances[k]) / nb_instances
-Ω * sum(abs, encoder[1].weight)
 
 ## Training
 
@@ -96,15 +90,31 @@ losses = Float64[]
     l = 0.0
     @showprogress "Epoch $epoch/$nb_epochs -" for k in 1:nb_instances
         gs = gradient(par) do
-            l += (
-                fenchel_young_loss(encoder(X[k]), Y[k]; mapf=instances[k]) / nb_instances + Ω * sum(abs, encoder[1].weight)
-            )
+            l += fenchel_young_loss(encoder(X[k]), Y[k]; mapf=instances[k])
         end
         Flux.update!(opt, par, gs)
     end
-    push!(losses, l)
+    push!(losses, l / nb_instances)
 end;
 
 println(lineplot(losses))
 
 encoder[1].weight
+
+## Eval
+
+solutions_pred = Vector{Solution}(undef, nb_instances);
+@showprogress for k in 1:nb_instances
+    mapf = instances[k]
+    solution = independent_dijkstra(mapf, -encoder(X[k]))
+    feasibility_search!(solution, mapf)
+    solutions_pred[k] = solution
+end
+
+for k = 1:nb_instances
+    mapf = instances[k]
+    sol_naive = solutions_naive[k]
+    sol_pred = solutions_pred[k]
+    sol = solutions[k]
+    @info "Solution comparison" flowtime(sol_naive, mapf) flowtime(sol_pred, mapf) flowtime(sol, mapf)
+end

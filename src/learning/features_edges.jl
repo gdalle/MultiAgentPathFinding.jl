@@ -5,7 +5,7 @@ function constant_features_edge(s::Integer, d::Integer, mapf::MAPF)
     outdeg_d = outdegree(g, d)
     indeg_d = indegree(g, d)
     rev_edge_exists = has_edge(g, d, s)
-    return Float64[outdeg_s, outdeg_d, rev_edge_exists]
+    return Float64[outdeg_s, outdeg_d]
 end
 
 function solution_features_edge(s::Integer, d::Integer, solution::Solution, mapf::MAPF)
