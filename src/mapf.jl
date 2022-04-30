@@ -46,7 +46,7 @@ function MAPF(;
     edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(graph)))
     rev_edge_indices = Dict((dst(ed), src(ed)) => e for (e, ed) in enumerate(edges(graph)))
 
-    edge_weights_mat = weights(graph)
+    edge_weights_mat = Graphs.weights(graph)
     edge_weights = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(graph)]
 
     distances_to_destinations = Dict{Int,Vector{Float64}}()

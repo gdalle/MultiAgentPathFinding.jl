@@ -102,3 +102,29 @@ function count_conflicts(solution::Solution, mapf::MAPF; tol=0)
     end
     return c
 end
+
+## Collisions
+
+function colliding_pairs(solution::Solution, mapf::MAPF; tol=0)
+    cp = 0
+    for a1 = 1:nb_agents(mapf), a2 = 1:a1-1
+        if conflict_exists(a1, a2, solution, mapf; tol=tol)
+            cp += 1
+        end
+    end
+    return cp
+end
+
+function collision_degree(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
+    deg = 0
+    for a2 = 1:nb_agents(mapf)
+        if conflict_exists(a1, a2, solution, mapf; tol=tol)
+            deg += 1
+        end
+    end
+    return deg
+end
+
+function collision_degrees(solution::Solution, mapf::MAPF; tol=0)
+    return [collision_degree(a1, solution, mapf; tol=tol) for a1 = 1:nb_agents(mapf)]
+end

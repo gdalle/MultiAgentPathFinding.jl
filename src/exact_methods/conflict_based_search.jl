@@ -72,7 +72,7 @@ function conflict_based_search(mapf::MAPF; greedy=true)
         if isnothing(conflict)
             return node.solution
         else
-            @unpack a, b, t, g = conflict
+            (; a, b, t, g) = conflict
 
             constraint_a = (a, t, g)
             solution_a = copy(node.solution)

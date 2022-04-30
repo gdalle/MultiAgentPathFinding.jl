@@ -9,16 +9,18 @@ Base.@kwdef mutable struct SIPPSNode
     parent::Union{Nothing,SIPPSNode} = nothing
 end
 
-function same_identity(n1, n2)
+const SafeIntervalTable = Vector{Vector{@NamedTuple{low::Int, high::Int}}}
+
+function same_identity(n1::SIPPSNode, n2::SIPPSNode)
     return n1.v == n2.v && n1.id == n2.id && n1.is_goal == n2.is_goal
 end
 
-function build_safe_interval_table(g, soft_obstacles)
+function build_safe_interval_table(g::AbstractGraph, soft_obstacles::Reservation)
     T = 1
     for (t, v) in soft_obstacles
         T = max(t, T)
     end
-    𝓣 = [@NamedTuple{low::Int, high::Int}[] for v in 1:nv(g)]
+    safe_interval_table = [@NamedTuple{low::Int, high::Int}[] for v in 1:nv(g)]
     for v in 1:nv(g)
         t = 1
         while t <= T
@@ -27,25 +29,25 @@ function build_safe_interval_table(g, soft_obstacles)
             while t <= T && status == ((t + 1, v) in soft_obstacles)
                 t += 1
             end
-            push!(𝓣[v], (low=low, high=t))
+            push!(safe_interval_table[v], (low=low, high=t+1))
             t += 1
         end
-        @unpack low, high = 𝓣[v][end]
-        𝓣[v][end] = (low=low, high=typemax(Int) ÷ 100)
+        (; low, high) = safe_interval_table[v][end]
+        safe_interval_table[v][end] = (low=low, high=typemax(Int) ÷ 100)
     end
-    return 𝓣
+    return safe_interval_table
 end
 
-function intervals_intersect((a1, b1), (a2, b2))
-    return a2 <= a1 <= b2 || a2 <= b1 <= b2
+function intervals_intersect((a1, b1)::Tuple{Int,Int}, (a2, b2)::Tuple{Int,Int})
+    return (a2 <= a1 < b2) || (a2 <= b1 < b2)
 end
 
-function has_soft_obstacles(𝓣, v, id)
-    l = length(𝓣[v])
+function has_soft_obstacles(safe_interval_table::SafeIntervalTable, v::Integer, id::Integer)
+    l = length(safe_interval_table[v])
     return (l - id) % 2 == 0  # the last interval is always obstacle-free
 end
 
-function extract_path(n)
+function extract_path(n::SIPPSNode)
     path = Path()
     while !isnothing(n)
         pushfirst!(path, (n.low, n.v))
@@ -54,74 +56,67 @@ function extract_path(n)
     return path
 end
 
-function insert_node!(Q, P, n)
-    Q_indices_to_delete = Int[]
-    for (i, q) in enumerate(keys(Q))
-        if same_identity(n, q)
-            if q.low <= n.low && q.c <= n.c
-                return false
-            elseif n.low <= q.low && n.c <= q.c
-                pushfirst!(Q_indices_to_delete, i)
-            elseif n.low < q.high && q.low < n.high
-                if n.low < q.low
-                    n.high = q.low
+function compare_with_identical!(X::Vector{SIPPSNode}, n::SIPPSNode)
+    indices_to_delete = Int[]
+    n_v, n_low, n_high, n_id, n_is_goal, n_c = n.v, n.low, n.high, n.id, n.is_goal, n.c
+    for i in eachindex(X)
+        q = X[i]
+        if n_v == q.v && n_id == q.id && n_is_goal == q.is_goal
+            q_low, q_high, q_c = q.low, q.high, q.c
+            if q_low <= n_low && q_c <= n_c
+                return false, indices_to_delete
+            elseif n_low <= q_low && n_c <= q_c
+                push!(indices_to_delete, i)
+            elseif n_low < q_high && q_low < n_high
+                if n_low < q_low
+                    n.high = q_low
                 else
-                    q.high = n.low
+                    q.high = n_low
                 end
             end
         end
     end
-    for i in Q_indices_to_delete
-        deleteat!(Q, i)
-    end
-    P_indices_to_delete = Int[]
-    for (i, q) in enumerate(P)
-        if same_identity(n, q)
-            if q.low <= n.low && q.c <= n.c
-                return false
-            elseif n.low <= q.low && n.c <= q.c
-                pushfirst!(P_indices_to_delete, i)
-            elseif n.low < q.high && q.low < n.high
-                if n.low < q.low
-                    n.high = q.low
-                else
-                    q.high = n.low
-                end
-            end
-        end
-    end
-    for i in P_indices_to_delete
-        deleteat!(P, i)
-    end
-    enqueue!(Q, n, (n.c, n.f))
-    return true
+    return true, indices_to_delete
 end
 
-function expand_node!(Q, P, n, g, heuristic, 𝓣)
-    𝓘 = Set{Tuple{Int,Int}}()
+function insert_node!(Q::VectorPriorityQueue{SIPPSNode}, P::Vector{SIPPSNode}, n::SIPPSNode)
+    Q_keep_n, Q_indices_to_delete = compare_with_identical!(keys(Q), n)
+    P_keep_n, P_indices_to_delete = compare_with_identical!(P, n)
+    deleteat!(Q, Q_indices_to_delete)
+    deleteat!(P, P_indices_to_delete)
+    if P_keep_n && Q_keep_n
+        enqueue!(Q, n, (n.c, n.f))
+        return true
+    end
+end
+
+function expand_node!(
+    Q::VectorPriorityQueue{SIPPSNode},
+    P::Vector{SIPPSNode},
+    n::SIPPSNode,
+    g::AbstractGraph,
+    heuristic,
+    safe_interval_table::SafeIntervalTable,
+)
+    reachable = Tuple{Int,Int}[]
     for v in outneighbors(g, n.v)
-        for id in 1:length(𝓣[v])
-            @unpack low, high = 𝓣[v][id]
+        for id in 1:length(safe_interval_table[v])
+            (; low, high) = safe_interval_table[v][id]
             if intervals_intersect((low, high), (n.low + 1, n.high + 1))
-                push!(𝓘, (v, id))
+                push!(reachable, (v, id))
             end
         end
     end
-    # for id = 1:length(𝓣[n.v])
-    #     if 𝓣[n.v][id].low == n.high
-    #         push!(𝓘, (n.v, id))
-    #     end
-    # end
-    for (v, id) in 𝓘
-        @unpack low, high = 𝓣[v][id]
+    for (v, id) in reachable
+        (; low, high) = safe_interval_table[v][id]
         n3 = SIPPSNode(;
             v=v,
-            low=n.low + 1,
+            low=low,
             high=high,
             id=id,
             is_goal=false,
-            f=n.low + 1 + heuristic(v),
-            c=n.c + Int(has_soft_obstacles(𝓣, v, id)),
+            f=low + heuristic(v),
+            c=n.c + Int(has_soft_obstacles(safe_interval_table, v, id)),
             parent=n,
         )
         insert_node!(Q, P, n3)
@@ -129,35 +124,29 @@ function expand_node!(Q, P, n, g, heuristic, 𝓣)
 end
 
 function SIPPS(
-    g::AbstractGraph{V},
+    g::AbstractGraph,
     s::Integer,
     d::Integer,
     t0::Integer;
-    edge_weights::AbstractMatrix{W}=weights(g),
     heuristic=v -> 0,
-    soft_obstacles=Set{Tuple{Int,V}}(),
-) where {V,W}
-    T = 0
-    for (t, v) in soft_obstacles
-        T = max(t, T)
-    end
-    𝓣 = build_safe_interval_table(g, soft_obstacles)
-
-    root_id = minimum(k for (k, (low, high)) in enumerate(𝓣[s]) if low <= t0 <= high)
+    soft_obstacles::Reservation,
+)
+    safe_interval_table = build_safe_interval_table(g, soft_obstacles)
+    root_id = minimum(
+        k for (k, (; low, high)) in enumerate(safe_interval_table[s]) if low <= t0 <= high
+    )
     root = SIPPSNode(;
         v=s,
         low=t0,
-        high=𝓣[s][root_id].high,
+        high=safe_interval_table[s][root_id].high,
         id=root_id,
         is_goal=false,
-        f=𝓣[s][root_id].low + heuristic(s),
-        c=Int(has_soft_obstacles(𝓣, s, root_id)),
+        f=safe_interval_table[s][root_id].low + heuristic(s),
+        c=Int(has_soft_obstacles(safe_interval_table, s, root_id)),
         parent=nothing,
     )
 
-    # Q = PriorityQueue{SIPPSNode,Tuple{Int,Float64}}()
-    Q = MyPriorityQueue{SIPPSNode,Tuple{Int,Float64}}()
-    # P = Set{SIPPSNode}()
+    Q = VectorPriorityQueue{SIPPSNode,Tuple{Int,Float64}}()
     P = SIPPSNode[]
     enqueue!(Q, root, (root.c, root.f))
 
@@ -166,7 +155,10 @@ function SIPPS(
         if n.is_goal
             return extract_path(n)
         elseif n.v == d
-            c_future = count((t, d) in soft_obstacles for t in (n.low + 1):T)
+            c_future = count(t > n.low for (t, v) in soft_obstacles if v == d)
+            if c_future == 0
+                return extract_path(n)
+            end
             n2 = SIPPSNode(;
                 v=n.v,
                 low=n.low,
@@ -179,7 +171,7 @@ function SIPPS(
             )
             insert_node!(Q, P, n2)
         end
-        expand_node!(Q, P, n, g, heuristic, 𝓣)
+        expand_node!(Q, P, n, g, heuristic, safe_interval_table)
         if !(n in P)
             push!(P, n)
         end
@@ -188,23 +180,48 @@ function SIPPS(
     return Path()
 end
 
-function cooperative_SIPPS!(solution::Solution, agents, mapf::MAPF)
-    forbidden_vertices = compute_forbidden_vertices(solution, mapf)
-    graph, edge_weights = mapf.graph, mapf.edge_weights
+function cooperative_SIPPS!(solution::Solution, mapf::MAPF; agents=1:nb_agents(mapf))
+    fixed_agents = [a for a = 1:nb_agents(mapf) if !(a in agents)]
+    reservation = compute_reservation(solution, mapf; agents=fixed_agents)
     for a in agents
         s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
         dist = mapf.distances_to_destinations[d]
         heuristic(v) = dist[v]
         path = SIPPS(
-            graph,
-            s,
-            d,
-            t0;
-            edge_weights=edge_weights,
-            heuristic=heuristic,
-            soft_obstacles=forbidden_vertices,
+            mapf.graph, s, d, t0; heuristic=heuristic, soft_obstacles=reservation
         )
         solution[a] = path
-        update_forbidden_vertices!(forbidden_vertices, path, mapf)
+        update_reservation(reservation, path, mapf)
     end
+end
+
+function large_neighborhood_search2!(solution::Solution, mapf::MAPF; N=1)
+    A = nb_agents(mapf)
+    pathless_agents = shuffle([a for a in 1:A if length(solution[a]) == 0])
+    cooperative_SIPPS!(solution, mapf; agents=pathless_agents)
+    cp = colliding_pairs(solution, mapf)
+    prog = ProgressUnknown("LNS2 steps: ")
+    # while !is_feasible(solution, mapf)
+    for k = 1:5
+        next!(prog, showvalues=[(:colliding_pairs, cp)])
+        neighborhood_agents = random_neighborhood_collision_degree(solution, mapf, N)
+        backup = remove_agents!(solution, neighborhood_agents)
+        cooperative_SIPPS!(solution, mapf; agents=neighborhood_agents)
+        new_cp = colliding_pairs(solution, mapf)
+        @info "Comparison" cp new_cp
+        if is_feasible(solution, mapf) || (new_cp <= cp)  # keep
+            cp = new_cp
+        else  # revert
+            for a in neighborhood_agents
+                solution[a] = backup[a]
+            end
+        end
+    end
+    return solution
+end
+
+function large_neighborhood_search2(mapf::MAPF; N=1)
+    solution = independent_dijkstra(mapf)
+    large_neighborhood_search2!(solution, mapf; N=N)
+    return solution
 end

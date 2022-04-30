@@ -11,9 +11,9 @@ function enqueue!(pq::VectorPriorityQueue{K,V}, k::K, v::V) where {K,V}
     insert!(pq.values, left, v)
 end
 
-function Base.deleteat!(pq::VectorPriorityQueue, i::Integer)
-    deleteat!(pq.keys, i)
-    deleteat!(pq.values, i)
+function Base.deleteat!(pq::VectorPriorityQueue, args...)
+    deleteat!(pq.keys, args...)
+    deleteat!(pq.values, args...)
 end
 
 function dequeue!(pq::VectorPriorityQueue)

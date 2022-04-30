@@ -1,30 +1,10 @@
-function update_forbidden_vertices!(forbidden_vertices, path::Path, mapf::MAPF)
-    for (t, v) in path
-        for g in mapf.group_memberships[v]
-            for w in mapf.conflict_groups[g]
-                push!(forbidden_vertices, (t, w))
-            end
-        end
-    end
-    return nothing
-end
-
-function compute_forbidden_vertices(solution::Solution, mapf::MAPF)
-    forbidden_vertices = Reservation()
-    for a in 1:nb_agents(mapf)
-        path = solution[a]
-        update_forbidden_vertices!(forbidden_vertices, path, mapf::MAPF)
-    end
-    return forbidden_vertices
-end
-
 function cooperative_astar!(
     solution::Solution,
     agents::AbstractVector{Int},
     mapf::MAPF,
     edge_weights::AbstractVector=mapf.edge_weights,
 )
-    forbidden_vertices = compute_forbidden_vertices(solution, mapf)
+    forbidden_vertices = compute_reservation(solution, mapf)
     @showprogress for a in agents
         s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
         dist = mapf.distances_to_destinations[d]
@@ -40,7 +20,7 @@ function cooperative_astar!(
             forbidden_vertices=forbidden_vertices,
         )
         solution[a] = path
-        update_forbidden_vertices!(forbidden_vertices, path, mapf)
+        update_reservation(forbidden_vertices, path, mapf)
     end
 end
 

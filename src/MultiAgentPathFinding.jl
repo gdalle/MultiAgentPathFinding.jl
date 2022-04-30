@@ -13,11 +13,9 @@ using PythonCall
 using Random
 using Requires
 using Statistics
+using StatsBase
 using SparseArrays
 using UnicodePlots
-using UnPack
-
-import StatsBase: sample
 
 ## Includes
 
@@ -26,6 +24,7 @@ include("mapf.jl")
 include("utils/eval_sol.jl")
 include("utils/priority_queue.jl")
 include("utils/conflicts.jl")
+include("utils/reservation.jl")
 include("utils/vectorize.jl")
 
 include("paths/dijkstra.jl")
@@ -35,9 +34,11 @@ include("paths/independent_shortest_paths.jl")
 
 include("exact_methods/conflict_based_search.jl")
 
+include("local_search/neighborhood.jl")
 include("local_search/large_neighborhood_search.jl")
 include("local_search/feasibility_search.jl")
 include("local_search/permutation_search.jl")
+include("local_search/safe_interval.jl")
 
 include("learning/features_agents.jl")
 include("learning/features_edges.jl")
@@ -66,13 +67,14 @@ export path_to_vec, solution_to_mat, solution_to_mat2
 export my_dijkstra_shortest_paths
 export temporal_astar
 export independent_astar, independent_dijkstra, independent_topological_sort
-export compute_forbidden_vertices
+export compute_reservation
 export cooperative_astar!, cooperative_astar
 
 export conflict_based_search
 
 export local_search_permutations, feasibility_search!
 export large_neighborhood_search, large_neighborhood_search!
+export cooperative_SIPPS!, large_neighborhood_search2!
 
 export agents_embedding
 export edges_embedding
