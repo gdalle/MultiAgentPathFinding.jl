@@ -2,8 +2,9 @@ module MultiAgentPathFinding
 
 ## Dependencies
 
-using DataGraphs
 using DataFrames
+using DataGraphs
+using DataStructures
 using FillArrays
 using Graphs
 using LinearAlgebra
@@ -22,7 +23,6 @@ using UnicodePlots
 include("mapf.jl")
 
 include("utils/eval_sol.jl")
-include("utils/priority_queue.jl")
 include("utils/conflicts.jl")
 include("utils/reservation.jl")
 include("utils/vectorize.jl")
@@ -38,7 +38,6 @@ include("local_search/neighborhood.jl")
 include("local_search/large_neighborhood_search.jl")
 include("local_search/feasibility_search.jl")
 include("local_search/permutation_search.jl")
-include("local_search/safe_interval.jl")
 
 include("learning/features_agents.jl")
 include("learning/features_edges.jl")

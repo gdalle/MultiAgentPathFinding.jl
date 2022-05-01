@@ -11,7 +11,7 @@ function my_dijkstra_shortest_paths(
 ) where {T<:Integer, W<:Real}
     dists = fill(typemax(W), nv(g))
     parents = zeros(T, nv(g))
-    Q = VectorPriorityQueue{T,W}()
+    Q = PriorityQueue{T,W}()
 
     dists[s] = zero(W)
     enqueue!(Q, s, zero(W))

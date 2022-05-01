@@ -19,7 +19,7 @@ line_generator = line_generators.sparse_line_generator()
 pyenv = rail_env.RailEnv(;
     width=40,
     height=40,
-    number_of_agents=50,
+    number_of_agents=100,
     rail_generator=rail_generator,
     line_generator=line_generator,
     random_seed=11,
@@ -42,9 +42,13 @@ solution_indep_feasible = feasibility_search!(copy(solution_indep), mapf);
 is_feasible(solution_indep_feasible, mapf)
 flowtime(solution_indep_feasible, mapf)
 
-solution_coop = cooperative_astar(mapf, collect(1:nb_agents(mapf)));
+solution_coop = cooperative_astar(mapf);
 is_feasible(solution_coop, mapf)
 flowtime(solution_coop, mapf)
+
+solution_coop_soft = cooperative_astar(mapf; soft=true);
+is_feasible(solution_coop_soft, mapf)
+flowtime(solution_coop_soft, mapf)
 
 solution_lns = large_neighborhood_search!(
     copy(solution_indep_feasible), mapf; N=5, steps=100

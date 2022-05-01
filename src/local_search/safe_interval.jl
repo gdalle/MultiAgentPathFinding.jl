@@ -79,7 +79,7 @@ function compare_with_identical!(X::Vector{SIPPSNode}, n::SIPPSNode)
     return true, indices_to_delete
 end
 
-function insert_node!(Q::VectorPriorityQueue{SIPPSNode}, P::Vector{SIPPSNode}, n::SIPPSNode)
+function insert_node!(Q::PriorityQueue{SIPPSNode}, P::Vector{SIPPSNode}, n::SIPPSNode)
     Q_keep_n, Q_indices_to_delete = compare_with_identical!(keys(Q), n)
     P_keep_n, P_indices_to_delete = compare_with_identical!(P, n)
     deleteat!(Q, Q_indices_to_delete)
@@ -91,7 +91,7 @@ function insert_node!(Q::VectorPriorityQueue{SIPPSNode}, P::Vector{SIPPSNode}, n
 end
 
 function expand_node!(
-    Q::VectorPriorityQueue{SIPPSNode},
+    Q::PriorityQueue{SIPPSNode},
     P::Vector{SIPPSNode},
     n::SIPPSNode,
     g::AbstractGraph,
@@ -146,7 +146,7 @@ function SIPPS(
         parent=nothing,
     )
 
-    Q = VectorPriorityQueue{SIPPSNode,Tuple{Int,Float64}}()
+    Q = PriorityQueue{SIPPSNode,Tuple{Int,Float64}}()
     P = SIPPSNode[]
     enqueue!(Q, root, (root.c, root.f))
 
@@ -193,35 +193,4 @@ function cooperative_SIPPS!(solution::Solution, mapf::MAPF; agents=1:nb_agents(m
         solution[a] = path
         update_reservation(reservation, path, mapf)
     end
-end
-
-function large_neighborhood_search2!(solution::Solution, mapf::MAPF; N=1)
-    A = nb_agents(mapf)
-    pathless_agents = shuffle([a for a in 1:A if length(solution[a]) == 0])
-    cooperative_SIPPS!(solution, mapf; agents=pathless_agents)
-    cp = colliding_pairs(solution, mapf)
-    prog = ProgressUnknown("LNS2 steps: ")
-    # while !is_feasible(solution, mapf)
-    for k = 1:5
-        next!(prog, showvalues=[(:colliding_pairs, cp)])
-        neighborhood_agents = random_neighborhood_collision_degree(solution, mapf, N)
-        backup = remove_agents!(solution, neighborhood_agents)
-        cooperative_SIPPS!(solution, mapf; agents=neighborhood_agents)
-        new_cp = colliding_pairs(solution, mapf)
-        @info "Comparison" cp new_cp
-        if is_feasible(solution, mapf) || (new_cp <= cp)  # keep
-            cp = new_cp
-        else  # revert
-            for a in neighborhood_agents
-                solution[a] = backup[a]
-            end
-        end
-    end
-    return solution
-end
-
-function large_neighborhood_search2(mapf::MAPF; N=1)
-    solution = independent_dijkstra(mapf)
-    large_neighborhood_search2!(solution, mapf; N=N)
-    return solution
 end
