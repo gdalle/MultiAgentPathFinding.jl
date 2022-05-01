@@ -2,12 +2,12 @@ function compute_reservation(solution::Solution, mapf::MAPF; agents=1:nb_agents(
     reservation = Reservation()
     for a in agents
         path = solution[a]
-        update_reservation(reservation, path, mapf::MAPF)
+        update_reservation!(reservation, path, mapf::MAPF)
     end
     return reservation
 end
 
-function update_reservation(reservation::Reservation, path::Path, mapf::MAPF)
+function update_reservation!(reservation::Reservation, path::Path, mapf::MAPF)
     for (t, v) in path
         for g in mapf.group_memberships[v]
             for w in mapf.conflict_groups[g]
