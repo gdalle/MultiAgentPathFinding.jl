@@ -13,7 +13,7 @@ rail_generators = pyimport("flatland.envs.rail_generators")
 line_generators = pyimport("flatland.envs.line_generators")
 rail_env = pyimport("flatland.envs.rail_env")
 
-rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=8)
+rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=6)
 line_generator = line_generators.sparse_line_generator()
 
 pyenv = rail_env.RailEnv(;
@@ -34,25 +34,25 @@ solution_indep = independent_astar(mapf);
 is_feasible(solution_indep, mapf)
 flowtime(solution_indep, mapf)
 
-# solution_indep2 = independent_dijkstra(mapf);
-# is_feasible(solution_indep2, mapf)
-# flowtime(solution_indep2, mapf)
+solution_indep2 = independent_dijkstra(mapf);
+is_feasible(solution_indep2, mapf)
+flowtime(solution_indep2, mapf)
 
-# solution_indep_feasible = feasibility_search!(copy(solution_indep), mapf);
-# is_feasible(solution_indep_feasible, mapf)
-# flowtime(solution_indep_feasible, mapf)
+solution_lns2 = feasibility_search(
+    mapf; neighborhood_size=5, conflict_price=1, conflict_price_increase=1e-2
+);
+is_feasible(solution_lns2, mapf)
+flowtime(solution_lns2, mapf)
 
 solution_coop = cooperative_astar(mapf);
 is_feasible(solution_coop, mapf)
 flowtime(solution_coop, mapf)
 
-solution_coop_soft = cooperative_astar(mapf; conflict_price=10000.);
+solution_coop_soft = cooperative_astar(mapf; conflict_price=100);
 is_feasible(solution_coop_soft, mapf)
 flowtime(solution_coop_soft, mapf)
 
-solution_lns = large_neighborhood_search!(
-    copy(solution_indep_feasible), mapf; N=5, steps=100
-);
+solution_lns = large_neighborhood_search(mapf; neighborhood_size=5, steps=1000);
 is_feasible(solution_lns, mapf)
 flowtime(solution_lns, mapf)
 

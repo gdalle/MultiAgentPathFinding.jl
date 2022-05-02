@@ -42,15 +42,15 @@ include("local_search/permutation_search.jl")
 include("learning/features_agents.jl")
 include("learning/features_edges.jl")
 
-include("flatland/constants.jl")
-include("flatland/agent.jl")
-include("flatland/graph.jl")
-include("flatland/utils.jl")
-include("flatland/mapf.jl")
+include("datasets/flatland/constants.jl")
+include("datasets/flatland/agent.jl")
+include("datasets/flatland/graph.jl")
+include("datasets/flatland/utils.jl")
+include("datasets/flatland/mapf.jl")
 
-include("benchmarks/read.jl")
-include("benchmarks/graph.jl")
-include("benchmarks/mapf.jl")
+include("datasets/benchmarks/read.jl")
+include("datasets/benchmarks/graph.jl")
+include("datasets/benchmarks/mapf.jl")
 
 ## Exports
 
@@ -71,9 +71,9 @@ export cooperative_astar!, cooperative_astar
 
 export conflict_based_search
 
-export local_search_permutations, feasibility_search!
+export local_search_permutations
+export feasibility_search!, feasibility_search
 export large_neighborhood_search, large_neighborhood_search!
-export cooperative_SIPPS!, large_neighborhood_search2!
 
 export agents_embedding
 export edges_embedding

@@ -21,59 +21,53 @@ function temporal_astar(
     conflict_price=Inf,
 ) where {V,W}
     T = Int
+    safe_conflict_price = conflict_price * (conflict_price < Inf)
 
     # Initialize storage
     came_from = Dict{Tuple{T,V},Tuple{T,V}}()
-    dist = Dict{Tuple{T,V},W}()
+    distance = Dict{Tuple{T,V},W}()
     conflicts = Dict{Tuple{T,V},Int}()
-    open_set = PriorityQueue{Tuple{T,V},Float64}()
+    queue = PriorityQueue{Tuple{T,V},Float64}()
 
     # Add first node to storage
-    first_node = (t0, s)
-    first_node_dist = zero(W)
-    first_node_conflicts = Int(first_node in reservation)
-    first_node_priority = (
-        conflict_price * (conflict_price < Inf) * first_node_conflicts + heuristic(s)
-    )
-    dist[first_node] = first_node_dist
-    conflicts[first_node] = first_node_conflicts
-    enqueue!(open_set, first_node, first_node_priority)
+    distance_s = zero(W)
+    conflicts_s = Int((t0, s) in reservation)
+    if conflicts_s == 0 || conflict_price < Inf
+        priority_s = safe_conflict_price * conflicts_s + heuristic(s)
+        distance[(t0, s)] = distance_s
+        conflicts[(t0, s)] = conflicts_s
+        enqueue!(queue, (t0, s), priority_s)
+    end
 
     # Explore
     nodes_explored = 0
-    while !isempty(open_set)
-        (t, v) = dequeue!(open_set)
+    while !isempty(queue)
+        (t, v) = dequeue!(queue)
         nodes_explored += 1
-        conflict_price == Inf && (t, v) in reservation && continue
-        if v == d  # optimal path found
-            return build_astar_path(came_from, t, v, t0)
-        else  # explore neighbors (possibly including v)
-            for w in outneighbors(g, v)
-                rest_dist = heuristic(w)
-                rest_dist == typemax(W) && continue
+        (v == d) && return build_astar_path(came_from, t, v, t0)
 
-                e_vw = edge_indices[(v, w)]
-                weight_vw = edge_weights[e_vw]
-                conflict_vw = Int((t + 1, w) in reservation)
+        for w in outneighbors(g, v)
+            heur_w = heuristic(w)
 
-                old_dist = get(dist, (t + 1, w), Inf)
-                old_conflicts = get(conflicts, (t + 1, w), typemax(Int))
+            e_vw = edge_indices[(v, w)]
+            weight_vw = edge_weights[e_vw]
+            conflict_vw = Int((t + 1, w) in reservation)
 
-                new_dist = dist[(t, v)] + weight_vw
-                new_conflicts = conflicts[(t, v)] + conflict_vw
+            distance_w = distance[(t, v)] + weight_vw
+            conflicts_w = conflicts[(t, v)] + conflict_vw
 
-                old_cost = (
-                    conflict_price * (conflict_price < Inf) * old_conflicts + old_dist
-                )
-                new_cost = (
-                    conflict_price * (conflict_price < Inf) * new_conflicts + new_dist
-                )
+            if conflicts_w == 0 || conflict_price < Inf
+                old_distance_w = get(distance, (t + 1, w), Inf)
+                old_conflicts_w = get(conflicts, (t + 1, w), typemax(Int) ÷ 2)
 
-                if new_cost < old_cost
+                old_cost_w = (safe_conflict_price * old_conflicts_w + old_distance_w)
+                cost_w = (safe_conflict_price * conflicts_w + distance_w)
+
+                if cost_w < old_cost_w
                     came_from[(t + 1, w)] = (t, v)
-                    dist[(t + 1, w)] = new_dist
-                    conflicts[(t + 1, w)] = new_conflicts
-                    open_set[(t + 1, w)] = new_cost + rest_dist
+                    distance[(t + 1, w)] = distance_w
+                    conflicts[(t + 1, w)] = conflicts_w
+                    queue[(t + 1, w)] = cost_w + heur_w
                 end
             end
         end
