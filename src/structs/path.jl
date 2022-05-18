@@ -1,3 +1,17 @@
+"""
+    Path
+
+Vector of tuples `(t,v)` corresponding to a timed path through a graph.
+"""
+const Path = Vector{Tuple{Int,Int}}
+
+"""
+    Solution
+
+Vector of `Path`s, one for each agent of a [`MAPF`](@ref).
+"""
+const Solution = Vector{Path}
+
 function path_to_vec(path::Path, mapf::MAPF; T=nothing)
     g = mapf.graph
     edge_indices = mapf.edge_indices

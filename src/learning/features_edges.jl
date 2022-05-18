@@ -1,11 +1,12 @@
 function constant_features_edge(s::Integer, d::Integer, mapf::MAPF)
     g = mapf.graph
-    outdeg_s = outdegree(g, s)
     indeg_s = indegree(g, s)
-    outdeg_d = outdegree(g, d)
+    outdeg_s = outdegree(g, s)
     indeg_d = indegree(g, d)
+    outdeg_d = outdegree(g, d)
     rev_edge_exists = has_edge(g, d, s)
-    return Float64[outdeg_s, outdeg_d]
+    edge_weight = mapf.edge_weights[mapf.edge_indices[s, d]]
+    return Float64[edge_weight, indeg_s, outdeg_s, indeg_d, outdeg_d]
 end
 
 function solution_features_edge(s::Integer, d::Integer, solution::Solution, mapf::MAPF)
@@ -14,18 +15,43 @@ function solution_features_edge(s::Integer, d::Integer, solution::Solution, mapf
     paths_crossing_d = 0
     paths_crossing_e = 0
     for path in solution
-        for ((t1, v1), (t2, v2)) in zip(path[1:(end - 1)], path[2:end])
+        n = length(path)
+        for ((t1, v1), (t2, v2)) in zip(view(path, 1:(n - 1)), view(path, 2:n))
             paths_crossing_s += (v1 == s) + (v2 == s)
             paths_crossing_d += (v1 == d) + (v2 == d)
             paths_crossing_e += (v1 == s && v2 == d)
         end
     end
-    return Float64[paths_crossing_s, paths_crossing_d]
+    return Float64[paths_crossing_s, paths_crossing_d, paths_crossing_e]
+end
+
+function joint_features_edge_agent(
+    s::Integer, d::Integer, a::Integer, solution::Solution, mapf::MAPF
+)
+    belongs_to_path = false
+    path = solution[a]
+    n = length(path)
+    for ((t1, v1), (t2, v2)) in zip(view(path, 1:(n - 1)), view(path, 2:n))
+        if (v1, v2) == (s, d)
+            belongs_to_path = true
+        end
+    end
+    return Float64[belongs_to_path]
 end
 
 function all_features_edge(s::Integer, d::Integer, solution::Solution, mapf::MAPF)
     return vcat(
         constant_features_edge(s, d, mapf), solution_features_edge(s, d, solution, mapf)
+    )
+end
+
+function all_features_edge_agent(
+    s::Integer, d::Integer, a::Integer, solution::Solution, mapf::MAPF
+)
+    return vcat(
+        constant_features_edge(s, d, mapf),
+        solution_features_edge(s, d, solution, mapf),
+        joint_features_edge_agent(s, d, a, solution, mapf),
     )
 end
 

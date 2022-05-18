@@ -1,8 +1,19 @@
-## Between vertices
+## Between vertices / edges
 
 function conflicting_vertices(v1::Integer, v2::Integer, mapf::MAPF)
-    for g1 in mapf.group_memberships[v1]
-        if v2 in mapf.conflict_groups[g1]
+    for g1 in mapf.vertex_group_memberships[v1]
+        if insorted(v2, mapf.vertex_groups[g1])
+            return true
+        end
+    end
+    return false
+end
+
+function conflicting_edges((u1, v1)::NTuple{2,<:Integer}, (u2, v2)::NTuple{2,<:Integer}, mapf::MAPF)
+    e1 = mapf.edge_indices[u1, v1]
+    e2 = mapf.edge_indices[u2, v2]
+    for g1 in mapf.edge_group_memberships[e1]
+        if insorted(e2, mapf.edge_groups[g1])
             return true
         end
     end

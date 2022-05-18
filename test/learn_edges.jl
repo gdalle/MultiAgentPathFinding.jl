@@ -5,8 +5,8 @@ using Flux
 using Graphs
 using InferOpt
 using MultiAgentPathFinding
-using PythonCall
 using ProgressMeter
+using PythonCall
 using SparseArrays
 using UnicodePlots
 using Base.Threads;
@@ -22,9 +22,9 @@ rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=3)
 line_generator = line_generators.sparse_line_generator()
 
 pyenv = rail_env.RailEnv(;
-    width=30,
-    height=30,
-    number_of_agents=20,
+    width=35,
+    height=35,
+    number_of_agents=50,
     rail_generator=rail_generator,
     line_generator=line_generator,
     random_seed=11,
@@ -35,7 +35,7 @@ mapf = flatland_mapf(pyenv);
 
 ## Data generation
 
-nb_instances = 100
+nb_instances = 1
 
 instances = Vector{typeof(flatland_mapf(pyenv))}(undef, nb_instances);
 @showprogress "Generating instances: " for k in 1:nb_instances
@@ -46,12 +46,9 @@ end
 solutions = Vector{Solution}(undef, nb_instances);
 @threads for k in 1:nb_instances
     @info "Instance $k solved by thread $(threadid())"
-    solutions[k] = large_neighborhood_search(instances[k]; N=10, steps=100, progress=false)
-end
-
-solutions_naive = Vector{Solution}(undef, nb_instances);
-@showprogress for k in 1:nb_instances
-    solutions_naive[k] = cooperative_astar(instances[k])
+    solutions[k] = large_neighborhood_search(
+        instances[k]; neighborhood_size=5, steps=100, progress=false
+    )
 end
 
 A = nb_agents(instances[1])
@@ -67,20 +64,16 @@ end
 
 ## Initialization
 
-turn_negative(z) = -exp.(z) .- 1.0
+turn_negative(z) = -exp.(z) .- 1
 repeat_agents(z::AbstractArray) = repeat(z; outer=(1, A))
 
-encoder = Chain(Dense(size(X[1], 1), 1), vec, turn_negative, repeat_agents)
+initial_encoder = Chain(Dense(size(X[1], 1), 1), vec, turn_negative, repeat_agents)
+encoder = deepcopy(initial_encoder)
 par = Flux.params(encoder)
 
-fenchel_young_loss = FenchelYoungLoss(Perturbed(maximizer; ε=0.1, M=5));
+fenchel_young_loss = FenchelYoungLoss(Perturbed(maximizer; ε=0.2, M=5));
 
 opt = ADAGrad();
-
-k = 1
-θ = encoder(X[k])
-maximizer(encoder(X[k]); mapf=instances[k])
-fenchel_young_loss(encoder(X[k]), Y[k]; mapf=instances[k]) / nb_instances
 
 ## Training
 
@@ -103,18 +96,25 @@ encoder[1].weight
 
 ## Eval
 
-solutions_pred = Vector{Solution}(undef, nb_instances);
-@showprogress for k in 1:nb_instances
+costs_opt = [flowtime(solution, mapf) for (solution, mapf) in zip(solutions, instances)]
+
+nb_trials = 5
+
+costs_pred_init = zeros(nb_instances);
+costs_pred_final = zeros(nb_instances);
+@threads for k in 1:nb_instances
     mapf = instances[k]
-    solution = independent_dijkstra(mapf, -encoder(X[k]))
-    feasibility_search!(solution, mapf)
-    solutions_pred[k] = solution
+    for _ = 1:nb_trials
+        solution_pred_init = independent_dijkstra(mapf, -encoder(X[k]))
+        solution_pred_final = independent_dijkstra(mapf, -initial_encoder(X[k]))
+        feasibility_search!(solution_pred_init, mapf; neighborhood_size=5, progress=false)
+        feasibility_search!(solution_pred_final, mapf; neighborhood_size=5, progress=false)
+        costs_pred_init[k] += flowtime(solution_pred_init, mapf) / nb_trials
+        costs_pred_final[k] += flowtime(solution_pred_final, mapf) / nb_trials
+    end
+    @info "Instance $k solved by thread $(threadid())"
 end
 
-for k = 1:nb_instances
-    mapf = instances[k]
-    sol_naive = solutions_naive[k]
-    sol_pred = solutions_pred[k]
-    sol = solutions[k]
-    @info "Solution comparison" flowtime(sol_naive, mapf) flowtime(sol_pred, mapf) flowtime(sol, mapf)
-end
+barplot((1:nb_instances), costs_opt, bar_width=0.3, label="optimal")
+barplot((1:nb_instances) .+ 0.3, costs_pred_final, bar_width=0.3, label="after_learning")
+barplot((1:nb_instances) .+ 0.6, costs_pred_init, bar_width=0.3, label="before_learning")

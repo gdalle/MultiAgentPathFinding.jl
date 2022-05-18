@@ -31,7 +31,7 @@ function temporal_astar(
 
     # Add first node to storage
     distance_s = zero(W)
-    conflicts_s = Int((t0, s) in reservation)
+    conflicts_s = is_forbidden_vertex(reservation, t0, s)
     if conflicts_s == 0 || conflict_price < Inf
         priority_s = safe_conflict_price * conflicts_s + heuristic(s)
         distance[(t0, s)] = distance_s
@@ -51,7 +51,7 @@ function temporal_astar(
 
             e_vw = edge_indices[(v, w)]
             weight_vw = edge_weights[e_vw]
-            conflict_vw = Int((t + 1, w) in reservation)
+            conflict_vw = is_forbidden_vertex(reservation, t + 1, w)
 
             distance_w = distance[(t, v)] + weight_vw
             conflicts_w = conflicts[(t, v)] + conflict_vw

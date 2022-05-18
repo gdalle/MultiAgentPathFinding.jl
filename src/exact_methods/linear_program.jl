@@ -1,4 +1,4 @@
-function solve_lp(mapf::MAPF; T::Integer, integer=false, capacity=true)
+function solve_lp(mapf::MAPF, optimizer; T::Integer, integer=false, capacity=true)
     @assert all(<=(T), mapf.starting_times)
 
     g = mapf.graph
@@ -7,7 +7,7 @@ function solve_lp(mapf::MAPF; T::Integer, integer=false, capacity=true)
     A = nb_agents(mapf)
     V, E = nv(g), ne(g)
 
-    model = Model(SCIP.Optimizer)
+    model = Model(optimizer)
 
     @variable(model, x[1:A, 1:(T - 1), 1:E])
     @variable(model, y[1:A, 1:T, 1:V])

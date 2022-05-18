@@ -3,12 +3,11 @@ module MultiAgentPathFinding
 ## Dependencies
 
 using DataFrames
-using DataGraphs
 using DataStructures
 using FillArrays
 using Graphs
 using LinearAlgebra
-using OffsetArrays
+using MetaDataGraphs
 using ProgressMeter
 using PythonCall
 using Random
@@ -20,17 +19,19 @@ using UnicodePlots
 
 ## Includes
 
-include("mapf.jl")
+include("structs/mapf.jl")
+include("structs/path.jl")
+include("structs/reservation.jl")
 
-include("utils/eval_sol.jl")
-include("utils/conflicts.jl")
-include("utils/reservation.jl")
-include("utils/vectorize.jl")
+include("eval/conflicts.jl")
+include("eval/feasibility.jl")
+include("eval/cost.jl")
 
 include("paths/dijkstra.jl")
+include("paths/independent_dijkstra.jl")
 include("paths/temporal_astar.jl")
+include("paths/independent_astar.jl")
 include("paths/cooperative_astar.jl")
-include("paths/independent_shortest_paths.jl")
 
 include("exact_methods/conflict_based_search.jl")
 
@@ -63,7 +64,7 @@ export find_conflict, conflict_exists, count_conflicts
 export is_feasible
 export path_to_vec, solution_to_mat, solution_to_mat2
 
-export my_dijkstra_shortest_paths
+export my_dijkstra
 export temporal_astar
 export independent_astar, independent_dijkstra, independent_topological_sort
 export compute_reservation
@@ -89,20 +90,15 @@ export benchmark_mapf
 function __init__()
     @require GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a" begin
         using .GLMakie
-        include("flatland/plot.jl")
+        include("datasets/flatland/plot.jl")
+        include("datasets/benchmarks/plot.jl")
         export plot_flatland_graph, flatland_agent_coords
-    end
-    @require Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0" begin
-        using .Images
-        include("benchmarks/plot.jl")
         export display_map
     end
     @require JuMP = "4076af6c-e467-56ae-b986-b466b2749572" begin
-        @require SCIP = "82193955-e24f-5292-bf16-6f2c5261a85f" begin
-            using .JuMP, .SCIP
-            include("exact_methods/linear_program.jl")
-            export solve_lp
-        end
+        using .JuMP
+        include("exact_methods/linear_program.jl")
+        export solve_lp
     end
 end
 
