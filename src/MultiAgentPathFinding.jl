@@ -2,10 +2,13 @@ module MultiAgentPathFinding
 
 ## Dependencies
 
+using ColorTypes
 using DataFrames
+using DataFramesMeta
 using DataStructures
 using FillArrays
 using Graphs
+using GridGraphs
 using LinearAlgebra
 using MetaDataGraphs
 using ProgressMeter
@@ -50,7 +53,6 @@ include("datasets/flatland/utils.jl")
 include("datasets/flatland/mapf.jl")
 
 include("datasets/benchmarks/read.jl")
-include("datasets/benchmarks/graph.jl")
 include("datasets/benchmarks/mapf.jl")
 
 ## Exports
@@ -81,8 +83,8 @@ export edges_embedding
 
 export flatland_mapf
 
-export read_map, read_scenario
-export GridGraph, shortest_path_grid
+export read_benchmark_map, read_benchmark_scenario
+export display_benchmark_map
 export benchmark_mapf
 
 ## Conditional dependencies

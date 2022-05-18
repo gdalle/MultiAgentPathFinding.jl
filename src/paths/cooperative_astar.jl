@@ -4,9 +4,13 @@ function cooperative_astar!(
     mapf::MAPF,
     edge_weights::AbstractVector=mapf.edge_weights;
     conflict_price=Inf,
+    show_progress=false,
 )
+    A = nb_agents(mapf)
     reservation = compute_reservation(solution, mapf)
-    @showprogress for a in agents
+    prog = Progress(A; enabled=show_progress)
+    for a in agents
+        next!(prog)
         s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
         dist = mapf.distances_to_destinations[d]
         heuristic(v) = dist[v]
@@ -31,10 +35,16 @@ function cooperative_astar(
     permutation::AbstractVector{Int}=1:nb_agents(mapf),
     edge_weights::AbstractVector=mapf.edge_weights;
     conflict_price=Inf,
+    show_progress=false,
 )
     solution = [Path() for a in 1:nb_agents(mapf)]
     cooperative_astar!(
-        solution, permutation, mapf, edge_weights; conflict_price=conflict_price
+        solution,
+        permutation,
+        mapf,
+        edge_weights;
+        conflict_price=conflict_price,
+        show_progress=show_progress,
     )
     return solution
 end

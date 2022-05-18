@@ -1,36 +1,28 @@
-function display_map(map_matrix::Matrix{Char}; path=nothing)
+function display_benchmark_map(map_matrix::Matrix{Char})
     height, width = size(map_matrix)
     map_colors = Matrix{RGB}(undef, height, width)
     for i in 1:height, j in 1:width
         c = map_matrix[i, j]
-        if c == '.'
+        if c == '.'  # empty => white
             x = RGB(1.0, 1.0, 1.0)
-        elseif c == 'G'
+        elseif c == 'G'  # empty => white
             x = RGB(1.0, 1.0, 1.0)
-        elseif c == 'S'
+        elseif c == 'S'  # shallow water => brown
             x = RGB(0.4, 0.4, 0.0)
-        elseif c == 'W'
+        elseif c == 'W'  # water => blue
             x = RGB(0.0, 0.0, 1.0)
-        elseif c == 'T'
+        elseif c == 'T'  # trees => green
             x = RGB(0.0, 0.7, 0.0)
-        elseif c == '@'
+        elseif c == '@'  # wall => black
             x = RGB(0.0, 0.0, 0.0)
-        elseif c == 'O'
+        elseif c == 'O'  # wall => black
             x = RGB(0.0, 0.0, 0.0)
-        else
+        else  # ? => black
             x = RGB(0.0, 0.0, 0.0)
         end
         map_colors[i, j] = x
     end
-    if !isnothing(path)
-        g = GridGraph(map_matrix)
-        for ed in path
-            s, d = src(ed), dst(ed)
-            (is, js) = node_coord(g, s)
-            (id, jd) = node_coord(g, d)
-            map_colors[is, js] = RGB(1., 0., 0.)
-            map_colors[id, jd] = RGB(1., 0., 0.)
-        end
-    end
-    return map_colors
+    return image(
+        map_colors; interpolate=false, axis=(aspect=DataAspect(), yreversed=true)
+    )
 end

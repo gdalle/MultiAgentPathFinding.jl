@@ -44,7 +44,10 @@ function temporal_astar(
     while !isempty(queue)
         (t, v) = dequeue!(queue)
         nodes_explored += 1
-        (v == d) && return build_astar_path(came_from, t, v, t0)
+
+        if v == d
+            return build_astar_path(came_from, t, v, t0)
+        end
 
         for w in outneighbors(g, v)
             heur_w = heuristic(w)

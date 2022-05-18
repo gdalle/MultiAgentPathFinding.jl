@@ -9,8 +9,12 @@ function build_dijkstra_path_rev(spt::ShortestPathTree, t0::Integer, s::Integer,
     path = [(t, v)]
     while v != d
         v = parents[v]
-        t += 1
-        push!(path, (t, v))
+        if v == zero(v)
+            return Path()
+        else
+            t += 1
+            push!(path, (t, v))
+        end
     end
     return path
 end

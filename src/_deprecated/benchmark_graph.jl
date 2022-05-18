@@ -4,7 +4,6 @@ struct GridGraph <: AbstractGraph{Int}
     grid::Matrix{Char}
 end
 
-is_passable(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 
 function node_index(g::GridGraph, i::Integer, j::Integer)
     n, m = size(g)

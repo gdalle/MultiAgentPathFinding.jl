@@ -1,22 +1,20 @@
+using GridGraphs
 using MultiAgentPathFinding
+using GLMakie
+Makie.inline!(true)
 
-map_path = joinpath("data", "room-map", "64room_000.map")
-scen_path = joinpath("data", "room-scen", "64room_000.map.scen")
+map_path = joinpath("data", "dao-map", "brc101d.map")
+scen_path = joinpath("data", "dao-scen", "brc101d.map.scen")
 
-map_matrix = read_map(map_path);
-scenario = read_scenario(scen_path);
+char_matrix = read_benchmark_map(map_path);
+scenario = read_benchmark_scenario(scen_path);
 
-display_map(map_matrix)
+# display_benchmark_map(char_matrix)
 
-g = GridGraph(map_matrix)
+mapf = benchmark_mapf(map_path, scen_path; bucket=1);
+g = mapf.graph
+cc = connected_components(g);
+bigcc = cc[argmax(length.(cc))];
 
-agent = scenario[rand(1:size(scenario, 1)), :]
-(is, js) = agent.start_i, agent.start_j
-(id, jd) = agent.goal_i, agent.goal_j
-path = shortest_path_grid(g, (is, js), (id, jd))
-
-display_map(map_matrix; path=path)
-
-mapf = benchmark_mapf(map_matrix, scenario; bucket=3)
-
-cooperative_astar(mapf)
+independent_dijkstra(mapf)
+independent_astar(mapf; show_progress=true)

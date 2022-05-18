@@ -1,23 +1,23 @@
-function read_map(path)
-    lines = open(path, "r") do file
+function read_benchmark_map(map_path::AbstractString)
+    lines = open(map_path, "r") do file
         readlines(file)
     end
     height_line = split(lines[2])
     width_line = split(lines[3])
     height = parse(Int, height_line[2])
     width = parse(Int, width_line[2])
-    map_matrix = Matrix{Char}(undef, height, width)
+    char_matrix = Matrix{Char}(undef, height, width)
     for i in 1:height
         line = lines[4 + i]
         for j in 1:width
-            map_matrix[i, j] = line[j]
+            char_matrix[i, j] = line[j]
         end
     end
-    return map_matrix
+    return char_matrix
 end
 
-function read_scenario(path)
-    lines = open(path, "r") do file
+function read_benchmark_scenario(scen_path::AbstractString; map_path=nothing)
+    lines = open(scen_path, "r") do file
         readlines(file)
     end
     scenario = DataFrame(;
@@ -37,16 +37,16 @@ function read_scenario(path)
         map = line_split[2]
         width = parse(Int, line_split[3])
         height = parse(Int, line_split[4])
-        start_x = parse(Int, line_split[5]) + 1
-        start_y = parse(Int, line_split[6]) + 1
-        goal_x = parse(Int, line_split[7]) + 1
-        goal_y = parse(Int, line_split[8]) + 1
+        start_x = parse(Int, line_split[5])
+        start_y = parse(Int, line_split[6])
+        goal_x = parse(Int, line_split[7])
+        goal_y = parse(Int, line_split[8])
         optimal_length = parse(Float64, line_split[9])
 
-        start_i = height - start_y + 1
-        start_j = start_x
-        goal_i = height - goal_y + 1
-        goal_j = goal_x
+        start_i = start_y + 1
+        start_j = start_x + 1
+        goal_i = goal_y + 1
+        goal_j = goal_x + 1
 
         line_tup = (
             bucket=bucket,
