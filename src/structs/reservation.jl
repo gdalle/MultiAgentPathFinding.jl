@@ -31,10 +31,8 @@ end
 
 function update_reservation!(reservation::Reservation, path::Path, mapf::MAPF)
     for (t, u) in path
-        for g in mapf.vertex_group_memberships[u]
-            for v in mapf.vertex_groups[g]
-                push!(reservation.forbidden_vertices, (t, v))
-            end
+        for v in mapf.vertex_conflict_lister(mapf, u)
+            push!(reservation.forbidden_vertices, (t, v))
         end
     end
     return nothing

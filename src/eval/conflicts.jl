@@ -1,31 +1,9 @@
-## Between vertices / edges
-
-function conflicting_vertices(v1::Integer, v2::Integer, mapf::MAPF)
-    for g1 in mapf.vertex_group_memberships[v1]
-        if insorted(v2, mapf.vertex_groups[g1])
-            return true
-        end
-    end
-    return false
-end
-
-function conflicting_edges((u1, v1)::NTuple{2,<:Integer}, (u2, v2)::NTuple{2,<:Integer}, mapf::MAPF)
-    e1 = mapf.edge_indices[u1, v1]
-    e2 = mapf.edge_indices[u2, v2]
-    for g1 in mapf.edge_group_memberships[e1]
-        if insorted(e2, mapf.edge_groups[g1])
-            return true
-        end
-    end
-    return false
-end
-
 ## Between paths
 
 function find_conflict(path1::Path, path2::Path, mapf::MAPF; tol=0)
     for (t1, v1) in path1
         for (t2, v2) in path2
-            if (abs(t1 - t2) <= tol) && conflicting_vertices(v1, v2, mapf)
+            if (abs(t1 - t2) <= tol) && (v2 in mapf.vertex_conflict_lister(mapf, v1))
                 return (t1, v1), (t2, v2)
             end
         end
@@ -40,7 +18,7 @@ end
 function count_conflicts(path1::Path, path2::Path, mapf::MAPF; tol=0)
     c = 0
     for (t1, v1) in path1, (t2, v2) in path2
-        if (abs(t1 - t2) <= tol) && conflicting_vertices(v1, v2, mapf)
+        if (abs(t1 - t2) <= tol) && (v2 in mapf.vertex_conflict_lister(mapf, v1))
             c += 1
         end
     end

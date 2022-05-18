@@ -2,25 +2,8 @@
     MAPF{G}
 
 Instance of a Multi-Agent PathFinding problem.
-
-# Fields
-
-- `graph::G`
-- `rev_graph::G`
-- `edge_indices::Dict{Tuple{Int,Int},Int}`
-- `rev_edge_indices::Dict{Tuple{Int,Int},Int}`
-- `edge_weights::Vector{Float64}`
-- `edge_weights_mat::SparseMatrixCSC{Float64,Int64}`
-- `vertex_groups::Vector{Vector{Int}}`
-- `edge_groups::Vector{Vector{Int}}`
-- `vertex_group_memberships::Vector{Vector{Int}}`
-- `edge_group_memberships::Vector{Vector{Int}}`
-- `sources::Vector{Int}`
-- `destinations::Vector{Int}`
-- `starting_times::Vector{Int}`
-- `distances_to_destinations::Dict{Int,Vector{Float64}}`
 """
-struct MAPF{G<:AbstractGraph{Int}}
+struct MAPF{G<:AbstractGraph{Int},VC,EC}
     # Graph-related
     graph::G
     rev_graph::G
@@ -30,10 +13,8 @@ struct MAPF{G<:AbstractGraph{Int}}
     edge_weights::Vector{Float64}
     edge_weights_mat::SparseMatrixCSC{Float64,Int}
     # Constraints-related
-    vertex_groups::Vector{Vector{Int}}
-    edge_groups::Vector{Vector{Int}}
-    vertex_group_memberships::Vector{Vector{Int}}
-    edge_group_memberships::Vector{Vector{Int}}
+    vertex_conflict_lister::VC
+    edge_conflict_lister::EC
     # Agents-related
     sources::Vector{Int}
     destinations::Vector{Int}
@@ -41,13 +22,16 @@ struct MAPF{G<:AbstractGraph{Int}}
     distances_to_destinations::Dict{Int,Vector{Float64}}
 end
 
+naive_vertex_conflict_lister(mapf::MAPF, v::Integer) = (v,)
+naive_edge_conflict_lister(mapf::MAPF, u::Integer, v::Integer) = ((v, u),)
+
 function MAPF(
     graph::G,
     sources::Vector{<:Integer},
     destinations::Vector{<:Integer};
     starting_times=[1 for a in 1:length(sources)],
-    vertex_groups=[[v] for v in 1:nv(graph)],
-    edge_groups=[Int[] for _ in 1:nv(graph)],
+    vertex_conflict_lister=naive_vertex_conflict_lister,
+    edge_conflict_lister=naive_edge_conflict_lister,
 ) where {G}
     # Graph-related
     rev_graph = reverse(graph)
@@ -57,23 +41,10 @@ function MAPF(
     J = [dst(ed) for ed in edges(graph)]
     V = [e for (e, ed) in enumerate(edges(graph))]
     edge_indices = sparse(I, J, V, nv(graph), nv(graph))
-    rev_edge_indices = edge_indices'
+    rev_edge_indices = sparse(J, I, V, nv(graph), nv(graph))
 
     edge_weights_mat = Graphs.weights(graph)
     edge_weights = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(graph)]
-
-    # Constraints-related
-    vertex_groups = [sort(group) for group in vertex_groups]
-    edge_groups = [sort(group) for group in edge_groups]
-
-    vertex_group_memberships = [Int[] for _ in 1:nv(graph)]
-    for (g, group) in enumerate(vertex_groups), v in group
-        push!(vertex_group_memberships[v], g)
-    end
-    edge_group_memberships = [Int[] for _ in 1:ne(graph)]
-    for (g, group) in enumerate(edge_groups), e in group
-        push!(edge_group_memberships[e], g)
-    end
 
     # Agents-related
     distances_to_destinations = Dict{Int,Vector{Float64}}()
@@ -84,7 +55,7 @@ function MAPF(
         distances_to_destinations[d] = shortest_path_tree_from_d.dists
     end
 
-    return MAPF{G}(
+    return MAPF(
         # Graph-related
         graph,
         rev_graph,
@@ -94,10 +65,8 @@ function MAPF(
         edge_weights,
         edge_weights_mat,
         # Constraints-related
-        vertex_groups,
-        edge_groups,
-        vertex_group_memberships,
-        edge_group_memberships,
+        vertex_conflict_lister,
+        edge_conflict_lister,
         # Agents-related
         sources,
         destinations,

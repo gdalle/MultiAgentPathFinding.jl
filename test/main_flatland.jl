@@ -38,14 +38,8 @@ solution_indep2 = independent_dijkstra(mapf);
 is_feasible(solution_indep2, mapf)
 flowtime(solution_indep2, mapf)
 
-solution_lns2 = feasibility_search(
-    mapf; neighborhood_size=5, conflict_price=1, conflict_price_increase=1e-2
-);
-is_feasible(solution_lns2, mapf)
-flowtime(solution_lns2, mapf)
-
-solution_coop = cooperative_astar(mapf);
-@profview is_feasible(solution_coop, mapf)
+@profview solution_coop = cooperative_astar(mapf);
+is_feasible(solution_coop, mapf)
 flowtime(solution_coop, mapf)
 
 solution_coop_soft = cooperative_astar(mapf; conflict_price=100);
@@ -55,6 +49,12 @@ flowtime(solution_coop_soft, mapf)
 solution_lns = large_neighborhood_search(mapf; neighborhood_size=5, steps=1000);
 is_feasible(solution_lns, mapf)
 flowtime(solution_lns, mapf)
+
+solution_lns2 = feasibility_search(
+    mapf; neighborhood_size=5, conflict_price=1, conflict_price_increase=1e-2
+);
+is_feasible(solution_lns2, mapf)
+flowtime(solution_lns2, mapf)
 
 ## (I)LP
 

@@ -22,15 +22,30 @@ function build_vertex_groups(g::FlatlandGraph)
     return vertex_groups
 end
 
+function flatland_vertex_conflict_lister(mapf::FlatlandMAPF, v::Integer)
+    g = mapf.graph
+    (i, j, direction, kind) = get_label(g, v)
+    if kind == REAL
+        mv = mirror_vertex(g, (i, j, direction, kind))
+        cv = vertices_on_cell(g, (i, j, direction, kind))
+        return Iterators.flatten((v, mv, cv))
+    else
+        return nothing
+    end
+end
+
 function flatland_mapf(pyenv::Py)
     agents = [Agent(pyagent) for pyagent in pyenv.agents]
     g = flatland_graph(pyenv, agents)
     sources = [get_vertex(g, initial_label(agent)) for agent in agents]
     destinations = [get_vertex(g, target_label(agent)) for agent in agents]
     starting_times = [agent.earliest_departure for agent in agents]
-    vertex_groups = build_vertex_groups(g)
     mapf = MAPF(
-        g, sources, destinations; starting_times=starting_times, vertex_groups=vertex_groups
+        g,
+        sources,
+        destinations;
+        starting_times=starting_times,
+        vertex_conflict_lister=flatland_vertex_conflict_lister,
     )
     return mapf
 end

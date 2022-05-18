@@ -12,6 +12,8 @@ function reverse_direction(d::Integer)
     end
 end
 
+## Grid utilities
+
 function neighbor_cell(i::Integer, j::Integer, out_direction::Integer)
     if out_direction == NORTH
         return (i - 1, j)
@@ -23,21 +25,6 @@ function neighbor_cell(i::Integer, j::Integer, out_direction::Integer)
         return (i, j - 1)
     else
         error("Out-direction $out_direction is not valid")
-    end
-end
-
-function vertices_on_cell(g::FlatlandGraph, i::Integer, j::Integer)
-    return [
-        get_vertex(g, (i, j, direction, REAL)) for
-        direction in CARDINAL_POINTS if haskey(g, (i, j, direction, REAL))
-    ]
-end
-
-function mirror_vertex(g::FlatlandGraph, v::Integer)
-    (i, j, direction, kind) = get_label(g, v)
-    if kind == REAL
-        i2, j2 = neighbor_cell(i, j, reverse_direction(direction))
-        return get_vertex(g, (i2, j2, reverse_direction(direction), REAL))
     end
 end
 
@@ -53,3 +40,22 @@ function direction_exists(transition_map::String, in_direction::Integer)
         out_direction in CARDINAL_POINTS
     )
 end
+
+## Vertex utilities
+
+function vertices_on_cell(g::FlatlandGraph, (i, j, direction, kind))
+    return (
+        get_vertex(g, (i, j, direction, REAL)) for
+        direction in CARDINAL_POINTS if haskey(g, (i, j, direction, REAL))
+    )
+end
+
+function mirror_vertex(g::FlatlandGraph, (i, j, direction, kind))
+    if kind == REAL
+        i2, j2 = neighbor_cell(i, j, reverse_direction(direction))
+        return get_vertex(g, (i2, j2, reverse_direction(direction), REAL))
+    end
+end
+
+vertices_on_cell(g::FlatlandGraph, v::Integer) = vertices_on_cell(g, get_label(g, v))
+mirror_vertex(g::FlatlandGraph, v::Integer) = mirror_vertex(g, get_label(g, v))
