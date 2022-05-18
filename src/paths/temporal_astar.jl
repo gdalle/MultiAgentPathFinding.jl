@@ -14,11 +14,12 @@ function temporal_astar(
     s::Integer,
     d::Integer,
     t0::Integer;
-    edge_indices::Dict,
+    edge_indices,
     edge_weights::Vector{W},
     heuristic=v -> 0.0,
     reservation::Reservation=Reservation(),
     conflict_price=Inf,
+    priority_updates=false
 ) where {V,W}
     T = Int
     safe_conflict_price = conflict_price * (conflict_price < Inf)
@@ -27,7 +28,7 @@ function temporal_astar(
     came_from = Dict{Tuple{T,V},Tuple{T,V}}()
     distance = Dict{Tuple{T,V},W}()
     conflicts = Dict{Tuple{T,V},Int}()
-    queue = PriorityQueue{Tuple{T,V},Float64}()
+    queue = VectorPriorityQueue{Tuple{T,V},Float64}()
 
     # Add first node to storage
     distance_s = zero(W)
@@ -52,7 +53,7 @@ function temporal_astar(
         for w in outneighbors(g, v)
             heur_w = heuristic(w)
 
-            e_vw = edge_indices[(v, w)]
+            e_vw = edge_indices[v, w]
             weight_vw = edge_weights[e_vw]
             conflict_vw = is_forbidden_vertex(reservation, t + 1, w)
 
@@ -70,7 +71,11 @@ function temporal_astar(
                     came_from[(t + 1, w)] = (t, v)
                     distance[(t + 1, w)] = distance_w
                     conflicts[(t + 1, w)] = conflicts_w
-                    queue[(t + 1, w)] = cost_w + heur_w
+                    if priority_updates
+                        queue[(t + 1, w)] = cost_w + heur_w
+                    else
+                        enqueue!(queue, (t+1, w), cost_w + heur_w)
+                    end
                 end
             end
         end

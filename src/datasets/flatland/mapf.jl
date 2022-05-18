@@ -1,3 +1,5 @@
+const FlatlandMAPF = MAPF{FlatlandGraph}
+
 function build_vertex_groups(g::FlatlandGraph)
     grid = get_grid(g)
     h, w = size(grid)
@@ -27,12 +29,8 @@ function flatland_mapf(pyenv::Py)
     destinations = [get_vertex(g, target_label(agent)) for agent in agents]
     starting_times = [agent.earliest_departure for agent in agents]
     vertex_groups = build_vertex_groups(g)
-    mapf = MAPF(;
-        graph=g,
-        sources=sources,
-        destinations=destinations,
-        starting_times=starting_times,
-        vertex_groups=vertex_groups,
+    mapf = MAPF(
+        g, sources, destinations; starting_times=starting_times, vertex_groups=vertex_groups
     )
     return mapf
 end

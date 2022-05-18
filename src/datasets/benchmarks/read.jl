@@ -6,14 +6,14 @@ function read_benchmark_map(map_path::AbstractString)
     width_line = split(lines[3])
     height = parse(Int, height_line[2])
     width = parse(Int, width_line[2])
-    char_matrix = Matrix{Char}(undef, height, width)
+    map_matrix = Matrix{Char}(undef, height, width)
     for i in 1:height
         line = lines[4 + i]
         for j in 1:width
-            char_matrix[i, j] = line[j]
+            map_matrix[i, j] = line[j]
         end
     end
-    return char_matrix
+    return map_matrix
 end
 
 function read_benchmark_scenario(scen_path::AbstractString; map_path=nothing)

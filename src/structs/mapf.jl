@@ -25,10 +25,10 @@ struct MAPF{G<:AbstractGraph{Int}}
     graph::G
     rev_graph::G
     # Edges-related
-    edge_indices::Dict{Tuple{Int,Int},Int}
-    rev_edge_indices::Dict{Tuple{Int,Int},Int}
+    edge_indices::SparseMatrixCSC{Int,Int}
+    rev_edge_indices::SparseMatrixCSC{Int,Int}
     edge_weights::Vector{Float64}
-    edge_weights_mat::SparseMatrixCSC{Float64,Int64}
+    edge_weights_mat::SparseMatrixCSC{Float64,Int}
     # Constraints-related
     vertex_groups::Vector{Vector{Int}}
     edge_groups::Vector{Vector{Int}}
@@ -41,21 +41,24 @@ struct MAPF{G<:AbstractGraph{Int}}
     distances_to_destinations::Dict{Int,Vector{Float64}}
 end
 
-function MAPF(;
-    graph,
-    sources,
-    destinations,
+function MAPF(
+    graph::G,
+    sources::Vector{<:Integer},
+    destinations::Vector{<:Integer};
     starting_times=[1 for a in 1:length(sources)],
     vertex_groups=[[v] for v in 1:nv(graph)],
     edge_groups=[Int[] for _ in 1:nv(graph)],
-)
+) where {G}
     # Graph-related
-    @assert is_directed(graph)
     rev_graph = reverse(graph)
 
     # Edges-related
-    edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(graph)))
-    rev_edge_indices = Dict((dst(ed), src(ed)) => e for (e, ed) in enumerate(edges(graph)))
+    I = [src(ed) for ed in edges(graph)]
+    J = [dst(ed) for ed in edges(graph)]
+    V = [e for (e, ed) in enumerate(edges(graph))]
+    edge_indices = sparse(I, J, V, nv(graph), nv(graph))
+    rev_edge_indices = edge_indices'
+
     edge_weights_mat = Graphs.weights(graph)
     edge_weights = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(graph)]
 
@@ -81,7 +84,7 @@ function MAPF(;
         distances_to_destinations[d] = shortest_path_tree_from_d.dists
     end
 
-    return MAPF(
+    return MAPF{G}(
         # Graph-related
         graph,
         rev_graph,

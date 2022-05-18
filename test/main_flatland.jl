@@ -13,13 +13,13 @@ rail_generators = pyimport("flatland.envs.rail_generators")
 line_generators = pyimport("flatland.envs.line_generators")
 rail_env = pyimport("flatland.envs.rail_env")
 
-rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=6)
+rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=50)
 line_generator = line_generators.sparse_line_generator()
 
 pyenv = rail_env.RailEnv(;
-    width=40,
-    height=40,
-    number_of_agents=50,
+    width=150,
+    height=150,
+    number_of_agents=200,
     rail_generator=rail_generator,
     line_generator=line_generator,
     random_seed=11,
@@ -45,7 +45,7 @@ is_feasible(solution_lns2, mapf)
 flowtime(solution_lns2, mapf)
 
 solution_coop = cooperative_astar(mapf);
-is_feasible(solution_coop, mapf)
+@profview is_feasible(solution_coop, mapf)
 flowtime(solution_coop, mapf)
 
 solution_coop_soft = cooperative_astar(mapf; conflict_price=100);

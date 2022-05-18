@@ -6,6 +6,7 @@ using ColorTypes
 using DataFrames
 using DataFramesMeta
 using DataStructures
+using FastPriorityQueues
 using FillArrays
 using Graphs
 using GridGraphs

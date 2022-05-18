@@ -22,7 +22,8 @@ function display_benchmark_map(map_matrix::Matrix{Char})
         end
         map_colors[i, j] = x
     end
-    return image(
-        map_colors; interpolate=false, axis=(aspect=DataAspect(), yreversed=true)
+    fig, ax, plt = image(
+        map_colors'; interpolate=false, axis=(aspect=DataAspect(), yreversed=true)
     )
+    return fig
 end

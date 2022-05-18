@@ -23,9 +23,11 @@ end
 ## Between paths
 
 function find_conflict(path1::Path, path2::Path, mapf::MAPF; tol=0)
-    for (t1, v1) in path1, (t2, v2) in path2
-        if (abs(t1 - t2) <= tol) && conflicting_vertices(v1, v2, mapf)
-            return (t1, v1), (t2, v2)
+    for (t1, v1) in path1
+        for (t2, v2) in path2
+            if (abs(t1 - t2) <= tol) && conflicting_vertices(v1, v2, mapf)
+                return (t1, v1), (t2, v2)
+            end
         end
     end
     return nothing
