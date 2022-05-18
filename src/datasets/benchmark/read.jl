@@ -16,7 +16,7 @@ function read_benchmark_map(map_path::AbstractString)
     return map_matrix
 end
 
-function read_benchmark_scenario(scen_path::AbstractString; map_path=nothing)
+function read_benchmark_scenario(scen_path::AbstractString, map_path::AbstractString)
     lines = open(scen_path, "r") do file
         readlines(file)
     end
@@ -35,6 +35,7 @@ function read_benchmark_scenario(scen_path::AbstractString; map_path=nothing)
         line_split = split(line, "\t")
         bucket = parse(Int, line_split[1]) + 1
         map = line_split[2]
+        @assert endswith(map_path, map)
         width = parse(Int, line_split[3])
         height = parse(Int, line_split[4])
         start_x = parse(Int, line_split[5])

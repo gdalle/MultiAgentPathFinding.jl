@@ -17,8 +17,8 @@ rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=50)
 line_generator = line_generators.sparse_line_generator()
 
 pyenv = rail_env.RailEnv(;
-    width=150,
-    height=150,
+    width=50,
+    height=50,
     number_of_agents=200,
     rail_generator=rail_generator,
     line_generator=line_generator,
@@ -38,7 +38,7 @@ solution_indep2 = independent_dijkstra(mapf);
 is_feasible(solution_indep2, mapf)
 flowtime(solution_indep2, mapf)
 
-@profview solution_coop = cooperative_astar(mapf);
+solution_coop = cooperative_astar(mapf);
 is_feasible(solution_coop, mapf)
 flowtime(solution_coop, mapf)
 

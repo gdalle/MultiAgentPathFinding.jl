@@ -2,27 +2,39 @@
 
 function find_conflict(path1::Path, path2::Path, mapf::MAPF; tol=0)
     for (t1, v1) in path1
-        for (t2, v2) in path2
-            if (abs(t1 - t2) <= tol) && (v2 in mapf.vertex_conflict_lister(mapf, v1))
-                return (t1, v1), (t2, v2)
+        conflicts = mapf.vertex_conflicts[v1]
+        for t2 in (t1-tol):(t1+tol)
+            k2 = t2 - path2[1][1] + 1
+            if 1 <= k2 <= length(path2)
+                v2 = path2[k2][2]
+                if insorted(v2, conflicts)
+                    return (t1, v1), (t2, v2)
+                end
             end
         end
     end
     return nothing
 end
 
-function conflict_exists(path1::Path, path2::Path, mapf::MAPF; tol=0)
-    return !isnothing(find_conflict(path1, path2, mapf; tol=tol))
-end
-
 function count_conflicts(path1::Path, path2::Path, mapf::MAPF; tol=0)
     c = 0
-    for (t1, v1) in path1, (t2, v2) in path2
-        if (abs(t1 - t2) <= tol) && (v2 in mapf.vertex_conflict_lister(mapf, v1))
-            c += 1
+    for (t1, v1) in path1
+        conflicts = mapf.vertex_conflicts[v1]
+        for t2 in (t1-tol):(t1+tol)
+            k2 = t2 - path2[1][1] + 1
+            if 1 <= k2 <= length(path2)
+                v2 = path2[k2][2]
+                if insorted(v2, conflicts)
+                    c += 1
+                end
+            end
         end
     end
     return c
+end
+
+function conflict_exists(path1::Path, path2::Path, mapf::MAPF; tol=0)
+    return !isnothing(find_conflict(path1, path2, mapf; tol=tol))
 end
 
 ## Between agents

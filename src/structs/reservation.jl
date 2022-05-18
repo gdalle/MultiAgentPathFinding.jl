@@ -31,7 +31,7 @@ end
 
 function update_reservation!(reservation::Reservation, path::Path, mapf::MAPF)
     for (t, u) in path
-        for v in mapf.vertex_conflict_lister(mapf, u)
+        for v in mapf.vertex_conflicts[u]
             push!(reservation.forbidden_vertices, (t, v))
         end
     end

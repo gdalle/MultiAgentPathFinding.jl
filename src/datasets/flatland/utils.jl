@@ -59,3 +59,4 @@ end
 
 vertices_on_cell(g::FlatlandGraph, v::Integer) = vertices_on_cell(g, get_label(g, v))
 mirror_vertex(g::FlatlandGraph, v::Integer) = mirror_vertex(g, get_label(g, v))
+is_real_vertex(g::FlatlandGraph, v::Integer) = last(get_label(g, v)) == REAL

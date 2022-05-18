@@ -3,7 +3,7 @@
 
 Instance of a Multi-Agent PathFinding problem.
 """
-struct MAPF{G<:AbstractGraph{Int},VC,EC}
+struct MAPF{G<:AbstractGraph{Int}}
     # Graph-related
     graph::G
     rev_graph::G
@@ -13,8 +13,8 @@ struct MAPF{G<:AbstractGraph{Int},VC,EC}
     edge_weights::Vector{Float64}
     edge_weights_mat::SparseMatrixCSC{Float64,Int}
     # Constraints-related
-    vertex_conflict_lister::VC
-    edge_conflict_lister::EC
+    vertex_conflicts::Vector{Vector{Int}}
+    edge_conflicts::Vector{Vector{Int}}
     # Agents-related
     sources::Vector{Int}
     destinations::Vector{Int}
@@ -22,16 +22,13 @@ struct MAPF{G<:AbstractGraph{Int},VC,EC}
     distances_to_destinations::Dict{Int,Vector{Float64}}
 end
 
-naive_vertex_conflict_lister(mapf::MAPF, v::Integer) = (v,)
-naive_edge_conflict_lister(mapf::MAPF, u::Integer, v::Integer) = ((v, u),)
-
 function MAPF(
     graph::G,
     sources::Vector{<:Integer},
     destinations::Vector{<:Integer};
     starting_times=[1 for a in 1:length(sources)],
-    vertex_conflict_lister=naive_vertex_conflict_lister,
-    edge_conflict_lister=naive_edge_conflict_lister,
+    vertex_conflicts=[[v] for v in vertices(graph)],
+    edge_conflicts=[Int[] for ed in edges(graph)],
 ) where {G}
     # Graph-related
     rev_graph = reverse(graph)
@@ -45,6 +42,10 @@ function MAPF(
 
     edge_weights_mat = Graphs.weights(graph)
     edge_weights = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(graph)]
+
+    # Constraints-related
+    vertex_conflicts = [sort(group) for group in vertex_conflicts]
+    edge_conflicts = [sort(group) for group in edge_conflicts]
 
     # Agents-related
     distances_to_destinations = Dict{Int,Vector{Float64}}()
@@ -65,8 +66,8 @@ function MAPF(
         edge_weights,
         edge_weights_mat,
         # Constraints-related
-        vertex_conflict_lister,
-        edge_conflict_lister,
+        vertex_conflicts,
+        edge_conflicts,
         # Agents-related
         sources,
         destinations,
