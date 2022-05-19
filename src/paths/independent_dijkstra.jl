@@ -1,7 +1,7 @@
 function independent_dijkstra(mapf::MAPF, edge_weights::AbstractVector=mapf.edge_weights)
     @assert all(>=(0), edge_weights)
     shortest_path_trees = Dict(
-        d => my_dijkstra(
+        d => custom_dijkstra(
             mapf.rev_graph,
             d;
             edge_indices=mapf.rev_edge_indices,

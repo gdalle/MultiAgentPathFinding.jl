@@ -14,4 +14,4 @@ solution_coop = cooperative_astar(mapf);
 
 @test !is_feasible(solution_indep, mapf)
 @test is_feasible(solution_coop, mapf)
-@test flowtime(solution_indep, mapf) <= flowtime(solution_coop, mapf)
+@test flowtime(solution_indep, mapf) < flowtime(solution_coop, mapf)

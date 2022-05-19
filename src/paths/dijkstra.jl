@@ -19,31 +19,29 @@ function build_dijkstra_path_rev(spt::ShortestPathTree, t0::Integer, s::Integer,
     return path
 end
 
-function my_dijkstra(
+function custom_dijkstra(
     g::AbstractGraph{T},
     s::Integer;
     edge_indices,
     edge_weights::AbstractVector{W},
-    priority_updates=false,
 ) where {T<:Integer,W<:AbstractFloat}
-    queue = VectorPriorityQueue{T,W}()
+    queue = SortedVectorPriorityQueue{T,W}()
     dists = fill(typemax(W), nv(g))
     parents = zeros(T, nv(g))
     dists[s] = zero(W)
     enqueue!(queue, s, zero(W))
     while !isempty(queue)
-        u = dequeue!(queue)
-        d_u = dists[u]
-        for v in outneighbors(g, u)
-            e_uv = edge_indices[u, v]
-            w_uv = edge_weights[e_uv]
-            dist_through_u = d_u + w_uv
-            if dist_through_u < dists[v]
-                dists[v] = dist_through_u
-                parents[v] = u
-                if priority_updates
-                    queue[v] = dist_through_u
-                else
+        u, d_u = first(queue)
+        dequeue!(queue)
+        if d_u <= dists[u]
+            dists[u] = d_u
+            for v in outneighbors(g, u)
+                e_uv = edge_indices[u, v]
+                w_uv = edge_weights[e_uv]
+                dist_through_u = d_u + w_uv
+                if dist_through_u < dists[v]
+                    dists[v] = dist_through_u
+                    parents[v] = u
                     enqueue!(queue, v, dist_through_u)
                 end
             end

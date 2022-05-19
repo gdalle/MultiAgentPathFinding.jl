@@ -4,7 +4,7 @@ function independent_dijkstra(mapf::MAPF, edge_weights::AbstractMatrix)
     solution = Vector{Path}(undef, A)
     for a in 1:A
         s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
-        dijkstra_state = my_dijkstra(
+        dijkstra_state = custom_dijkstra(
             mapf.rev_graph,
             d;
             edge_indices=mapf.rev_edge_indices,

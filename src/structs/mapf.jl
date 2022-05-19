@@ -50,7 +50,7 @@ function MAPF(
     # Agents-related
     distances_to_destinations = Dict{Int,Vector{Float64}}()
     for d in unique(destinations)
-        shortest_path_tree_from_d = my_dijkstra(
+        shortest_path_tree_from_d = custom_dijkstra(
             rev_graph, d; edge_indices=rev_edge_indices, edge_weights=edge_weights
         )
         distances_to_destinations[d] = shortest_path_tree_from_d.dists

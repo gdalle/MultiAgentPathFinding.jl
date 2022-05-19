@@ -64,7 +64,7 @@ export find_conflict, conflict_exists, count_conflicts
 export is_feasible
 export path_to_vec, solution_to_mat, solution_to_mat2
 
-export my_dijkstra
+export custom_dijkstra
 export temporal_astar
 export independent_astar, independent_dijkstra, independent_topological_sort
 export compute_reservation

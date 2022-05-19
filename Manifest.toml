@@ -161,7 +161,7 @@ version = "2.2.3+0"
 
 [[deps.FastPriorityQueues]]
 deps = ["DataStructures"]
-git-tree-sha1 = "c15db62e084c6251c50e61fc72a9749a66ab6739"
+git-tree-sha1 = "06eaae88961896284b0bfd49afa5820691fb894e"
 repo-rev = "main"
 repo-url = "https://github.com/gdalle/FastPriorityQueues.jl"
 uuid = "d4e633c3-44a9-41d8-acf9-6b39ae83a07a"
