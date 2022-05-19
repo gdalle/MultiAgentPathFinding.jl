@@ -83,8 +83,8 @@ function add_agents!(ax)
     A = Observable(Int[])
     XY = Observable(Point2f[])
     M = Observable(Symbol[])
-    scatter!(ax, XY; marker=:rect, color=:red, markersize=30)
-    scatter!(ax, XY; marker=M, color="white", markersize=15)
+    scatter!(ax, XY; marker=:rect, color=:yellow, markersize=35)
+    # scatter!(ax, XY; marker=M, color="white", markersize=15)
     text!(ax, @lift(string.($A)); position=XY, color="black", align=(:center, :center))
     return A, XY, M
 end

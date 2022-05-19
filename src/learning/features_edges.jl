@@ -4,7 +4,6 @@ function constant_features_edge(s::Integer, d::Integer, mapf::MAPF)
     outdeg_s = outdegree(g, s)
     indeg_d = indegree(g, d)
     outdeg_d = outdegree(g, d)
-    rev_edge_exists = has_edge(g, d, s)
     edge_weight = mapf.edge_weights[mapf.edge_indices[s, d]]
     return Float64[edge_weight, indeg_s, outdeg_s, indeg_d, outdeg_d]
 end
@@ -25,33 +24,10 @@ function solution_features_edge(s::Integer, d::Integer, solution::Solution, mapf
     return Float64[paths_crossing_s, paths_crossing_d, paths_crossing_e]
 end
 
-function joint_features_edge_agent(
-    s::Integer, d::Integer, a::Integer, solution::Solution, mapf::MAPF
-)
-    belongs_to_path = false
-    path = solution[a]
-    n = length(path)
-    for ((t1, v1), (t2, v2)) in zip(view(path, 1:(n - 1)), view(path, 2:n))
-        if (v1, v2) == (s, d)
-            belongs_to_path = true
-        end
-    end
-    return Float64[belongs_to_path]
-end
-
 function all_features_edge(s::Integer, d::Integer, solution::Solution, mapf::MAPF)
     return vcat(
-        constant_features_edge(s, d, mapf), solution_features_edge(s, d, solution, mapf)
-    )
-end
-
-function all_features_edge_agent(
-    s::Integer, d::Integer, a::Integer, solution::Solution, mapf::MAPF
-)
-    return vcat(
         constant_features_edge(s, d, mapf),
-        solution_features_edge(s, d, solution, mapf),
-        joint_features_edge_agent(s, d, a, solution, mapf),
+        solution_features_edge(s, d, solution, mapf)
     )
 end
 
