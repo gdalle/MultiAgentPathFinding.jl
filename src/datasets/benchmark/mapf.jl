@@ -2,15 +2,20 @@ const BenchmarkMAPF = MAPF{SparseGridGraph{Int64,Float64}}
 
 is_passable(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 
-function benchmark_mapf(map_matrix::Matrix{Char}, scenario::DataFrame; buckets=1:10)
+function benchmark_mapf(
+    map_matrix::Matrix{Char}, scenario::Vector{BenchmarkProblem}; buckets=1:10
+)
     mask = map(is_passable, map_matrix)
     weights = zeros(Float64, size(mask))
     weights[mask] .= 1.0
     g = SparseGridGraph(weights, mask)
-    agents = @rsubset(scenario, :bucket in buckets)
-    sources = [GridGraphs.node_index(g, ag.start_i, ag.start_j) for ag in eachrow(agents)]
+    sources = [
+        GridGraphs.node_index(g, pb.start_i, pb.start_j) for
+        pb in scenario if pb.bucket in buckets
+    ]
     destinations = [
-        GridGraphs.node_index(g, ag.goal_i, ag.goal_j) for ag in eachrow(agents)
+        GridGraphs.node_index(g, pb.goal_i, pb.goal_j) for
+        pb in scenario if pb.bucket in buckets
     ]
     mapf = MAPF(g, sources, destinations)
     return mapf

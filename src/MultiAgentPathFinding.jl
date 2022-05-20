@@ -3,9 +3,7 @@ module MultiAgentPathFinding
 ## Dependencies
 
 using ColorTypes
-using DataFrames
-using DataFramesMeta
-using FastPriorityQueues
+using DataStructures
 using GLMakie
 using Graphs
 using GridGraphs
@@ -41,7 +39,6 @@ include("local_search/permutation_search.jl")
 
 include("learning/features_agents.jl")
 include("learning/features_edges.jl")
-include("learning/features_both.jl")
 
 include("datasets/flatland/constants.jl")
 include("datasets/flatland/agent.jl")
@@ -76,10 +73,10 @@ export local_search_permutations
 export feasibility_search!, feasibility_search
 export large_neighborhood_search, large_neighborhood_search!
 
-export agents_embedding
-export edges_embedding
-export edges_agents_embedding
+export agent_embedding, all_agents_embedding
+export edge_embedding, all_edges_embedding
 
+export FlatlandGraph, FlatlandMAPF
 export flatland_mapf
 
 export read_benchmark_map, read_benchmark_scenario

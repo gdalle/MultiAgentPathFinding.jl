@@ -27,7 +27,7 @@ function temporal_astar(
     came_from = Dict{Tuple{T,V},Tuple{T,V}}()
     distance = Dict{Tuple{T,V},W}()
     conflicts = Dict{Tuple{T,V},Int}()
-    queue = SortedVectorPriorityQueue{Tuple{T,V},Float64}()
+    queue = PriorityQueue{Tuple{T,V},Float64}()
 
     # Add first node to storage
     distance_s = zero(W)
@@ -36,7 +36,7 @@ function temporal_astar(
         priority_s = safe_conflict_price * conflicts_s + heuristic(s)
         distance[t0, s] = distance_s
         conflicts[t0, s] = conflicts_s
-        enqueue!(queue, (t0, s), priority_s)
+        queue[t0, s] = priority_s
     end
 
     # Explore
@@ -70,7 +70,7 @@ function temporal_astar(
                     came_from[t + 1, w] = (t, v)
                     distance[t + 1, w] = distance_w
                     conflicts[t + 1, w] = conflicts_w
-                    enqueue!(queue, (t+1, w), cost_w + heur_w)
+                    queue[t + 1, w] = cost_w + heur_w
                 end
             end
         end

@@ -25,25 +25,22 @@ function custom_dijkstra(
     edge_indices,
     edge_weights::AbstractVector{W},
 ) where {T<:Integer,W<:AbstractFloat}
-    queue = SortedVectorPriorityQueue{T,W}()
+    queue = PriorityQueue{T,W}()
     dists = fill(typemax(W), nv(g))
     parents = zeros(T, nv(g))
     dists[s] = zero(W)
-    enqueue!(queue, s, zero(W))
+    queue[s] = zero(W)
     while !isempty(queue)
-        u, d_u = first(queue)
-        dequeue!(queue)
-        if d_u <= dists[u]
-            dists[u] = d_u
-            for v in outneighbors(g, u)
-                e_uv = edge_indices[u, v]
-                w_uv = edge_weights[e_uv]
-                dist_through_u = d_u + w_uv
-                if dist_through_u < dists[v]
-                    dists[v] = dist_through_u
-                    parents[v] = u
-                    enqueue!(queue, v, dist_through_u)
-                end
+        u, d_u = dequeue_pair!(queue)
+        dists[u] = d_u
+        for v in outneighbors(g, u)
+            e_uv = edge_indices[u, v]
+            w_uv = edge_weights[e_uv]
+            dist_through_u = d_u + w_uv
+            if dist_through_u < dists[v]
+                dists[v] = dist_through_u
+                parents[v] = u
+                queue[v] = dist_through_u
             end
         end
     end

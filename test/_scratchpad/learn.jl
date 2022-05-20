@@ -1,27 +1,29 @@
 ## Imports
 
-@time_imports using BenchmarkTools
-@time_imports using Flux
-@time_imports using GLMakie
-@time_imports using Graphs
-@time_imports using InferOpt
-@time_imports using MultiAgentPathFinding
-@time_imports using ProgressMeter
-@time_imports using PythonCall
-@time_imports using SparseArrays
-@time_imports using Base.Threads
+using BenchmarkTools
+using Flux
+using GLMakie
+using Graphs
+using InferOpt
+using MultiAgentPathFinding
+using ProgressMeter
+using PythonCall
+using Random
+using SparseArrays
+using Base.Threads
 
 nthreads()
 GLMakie.inline!(true)
+Random.seed!(63)
 
 ## Test
 
-rail_generators = pyimport("flatland.envs.rail_generators")
-line_generators = pyimport("flatland.envs.line_generators")
-rail_env = pyimport("flatland.envs.rail_env")
+rail_generators = pyimport("flatland.envs.rail_generators");
+line_generators = pyimport("flatland.envs.line_generators");
+rail_env = pyimport("flatland.envs.rail_env");
 
-rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=3)
-line_generator = line_generators.sparse_line_generator()
+rail_generator = rail_generators.sparse_rail_generator(; max_num_cities=10);
+line_generator = line_generators.sparse_line_generator();
 
 A = 50
 
@@ -35,38 +37,114 @@ pyenv = rail_env.RailEnv(;
 )
 pyenv.reset();
 
-mapf = flatland_mapf(pyenv);
-
 ## Data generation
 
-nb_instances = 10
+K = 10  # nb of instances
 
-all_instances = Vector{typeof(flatland_mapf(pyenv))}(undef, nb_instances);
-@showprogress "Generating instances: " for k in 1:nb_instances
+mapfs = Vector{FlatlandMAPF}(undef, K);
+@showprogress "Generating instances: " for k in 1:K
     pyenv.reset()
-    all_instances[k] = flatland_mapf(pyenv)
+    mapfs[k] = flatland_mapf(pyenv)
 end
 
-solutions = Vector{Solution}(undef, nb_instances);
-@threads for k in 1:nb_instances
-    @info "Instance $k solved by thread $(threadid())"
-    solutions[k] = independent_dijkstra(all_instances[k])
-    feasibility_search!(solutions[k], all_instances[k]; neighborhood_size=5, progress=false)
+## Lower bound
+
+solutions_indep = Vector{Solution}(undef, K);
+@threads for k in 1:K
+    @info "Instance $k solved by thread $(threadid()) (indep)"
+    mapf = mapfs[k]
+    solution = independent_astar(mapf)
+    solutions_indep[k] = solution
 end
 
-X = Vector{Array{Float64,3}}(undef, nb_instances)
-@threads for k in 1:nb_instances
+## Feasible solutions
+
+solutions_coop = Vector{Solution}(undef, K);
+@threads for k in 1:K
+    @info "Instance $k solved by thread $(threadid()) (coop)"
+    mapf = mapfs[k]
+    solution = cooperative_astar(mapf)
+    solutions_coop[k] = solution
+end
+
+solutions_lns2 = Vector{Solution}(undef, K);
+@threads for k in 1:K
+    @info "Instance $k solved by thread $(threadid()) (LNS2)"
+    mapf = mapfs[k]
+    solution = independent_dijkstra(mapf)
+    feasibility_search!(
+        solution,
+        mapf;
+        conflict_price=10,
+        conflict_price_increase=0.01,
+        neighborhood_size=5,
+        progress=false,
+    )
+    solutions_lns2[k] = solution
+end
+
+## Apply local search
+
+solutions_coop_lns1 = Vector{Solution}(undef, K);
+@threads for k in 1:K
+    @info "Instance $k solved by thread $(threadid()) (coop + LNS1)"
+    mapf = mapfs[k]
+    solution = deepcopy(solutions_coop[k])
+    large_neighborhood_search!(
+        solution,
+        mapf;
+        steps=1000,
+        neighborhood_size=5,
+        progress=false,
+    )
+    solutions_coop_lns1[k] = solution
+end
+
+solutions_lns2_lns1 = Vector{Solution}(undef, K);
+@threads for k in 1:K
+    @info "Instance $k solved by thread $(threadid()) (coop + LNS2)"
+    mapf = mapfs[k]
+    solution = deepcopy(solutions_lns2[k])
+    large_neighborhood_search!(
+        solution,
+        mapf;
+        steps=1000,
+        neighborhood_size=5,
+        progress=false,
+    )
+    solutions_lns2_lns1[k] = solution
+end
+
+## Eval dataset
+
+mean(flowtime.(solutions_indep, mapfs))
+mean(flowtime.(solutions_coop, mapfs))
+mean(flowtime.(solutions_lns2, mapfs))
+mean(flowtime.(solutions_coop_lns1, mapfs))
+mean(flowtime.(solutions_lns2_lns1, mapfs))
+
+solutions_opt = solutions_lns2_lns1;
+
+## Build features
+
+X = Vector{Matrix{Float64}}(undef, K * A)
+Y = Vector{Vector{Int}}(undef, K * A)
+@threads for k in 1:K
     @info "Instance $k embedded by thread $(threadid())"
-    X[k] = edges_agents_embedding(all_instances[k])
+    for a in 1:A
+        X[(k - 1) * A + a] = all_edges_embedding(a, solutions_indep[k], mapfs[k])
+        Y[(k - 1) * A + a] = path_to_vec(solutions_opt[k][a], mapfs[k])
+    end
 end
-nb_features = size(X[1], 1)
 
-Y = [solution_to_mat(solution, mapf) for (solution, mapf) in zip(solutions, all_instances)];
+F = size(X[1], 1)
 
-function maximizer(θ; mapf)
+## Define pipeline
+
+function maximizer(θ; a, mapf)
     edge_weights = -θ
-    solution = independent_dijkstra(mapf, edge_weights)
-    ŷ = solution_to_mat(solution, mapf)
+    path = independent_dijkstra(a, mapf, edge_weights)
+    ŷ = path_to_vec(path, mapf)
     return ŷ
 end
 
@@ -76,12 +154,9 @@ negative_identity(z) = -z
 vector_relu(z) = relu.(z)
 dropfirstdim(z) = dropdims(z; dims=1)
 
-initial_encoder = Chain(
-    Dense(nb_features, 1),
-    dropfirstdim,
-    vector_relu,
-    negative_identity,
-)
+initial_encoder = Chain(Dense(F, 1), dropfirstdim, vector_relu, negative_identity)
+
+maximizer(initial_encoder(X[1]); a=1, mapf=mapfs[1])
 
 encoder = deepcopy(initial_encoder)
 par = Flux.params(encoder)
@@ -94,7 +169,7 @@ nb_epochs = 30
 losses = Float64[]
 @showprogress "Training -" for epoch in 1:nb_epochs
     l = 0.0
-    @showprogress "Epoch $epoch/$nb_epochs -" for k in 1:nb_instances
+    @showprogress "Epoch $epoch/$nb_epochs -" for k in 1:K
         gs = gradient(par) do
             l += fenchel_young_loss(encoder(X[k]), Y[k]; mapf=all_instances[k])
         end
@@ -112,9 +187,9 @@ costs_opt = [flowtime(solution, mapf) for (solution, mapf) in zip(solutions, all
 
 nb_trials = 5
 
-costs_pred_init = zeros(nb_instances);
-costs_pred_final = zeros(nb_instances);
-@threads for k in 1:nb_instances
+costs_pred_init = zeros(K);
+costs_pred_final = zeros(K);
+@threads for k in 1:K
     mapf = all_instances[k]
     for _ in 1:nb_trials
         solution_pred_init = independent_dijkstra(mapf, -encoder(X[k]))
@@ -127,14 +202,8 @@ costs_pred_final = zeros(nb_instances);
     @info "Instance $k solved by thread $(threadid())"
 end
 
-barplot((1:nb_instances), costs_pred_init; width=0.3, label="before learning", color=:red)
-barplot!(
-    (1:nb_instances) .+ 0.3,
-    costs_pred_final;
-    width=0.3,
-    label="after learning",
-    color=:blue,
-)
-barplot!((1:nb_instances) .+ 0.6, costs_opt; width=0.3, label="optimal", color=:green)
+barplot((1:K), costs_pred_init; width=0.3, label="before learning", color=:red)
+barplot!((1:K) .+ 0.3, costs_pred_final; width=0.3, label="after learning", color=:blue)
+barplot!((1:K) .+ 0.6, costs_opt; width=0.3, label="optimal", color=:green)
 axislegend()
 current_figure()

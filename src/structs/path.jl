@@ -15,20 +15,34 @@ const Solution = Vector{Path}
 function path_to_vec(path::Path, mapf::MAPF)
     g = mapf.graph
     edge_indices = mapf.edge_indices
-    V, E = nv(g), ne(g)
     K = length(path)
-    ind = Int[]
-    val = Float64[]
+    y = zeros(Int, ne(g))
     for k in 1:(K - 1)
         _, v1 = path[k]
         _, v2 = path[k + 1]
-        e = edge_indices[(v1, v2)]
+        e = edge_indices[v1, v2]
+        y[e] += 1
+    end
+    return y
+end
+
+function path_to_vec_sparse(path::Path, mapf::MAPF)
+    g = mapf.graph
+    edge_indices = mapf.edge_indices
+    V, E = nv(g), ne(g)
+    K = length(path)
+    ind = Int[]
+    val = Int[]
+    for k in 1:(K - 1)
+        _, v1 = path[k]
+        _, v2 = path[k + 1]
+        e = edge_indices[v1, v2]
         i = findfirst(isequal(e), ind)
         if isnothing(i)
             push!(ind, e)
-            push!(val, 1.)
+            push!(val, 1)
         else
-            val[i] += 1.
+            val[i] += 1
         end
     end
     return sparsevec(ind, val, E)

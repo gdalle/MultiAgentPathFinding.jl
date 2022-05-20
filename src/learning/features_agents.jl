@@ -26,7 +26,7 @@ function conflict_features_agent(a::Integer, solution::Solution, mapf::MAPF)
     return (1 / A) .* Float64[conflicts0, conflicts1, conflicts2, conflicts3, crossings]
 end
 
-function all_features_agent(a::Integer, solution::Solution, mapf::MAPF)
+function agent_embedding(a::Integer, solution::Solution, mapf::MAPF)
     return vcat(
         constant_features_agent(a, mapf),
         path_features_agent(a, solution, mapf),
@@ -34,7 +34,7 @@ function all_features_agent(a::Integer, solution::Solution, mapf::MAPF)
     )
 end
 
-function agents_embedding(mapf::MAPF)
+function all_agents_embedding(mapf::MAPF)
     solution = independent_astar(mapf)
     x = reduce(hcat, all_features_agent(a, solution, mapf) for a in 1:nb_agents(mapf))
     s = std(x; dims=2)
