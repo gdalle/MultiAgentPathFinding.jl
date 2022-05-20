@@ -60,7 +60,7 @@ export flowtime, max_time
 export VectorPriorityQueue
 export find_conflict, conflict_exists, count_conflicts
 export is_feasible
-export path_to_vec
+export path_to_vec, path_to_vec_sparse
 export solution_to_mat, solution_to_mat2
 
 export custom_dijkstra

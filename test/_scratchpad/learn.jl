@@ -39,7 +39,7 @@ pyenv.reset();
 
 ## Data generation
 
-K = 10  # nb of instances
+K = 20  # nb of instances
 
 mapfs = Vector{FlatlandMAPF}(undef, K);
 @showprogress "Generating instances: " for k in 1:K
@@ -91,11 +91,7 @@ solutions_coop_lns1 = Vector{Solution}(undef, K);
     mapf = mapfs[k]
     solution = deepcopy(solutions_coop[k])
     large_neighborhood_search!(
-        solution,
-        mapf;
-        steps=1000,
-        neighborhood_size=5,
-        progress=false,
+        solution, mapf; steps=1000, neighborhood_size=5, progress=false
     )
     solutions_coop_lns1[k] = solution
 end
@@ -106,11 +102,7 @@ solutions_lns2_lns1 = Vector{Solution}(undef, K);
     mapf = mapfs[k]
     solution = deepcopy(solutions_lns2[k])
     large_neighborhood_search!(
-        solution,
-        mapf;
-        steps=1000,
-        neighborhood_size=5,
-        progress=false,
+        solution, mapf; steps=1000, neighborhood_size=5, progress=false
     )
     solutions_lns2_lns1[k] = solution
 end
@@ -127,13 +119,16 @@ solutions_opt = solutions_lns2_lns1;
 
 ## Build features
 
-X = Vector{Matrix{Float64}}(undef, K * A)
-Y = Vector{Vector{Int}}(undef, K * A)
+X = Vector{Matrix{Float64}}(undef, K * A);
+Y = Vector{Vector{Int}}(undef, K * A);
 @threads for k in 1:K
     @info "Instance $k embedded by thread $(threadid())"
+    mapf = mapfs[k]
+    solution = solutions_opt[k]
     for a in 1:A
-        X[(k - 1) * A + a] = all_edges_embedding(a, solutions_indep[k], mapfs[k])
-        Y[(k - 1) * A + a] = path_to_vec(solutions_opt[k][a], mapfs[k])
+        path = solution[a]
+        X[(k - 1) * A + a] = all_edges_embedding(a, solution, mapf)
+        Y[(k - 1) * A + a] = path_to_vec(path, mapf)
     end
 end
 
@@ -156,24 +151,26 @@ dropfirstdim(z) = dropdims(z; dims=1)
 
 initial_encoder = Chain(Dense(F, 1), dropfirstdim, vector_relu, negative_identity)
 
-maximizer(initial_encoder(X[1]); a=1, mapf=mapfs[1])
-
 encoder = deepcopy(initial_encoder)
-par = Flux.params(encoder)
-fenchel_young_loss = FenchelYoungLoss(PerturbedLogNormal(maximizer; ε=0.1, M=10));
+
+par = Flux.params(encoder);
 opt = ADAGrad();
 
 ## Training
 
-nb_epochs = 30
+nb_epochs = 50
 losses = Float64[]
 @showprogress "Training -" for epoch in 1:nb_epochs
     l = 0.0
     @showprogress "Epoch $epoch/$nb_epochs -" for k in 1:K
-        gs = gradient(par) do
-            l += fenchel_young_loss(encoder(X[k]), Y[k]; mapf=all_instances[k])
+        mapf = mapfs[k]
+        for a in 1:A
+            x, y = X[(k - 1) * A + a], Y[(k - 1) * A + a]
+            gs = gradient(par) do
+                l += fenchel_young_loss(encoder(x), y; a=a, mapf=mapf)
+            end
+            Flux.update!(opt, par, gs)
         end
-        Flux.update!(opt, par, gs)
     end
     @info "Loss $l"
     push!(losses, l)
