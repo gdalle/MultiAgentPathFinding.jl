@@ -15,7 +15,7 @@ function temporal_astar(
     d::Integer,
     t0::Integer,
     edge_indices,
-    edge_weights_vec::Vector{W};
+    edge_weights_vec::AbstractVector{W};
     heuristic=v -> 0.0,
     reservation::Reservation=Reservation(),
     conflict_price=Inf,

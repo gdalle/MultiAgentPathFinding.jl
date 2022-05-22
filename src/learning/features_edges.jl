@@ -1,5 +1,7 @@
 function constant_features_edge(s::Integer, d::Integer, mapf::MAPF)
     g = mapf.graph
+    e = mapf.edge_indices[s, d]
+    edge_weight = mapf.edge_weights_vec[e]
     indeg_s = indegree(g, s)
     outdeg_s = outdegree(g, s)
     indeg_d = indegree(g, d)
@@ -8,7 +10,6 @@ function constant_features_edge(s::Integer, d::Integer, mapf::MAPF)
     d_is_source = d in mapf.sources
     s_is_destination = s in mapf.destinations
     d_is_destination = d in mapf.destinations
-    edge_weight = mapf.edge_weights[mapf.edge_indices[s, d]]
     return Float64[
         edge_weight,
         indeg_s,
@@ -27,6 +28,7 @@ function solution_features_edge(s::Integer, d::Integer, solution::Solution, mapf
     paths_visiting_s = 0
     paths_visiting_d = 0
     paths_crossing_e = 0
+    paths_crossing_e_rev = 0
     for timed_path in solution
         (; t0, path) = timed_path
         K = length(path)
@@ -54,11 +56,17 @@ function agent_features_edge(
     K = length(path)
     for k in 1:(K - 1)
         v1, v2 = path[k], path[k + 1]
-        s in (v1, v2) && s_belongs_to_path = true
-        d in (v1, v2) && d_belongs_to_path = true
-        (s in (v1, v2) && d in (v1, v2)) && edge_belongs_to_path = true
+        if s in (v1, v2)
+            s_belongs_to_path = true
+        end
+        if d in (v1, v2)
+            d_belongs_to_path = true
+        end
+        if s in (v1, v2) && d in (v1, v2)
+            edge_belongs_to_path = true
+        end
     end
-    return Float64[s_belonds_to_path, d_belongs_to_path, edge_belongs_to_path]
+    return Float64[s_belongs_to_path, d_belongs_to_path, edge_belongs_to_path]
 end
 
 function edge_embedding(s::Integer, d::Integer, solution::Solution, mapf::MAPF)

@@ -68,7 +68,7 @@ export is_feasible
 export forward_dijkstra, backward_dijkstra
 export temporal_astar
 export independent_astar
-export independent_dijkstra
+export independent_dijkstra, agent_dijkstra
 export cooperative_astar!, cooperative_astar
 
 export local_search_permutations
