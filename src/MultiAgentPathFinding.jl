@@ -12,9 +12,9 @@ using MetaDataGraphs
 using ProgressMeter
 using PythonCall
 using Random
-using Statistics
+using Statistics: mean
 using StatsBase: sample
-using SparseArrays
+using SparseArrays: sparsevec, sparse
 
 ## Includes
 
@@ -55,25 +55,25 @@ include("datasets/benchmark/plot.jl")
 
 export MAPF, nb_agents
 export TimedPath
+export path_to_vec, path_to_vec_sparse
 export Solution
+export solution_to_mat
 export Reservation
+export compute_reservation, update_reservation!
 
 export flowtime, max_time
-export VectorPriorityQueue
 export find_conflict, conflict_exists, count_conflicts
 export is_feasible
-export path_to_vec, path_to_vec_sparse
-export solution_to_mat, solution_to_mat2
 
-export custom_dijkstra
+export forward_dijkstra, backward_dijkstra
 export temporal_astar
-export independent_astar, independent_dijkstra, independent_topological_sort
-export compute_reservation
+export independent_astar
+export independent_dijkstra
 export cooperative_astar!, cooperative_astar
 
 export local_search_permutations
 export feasibility_search!, feasibility_search
-export large_neighborhood_search, large_neighborhood_search!
+export large_neighborhood_search!, large_neighborhood_search
 
 export agent_embedding, all_agents_embedding
 export edge_embedding, all_edges_embedding

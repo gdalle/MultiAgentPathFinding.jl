@@ -39,7 +39,7 @@ end
 
 function cooperative_astar(
     mapf::MAPF,
-    agents::AbstractVector{Int}=1:nb_agents(mapf),
+    agents::AbstractVector{Int}=randperm(nb_agents(mapf)),
     edge_weights_vec::AbstractVector=mapf.edge_weights_vec;
     conflict_price=Inf,
     show_progress=false,
