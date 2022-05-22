@@ -11,7 +11,9 @@ function feasibility_search!(
     cooperative_astar!(solution, pathless_agents, mapf; conflict_price=conflict_price)
     cp = colliding_pairs(solution, mapf)
     prog = ProgressUnknown("LNS2 steps: "; enabled=progress)
+    steps = 0
     while !is_feasible(solution, mapf)
+        steps += 1
         next!(prog; showvalues=[(:colliding_pairs, cp)])
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
@@ -28,6 +30,7 @@ function feasibility_search!(
         end
         conflict_price *= (1 + conflict_price_increase)
     end
+    println("$steps steps")
     return solution
 end
 
