@@ -30,7 +30,6 @@ solution_lns2 = feasibility_search(
     mapf; neighborhood_size=5, conflict_price=1, conflict_price_increase=1e-2
 );
 
-@test !is_feasible(solution_indep, mapf)
 @test !is_feasible(solution_indep2, mapf)
 @test is_feasible(solution_coop, mapf)
 @test is_feasible(solution_lns2, mapf)

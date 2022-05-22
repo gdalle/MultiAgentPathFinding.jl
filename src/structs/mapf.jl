@@ -6,12 +6,9 @@ Instance of a Multi-Agent PathFinding problem.
 struct MAPF{G<:AbstractGraph{Int}}
     # Graph-related
     graph::G
-    rev_graph::G
     # Edges-related
-    edge_indices::SparseMatrixCSC{Int,Int}
-    rev_edge_indices::SparseMatrixCSC{Int,Int}
-    edge_weights::Vector{Float64}
-    edge_weights_mat::SparseMatrixCSC{Float64,Int}
+    edge_indices::Dict{Tuple{Int,Int},Int}
+    edge_weights_vec::Vector{Float64}
     # Constraints-related
     vertex_conflicts::Vector{Vector{Int}}
     edge_conflicts::Vector{Vector{Int}}
@@ -30,18 +27,10 @@ function MAPF(
     vertex_conflicts=[[v] for v in vertices(graph)],
     edge_conflicts=[Int[] for ed in edges(graph)],
 ) where {G}
-    # Graph-related
-    rev_graph = reverse(graph)
-
     # Edges-related
-    I = [src(ed) for ed in edges(graph)]
-    J = [dst(ed) for ed in edges(graph)]
-    V = [e for (e, ed) in enumerate(edges(graph))]
-    edge_indices = sparse(I, J, V, nv(graph), nv(graph))
-    rev_edge_indices = sparse(J, I, V, nv(graph), nv(graph))
-
+    edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(graph)))
     edge_weights_mat = Graphs.weights(graph)
-    edge_weights = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(graph)]
+    edge_weights_vec = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(graph)]
 
     # Constraints-related
     vertex_conflicts = [sort(group) for group in vertex_conflicts]
@@ -50,21 +39,16 @@ function MAPF(
     # Agents-related
     distances_to_destinations = Dict{Int,Vector{Float64}}()
     for d in unique(destinations)
-        shortest_path_tree_from_d = custom_dijkstra(
-            rev_graph, d; edge_indices=rev_edge_indices, edge_weights=edge_weights
-        )
-        distances_to_destinations[d] = shortest_path_tree_from_d.dists
+        spt_to_d = backward_dijkstra(graph, d, edge_indices, edge_weights_vec)
+        distances_to_destinations[d] = spt_to_d.dists
     end
 
     return MAPF(
         # Graph-related
         graph,
-        rev_graph,
         # Edges-related
         edge_indices,
-        rev_edge_indices,
-        edge_weights,
-        edge_weights_mat,
+        edge_weights_vec,
         # Constraints-related
         vertex_conflicts,
         edge_conflicts,

@@ -23,11 +23,3 @@ function conflicting_neighborhood(solution::Solution, mapf::MAPF)
     end
     return collect(neighborhood)
 end
-
-function remove_agents!(solution::Solution, agents)
-    backup = Dict(a => solution[a] for a in agents)
-    for a in agents
-        solution[a] = Path()
-    end
-    return backup
-end

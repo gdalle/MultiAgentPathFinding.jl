@@ -20,6 +20,7 @@ using SparseArrays
 
 include("structs/mapf.jl")
 include("structs/path.jl")
+include("structs/solution.jl")
 include("structs/reservation.jl")
 
 include("eval/conflicts.jl")
@@ -35,7 +36,6 @@ include("paths/cooperative_astar.jl")
 include("local_search/neighborhood.jl")
 include("local_search/large_neighborhood_search.jl")
 include("local_search/feasibility_search.jl")
-include("local_search/permutation_search.jl")
 
 include("learning/features_agents.jl")
 include("learning/features_edges.jl")
@@ -53,8 +53,10 @@ include("datasets/benchmark/plot.jl")
 
 ## Exports
 
-export Path, Solution
 export MAPF, nb_agents
+export TimedPath
+export Solution
+export Reservation
 
 export flowtime, max_time
 export VectorPriorityQueue

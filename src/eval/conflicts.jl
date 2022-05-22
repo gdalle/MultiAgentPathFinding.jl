@@ -1,12 +1,15 @@
 ## Between paths
 
-function find_conflict(path1::Path, path2::Path, mapf::MAPF; tol=0)
-    for (t1, v1) in path1
+function find_conflict(timed_path1::TimedPath, timed_path2::TimedPath, mapf::MAPF; tol=0)
+    t01, path1 = timed_path1.t0, timed_path1.path
+    t02, path2 = timed_path2.t0, timed_path2.path
+    for (k1, v1) in enumerate(path1)
+        t1 = t01 + k1 - 1
         conflicts = mapf.vertex_conflicts[v1]
-        for t2 in (t1-tol):(t1+tol)
-            k2 = t2 - path2[1][1] + 1
+        for t2 in (t1 - tol):(t1 + tol)
+            k2 = t2 - t02 + 1
             if 1 <= k2 <= length(path2)
-                v2 = path2[k2][2]
+                v2 = path2[k2]
                 if insorted(v2, conflicts)
                     return (t1, v1), (t2, v2)
                 end
@@ -16,14 +19,17 @@ function find_conflict(path1::Path, path2::Path, mapf::MAPF; tol=0)
     return nothing
 end
 
-function count_conflicts(path1::Path, path2::Path, mapf::MAPF; tol=0)
+function count_conflicts(timed_path1::TimedPath, timed_path2::TimedPath, mapf::MAPF; tol=0)
     c = 0
-    for (t1, v1) in path1
+    t01, path1 = timed_path1.t0, timed_path1.path
+    t02, path2 = timed_path2.t0, timed_path2.path
+    for (k1, v1) in enumerate(path1)
+        t1 = t01 + k1 - 1
         conflicts = mapf.vertex_conflicts[v1]
-        for t2 in (t1-tol):(t1+tol)
-            k2 = t2 - path2[1][1] + 1
+        for t2 in (t1 - tol):(t1 + tol)
+            k2 = t2 - t02 + 1
             if 1 <= k2 <= length(path2)
-                v2 = path2[k2][2]
+                v2 = path2[k2]
                 if insorted(v2, conflicts)
                     c += 1
                 end
@@ -33,8 +39,8 @@ function count_conflicts(path1::Path, path2::Path, mapf::MAPF; tol=0)
     return c
 end
 
-function conflict_exists(path1::Path, path2::Path, mapf::MAPF; tol=0)
-    return !isnothing(find_conflict(path1, path2, mapf; tol=tol))
+function conflict_exists(timed_path1::TimedPath, timed_path2::TimedPath, mapf::MAPF; tol=0)
+    return !isnothing(find_conflict(timed_path1, timed_path2, mapf; tol=tol))
 end
 
 ## Between agents
@@ -57,7 +63,7 @@ end
 ## Between one agent and the rest
 
 function find_conflict(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
-    for a2 = 1:nb_agents(mapf)
+    for a2 in 1:nb_agents(mapf)
         if a2 != a1
             conflict = find_conflict(a1, a2, solution, mapf; tol=tol)
             if !isnothing(conflict)
@@ -74,7 +80,7 @@ end
 
 function count_conflicts(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
     c = 0
-    for a2 = 1:nb_agents(mapf)
+    for a2 in 1:nb_agents(mapf)
         if a2 != a1
             c += count_conflicts(a1, a2, solution, mapf; tol=tol)
         end
@@ -85,7 +91,7 @@ end
 ## In the whole solution
 
 function find_conflict(solution::Solution, mapf::MAPF; tol=0)
-    for a1 = 1:nb_agents(mapf), a2 = 1:a1-1
+    for a1 in 1:nb_agents(mapf), a2 in 1:(a1 - 1)
         conflict = find_conflict(a1, a2, solution, mapf; tol=tol)
         if !isnothing(conflict)
             return conflict
@@ -100,7 +106,7 @@ end
 
 function count_conflicts(solution::Solution, mapf::MAPF; tol=0)
     c = 0
-    for a1 = 1:nb_agents(mapf), a2 = 1:a1-1
+    for a1 in 1:nb_agents(mapf), a2 in 1:(a1 - 1)
         c += count_conflicts(a1, a2, solution, mapf; tol=tol)
     end
     return c
@@ -110,7 +116,7 @@ end
 
 function colliding_pairs(solution::Solution, mapf::MAPF; tol=0)
     cp = 0
-    for a1 = 1:nb_agents(mapf), a2 = 1:a1-1
+    for a1 in 1:nb_agents(mapf), a2 in 1:(a1 - 1)
         if conflict_exists(a1, a2, solution, mapf; tol=tol)
             cp += 1
         end
@@ -120,7 +126,7 @@ end
 
 function collision_degree(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
     deg = 0
-    for a2 = 1:nb_agents(mapf)
+    for a2 in 1:nb_agents(mapf)
         if conflict_exists(a1, a2, solution, mapf; tol=tol)
             deg += 1
         end
@@ -129,5 +135,5 @@ function collision_degree(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
 end
 
 function collision_degrees(solution::Solution, mapf::MAPF; tol=0)
-    return [collision_degree(a1, solution, mapf; tol=tol) for a1 = 1:nb_agents(mapf)]
+    return [collision_degree(a1, solution, mapf; tol=tol) for a1 in 1:nb_agents(mapf)]
 end

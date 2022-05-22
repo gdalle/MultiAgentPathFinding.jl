@@ -14,7 +14,7 @@ function feasibility_search!(
     while !is_feasible(solution, mapf)
         next!(prog; showvalues=[(:colliding_pairs, cp)])
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
-        backup = remove_agents!(solution, neighborhood_agents)
+        backup = remove_agents!(solution, neighborhood_agents, mapf)
         cooperative_astar!(
             solution, neighborhood_agents, mapf; conflict_price=conflict_price
         )

@@ -7,7 +7,7 @@ function large_neighborhood_search!(
     for _ in 1:steps
         next!(p)
         agents = random_neighborhood(mapf, neighborhood_size)
-        backup = remove_agents!(solution, agents)
+        backup = remove_agents!(solution, agents, mapf)
         cooperative_astar!(solution, agents, mapf)
         new_cost = flowtime(solution, mapf)
         if is_feasible(solution, mapf) && new_cost < cost  # keep

@@ -23,16 +23,17 @@ is_forbidden_edge(res::Reservation, t::Integer, e::Integer) = (t, e) in res.forb
 function compute_reservation(solution::Solution, mapf::MAPF; agents=1:nb_agents(mapf))
     reservation = Reservation()
     for a in agents
-        path = solution[a]
-        update_reservation!(reservation, path, mapf::MAPF)
+        timed_path = solution[a]
+        update_reservation!(reservation, timed_path, mapf::MAPF)
     end
     return reservation
 end
 
-function update_reservation!(reservation::Reservation, path::Path, mapf::MAPF)
-    for (t, u) in path
+function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF)
+    (; t0, path) = timed_path
+    for (k, u) in enumerate(path)
         for v in mapf.vertex_conflicts[u]
-            push!(reservation.forbidden_vertices, (t, v))
+            push!(reservation.forbidden_vertices, (t0 + k - 1, v))
         end
     end
     return nothing

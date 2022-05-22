@@ -1,21 +1,21 @@
-function build_astar_path(came_from::Dict, t::Integer, v::Integer, t0::Integer)
-    path = Path()
-    (τ, u) = (t, v)
-    pushfirst!(path, (τ, u))
+function build_astar_path(came_from::Dict, t0::Integer, s::Integer, t::Integer, d::Integer)
+    path = Int[]
+    (τ, v) = (t, d)
+    pushfirst!(path, v)
     while τ > t0
-        (τ, u) = came_from[(τ, u)]
-        pushfirst!(path, (τ, u))
+        (τ, v) = came_from[τ, v]
+        pushfirst!(path, v)
     end
-    return path
+    return TimedPath(t0, path)
 end
 
 function temporal_astar(
     g::AbstractGraph{V},
     s::Integer,
     d::Integer,
-    t0::Integer;
+    t0::Integer,
     edge_indices,
-    edge_weights::Vector{W},
+    edge_weights_vec::Vector{W};
     heuristic=v -> 0.0,
     reservation::Reservation=Reservation(),
     conflict_price=Inf,
@@ -46,14 +46,14 @@ function temporal_astar(
         nodes_explored += 1
 
         if v == d
-            return build_astar_path(came_from, t, v, t0)
+            return build_astar_path(came_from, t0, s, t, d)
         end
 
         for w in outneighbors(g, v)
             heur_w = heuristic(w)
 
             e_vw = edge_indices[v, w]
-            weight_vw = edge_weights[e_vw]
+            weight_vw = edge_weights_vec[e_vw]
             conflict_vw = is_forbidden_vertex(reservation, t + 1, w)
 
             distance_w = distance[t, v] + weight_vw

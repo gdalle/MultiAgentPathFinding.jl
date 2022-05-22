@@ -2,47 +2,54 @@ function cooperative_astar!(
     solution::Solution,
     agents::AbstractVector{Int},
     mapf::MAPF,
-    edge_weights::AbstractVector=mapf.edge_weights;
+    edge_weights_vec::AbstractVector=mapf.edge_weights_vec;
     conflict_price=Inf,
     show_progress=false,
 )
-    A = nb_agents(mapf)
+    (;
+        graph,
+        edge_indices,
+        sources,
+        destinations,
+        starting_times,
+        distances_to_destinations,
+    ) = mapf
     reservation = compute_reservation(solution, mapf)
-    prog = Progress(A; enabled=show_progress)
+    prog = Progress(length(agents); enabled=show_progress)
     for a in agents
         next!(prog)
-        s, d, t0 = mapf.sources[a], mapf.destinations[a], mapf.starting_times[a]
-        dist = mapf.distances_to_destinations[d]
+        s, d, t0 = sources[a], destinations[a], starting_times[a]
+        dist = distances_to_destinations[d]
         heuristic(v) = dist[v]
-        path = temporal_astar(
-            mapf.graph,
+        timed_path = temporal_astar(
+            graph,
             s,
             d,
-            t0;
-            edge_indices=mapf.edge_indices,
-            edge_weights=edge_weights,
+            t0,
+            edge_indices,
+            edge_weights_vec;
             heuristic=heuristic,
             reservation=reservation,
             conflict_price=conflict_price,
         )
-        solution[a] = path
-        update_reservation!(reservation, path, mapf)
+        solution[a] = timed_path
+        update_reservation!(reservation, timed_path, mapf)
     end
 end
 
 function cooperative_astar(
     mapf::MAPF,
-    permutation::AbstractVector{Int}=1:nb_agents(mapf),
-    edge_weights::AbstractVector=mapf.edge_weights;
+    agents::AbstractVector{Int}=1:nb_agents(mapf),
+    edge_weights_vec::AbstractVector=mapf.edge_weights_vec;
     conflict_price=Inf,
     show_progress=false,
 )
-    solution = [Path() for a in 1:nb_agents(mapf)]
+    solution = [TimedPath(mapf.sources[a], Int[]) for a in 1:nb_agents(mapf)]
     cooperative_astar!(
         solution,
-        permutation,
+        agents,
         mapf,
-        edge_weights;
+        edge_weights_vec;
         conflict_price=conflict_price,
         show_progress=show_progress,
     )

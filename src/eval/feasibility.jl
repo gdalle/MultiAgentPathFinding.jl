@@ -8,20 +8,21 @@ function is_feasible(solution::Solution, mapf::MAPF)
         s = mapf.sources[a]
         d = mapf.destinations[a]
         t0 = mapf.starting_times[a]
-        path = solution[a]
+        timed_path = solution[a]
+        path = timed_path.path
         if length(path) == 0
-            return false
-        elseif path[1] != (t0, s)
-            return false
-        elseif path[end][2] != d
-            return false
+            return false  # empty path
+        elseif timed_path.t0 != t0
+            return false  # wrong starting time
+        elseif first(path) != s
+            return false  # wrong source
+        elseif last(path) != d
+            return false  # wrong destination
         else
             for k in 1:(length(path) - 1)
-                (t1, v1), (t2, v2) = path[k], path[k + 1]
-                if t2 != t1 + 1
-                    return false
-                elseif !has_edge(g, v1, v2)
-                    return false
+                v1, v2 = path[k], path[k + 1]
+                if !has_edge(g, v1, v2)
+                    return false  # invalid edge
                 end
             end
         end
