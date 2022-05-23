@@ -1,5 +1,8 @@
 ## Imports
 
+using Base.Threads
+nthreads()
+
 using BenchmarkTools
 using Flux
 using Graphs
@@ -10,19 +13,17 @@ using PythonCall
 using Random
 using SparseArrays
 using Statistics
-using Base.Threads
+using UnicodePlots
 
-nthreads()
-GLMakie.inline!(true)
 Random.seed!(63)
 
 ## Settings
 
-W = 50  # width
-H = 50  # height
-C = 10  # cities
+W = 40  # width
+H = 40  # height
+C = 5  # cities
 A = 100  # agents
-K = 1  # nb of instances
+K = 30  # nb of instances
 
 ## Data generation
 
@@ -54,7 +55,7 @@ solutions_indep = Vector{Solution}(undef, K);
 @threads for k in 1:K
     @info "Instance $k solved by thread $(threadid()) (indep)"
     mapf = mapfs[k]
-    solution = independent_astar(mapf)
+    solution = independent_dijkstra(mapf)
     solutions_indep[k] = solution
 end
 
@@ -72,13 +73,11 @@ solutions_lns2 = Vector{Solution}(undef, K);
 @threads for k in 1:K
     @info "Instance $k solved by thread $(threadid()) (LNS2)"
     mapf = mapfs[k]
-    solution = independent_dijkstra(mapf)
-    feasibility_search!(
-        solution,
+    solution = feasibility_search(
         mapf;
         conflict_price=1,
-        conflict_price_increase=0.01,
-        neighborhood_size=A ÷ 10,
+        conflict_price_increase=1e-2,
+        neighborhood_size=5,
         progress=false,
     )
     solutions_lns2[k] = solution
@@ -86,39 +85,41 @@ end
 
 ## Apply local search
 
-solutions_coop_lns1 = Vector{Solution}(undef, K);
-@threads for k in 1:K
-    @info "Instance $k solved by thread $(threadid()) (coop + LNS1)"
-    mapf = mapfs[k]
-    solution = deepcopy(solutions_coop[k])
-    large_neighborhood_search!(
-        solution, mapf; steps=A, neighborhood_size=A ÷ 10, progress=false
-    )
-    solutions_coop_lns1[k] = solution
-end
+# solutions_coop_lns1 = Vector{Solution}(undef, K);
+# @threads for k in 1:K
+#     @info "Instance $k solved by thread $(threadid()) (coop + LNS1)"
+#     mapf = mapfs[k]
+#     solution = deepcopy(solutions_coop[k])
+#     large_neighborhood_search!(
+#         solution, mapf; steps=A, neighborhood_size=A ÷ 10, progress=false
+#     )
+#     solutions_coop_lns1[k] = solution
+# end
 
-solutions_lns2_lns1 = Vector{Solution}(undef, K);
-@threads for k in 1:K
-    @info "Instance $k solved by thread $(threadid()) (coop + LNS2)"
-    mapf = mapfs[k]
-    solution = deepcopy(solutions_lns2[k])
-    large_neighborhood_search!(
-        solution, mapf; steps=A, neighborhood_size=A ÷ 10, progress=false
-    )
-    solutions_lns2_lns1[k] = solution
-end
+# solutions_lns2_lns1 = Vector{Solution}(undef, K);
+# @threads for k in 1:K
+#     @info "Instance $k solved by thread $(threadid()) (coop + LNS2)"
+#     mapf = mapfs[k]
+#     solution = deepcopy(solutions_lns2[k])
+#     large_neighborhood_search!(
+#         solution, mapf; steps=A, neighborhood_size=A ÷ 10, progress=false
+#     )
+#     solutions_lns2_lns1[k] = solution
+# end
 
 ## Eval dataset
 
 mean(flowtime.(solutions_indep, mapfs))
 mean(flowtime.(solutions_coop, mapfs))
-mean(flowtime.(solutions_coop_lns1, mapfs))
 mean(flowtime.(solutions_lns2, mapfs))
-mean(flowtime.(solutions_lns2_lns1, mapfs))
+# mean(flowtime.(solutions_coop_lns1, mapfs))
+# mean(flowtime.(solutions_lns2_lns1, mapfs))
 
-solutions_opt = solutions_lns2_lns1;
+solutions_opt = solutions_lns2;
 
 ## Build features
+
+imitate = "opt"
 
 X = Vector{Matrix{Float64}}(undef, K * A);
 Y = Vector{Vector{Int}}(undef, K * A);
@@ -133,7 +134,11 @@ Y = Vector{Vector{Int}}(undef, K * A);
         embedding .-= m
         embedding ./= s
         X[(k - 1) * A + a] = embedding
-        Y[(k - 1) * A + a] = path_to_vec(solutions_opt[k][a], mapf)
+        if imitate == "indep"
+            Y[(k - 1) * A + a] = path_to_vec(solutions_indep[k][a], mapf)
+        elseif imitate == "opt"
+            Y[(k - 1) * A + a] = path_to_vec(solutions_opt[k][a], mapf)
+        end
     end
 end
 
@@ -150,14 +155,16 @@ end
 
 ## Initialization
 
-make_positive(z) = celu.(z) .+ 1.01;
+make_positive(z) = celu.(z) .+ 1.01;;
 switch_sign(z) = -z;
 dropfirstdim(z) = dropdims(z; dims=1);
 
 perturbed = PerturbedLogNormal(maximizer; ε=1, M=5)
 fenchel_young_loss = FenchelYoungLoss(perturbed)
 
-initial_encoder = Chain(Dense(F, 1), dropfirstdim, make_positive, switch_sign)
+initial_encoder = Chain(
+    Dense(F, F, sigmoid), Dense(F, 1), dropfirstdim, make_positive, switch_sign
+)
 encoder = deepcopy(initial_encoder)
 
 par = Flux.params(encoder);
@@ -193,28 +200,25 @@ for epoch in 1:nb_epochs
     epoch > 1 && losses[end] ≈ losses[end - 1] && break
 end;
 
-losses
-distances
+lineplot(losses, xlabel="Epoch", ylabel="FYL") |> println
+lineplot(distances, xlabel="Epoch", ylabel="Hamming dist") |> println
 
 ## Eval
 
-costs_opt = [flowtime(solution, mapf) for (solution, mapf) in zip(solutions_opt, mapfs)];
-costs_indep = [flowtime(solution, mapf) for (solution, mapf) in zip(solutions_indep, mapfs)];
-
-costs_pred_init = zeros(K);
-costs_pred_final = zeros(K);
-
-for k in 1:K  # Error
-    mapf = mapfs[k]
-    edge_weights_mat_init = reduce(hcat, -initial_encoder(X[(k - 1) * A + a]) for a = 1:A)
-    edge_weights_mat_final = reduce(hcat, -encoder(X[(k - 1) * A + a]) for a = 1:A)
-    solution_pred_init = cooperative_astar(mapf, 1:A, edge_weights_mat_init)
-    solution_pred_final = cooperative_astar(mapf, 1:A, edge_weights_mat_final)
-    costs_pred_init[k] += flowtime(solution_pred_init, mapf)
-    costs_pred_final[k] += flowtime(solution_pred_final, mapf)
+solutions_pred_init = Vector{Solution}(undef, K);
+solutions_pred_final = Vector{Solution}(undef, K);
+@threads for k in 1:K  # Error
     @info "Instance $k solved by thread $(threadid())"
+    mapf = mapfs[k]
+    edge_weights_mat_init = reduce(hcat, -initial_encoder(X[(k - 1) * A + a]) for a in 1:A)
+    edge_weights_mat_final = reduce(hcat, -encoder(X[(k - 1) * A + a]) for a in 1:A)
+    solutions_pred_init[k] = cooperative_astar(mapf, 1:A, edge_weights_mat_init)
+    solutions_pred_final[k] = cooperative_astar(mapf, 1:A, edge_weights_mat_final)
 end
 
-costs_pred_init
-costs_pred_final
-costs_opt
+mean(flowtime.(solutions_indep, mapfs))
+mean(flowtime.(solutions_coop, mapfs))
+mean(flowtime.(solutions_opt, mapfs))
+
+mean(flowtime.(solutions_pred_init, mapfs))
+mean(flowtime.(solutions_pred_final, mapfs))
