@@ -3,34 +3,16 @@ function temporal_astar(
     s::Integer,
     d::Integer,
     t0::Integer,
-    edge_indices::Dict,
-    edge_weights_vec::AbstractVector{W};
+    w::AbstractMatrix{W},
+    reservation::Reservation=Reservation();
     heuristic::Function=v -> 0.0,
-    reservation::Reservation=Reservation(),
     conflict_price::Float64=Inf,
 ) where {V,W<:AbstractFloat}
     if conflict_price == Inf
-        return temporal_astar_hard(
-            g,
-            s,
-            d,
-            t0,
-            edge_indices,
-            edge_weights_vec;
-            heuristic=heuristic,
-            reservation=reservation,
-        )
+        return temporal_astar_hard(g, s, d, t0, w, reservation; heuristic=heuristic)
     else
         return temporal_astar_soft(
-            g,
-            s,
-            d,
-            t0,
-            edge_indices,
-            edge_weights_vec;
-            heuristic=heuristic,
-            reservation=reservation,
-            conflict_price=conflict_price
+            g, s, d, t0, w, reservation; heuristic=heuristic, conflict_price=conflict_price
         )
     end
 end
@@ -40,10 +22,9 @@ function temporal_astar_hard(
     s::Integer,
     d::Integer,
     t0::Integer,
-    edge_indices::Dict,
-    edge_weights_vec::AbstractVector{W};
+    w::AbstractMatrix{W},
+    reservation::Reservation=Reservation();
     heuristic=v -> 0.0,
-    reservation::Reservation=Reservation(),
 ) where {V,W}
     T = Int
     # Init storage
@@ -63,9 +44,7 @@ function temporal_astar_hard(
         end
         for v in outneighbors(g, u)
             is_forbidden_vertex(reservation, t + 1, v) && continue
-            e_uv = edge_indices[u, v]
-            w_uv = edge_weights_vec[e_uv]
-            dist_v = dists[t, u] + w_uv
+            dist_v = dists[t, u] + w[u, v]
             old_dist_v = get(dists, (t + 1, v), typemax(W))
             if dist_v < old_dist_v
                 parents[t + 1, v] = (t, u)
@@ -82,10 +61,9 @@ function temporal_astar_soft(
     s::Integer,
     d::Integer,
     t0::Integer,
-    edge_indices,
-    edge_weights_vec::AbstractVector{W};
+    w::AbstractMatrix{W},
+    reservation::Reservation=Reservation();
     heuristic=v -> 0.0,
-    reservation::Reservation=Reservation(),
     conflict_price::Float64=0.0,
 ) where {V,W}
     T = Int
@@ -106,9 +84,7 @@ function temporal_astar_soft(
             return build_astar_path(parents, t0, s, t, d)
         end
         for v in outneighbors(g, u)
-            e_uv = edge_indices[u, v]
-            w_uv = edge_weights_vec[e_uv]
-            dist_v = dists[t, u] + w_uv
+            dist_v = dists[t, u] + w[u, v]
             conflicts_v = conflicts[t, u] + is_forbidden_vertex(reservation, t + 1, v)
             old_dist_v = get(dists, (t + 1, v), typemax(W))
             old_conflicts_v = get(conflicts, (t + 1, v), typemax(Int) ÷ 10)

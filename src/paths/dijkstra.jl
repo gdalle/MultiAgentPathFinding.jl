@@ -7,10 +7,8 @@ end
 function forward_dijkstra(
     g::AbstractGraph{T},
     s::Integer,
-    edge_indices::Dict,
-    edge_weights_vec::AbstractVector{W},
+    w::AbstractMatrix{W},
 ) where {T<:Integer,W<:AbstractFloat}
-    @assert all(>=(zero(W)), edge_weights_vec)
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
     dists = fill(typemax(W), nv(g))
@@ -24,9 +22,7 @@ function forward_dijkstra(
         if dist_u <= dists[u]
             dists[u] = dist_u
             for v in outneighbors(g, u)
-                e_uv = edge_indices[u, v]
-                w_uv = edge_weights_vec[e_uv]
-                dist_v = dist_u + w_uv
+                dist_v = dist_u + w[u, v]
                 if dist_v < dists[v]
                     parents[v] = u
                     dists[v] = dist_v
@@ -41,10 +37,8 @@ end
 function backward_dijkstra(
     g::AbstractGraph{T},
     d::Integer,
-    edge_indices::Dict,
-    edge_weights_vec::AbstractVector{W},
+    w::AbstractMatrix{W},
 ) where {T<:Integer,W<:AbstractFloat}
-    @assert all(>=(zero(W)), edge_weights_vec)
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
     dists = fill(typemax(W), nv(g))
@@ -58,9 +52,7 @@ function backward_dijkstra(
         if dist_v <= dists[v]
             dists[v] = dist_v
             for u in inneighbors(g, v)
-                e_uv = edge_indices[u, v]
-                w_uv = edge_weights_vec[e_uv]
-                dist_u = w_uv + dist_v
+                dist_u = w[u, v] + dist_v
                 if dist_u < dists[u]
                     parents[u] = v
                     dists[u] = dist_u

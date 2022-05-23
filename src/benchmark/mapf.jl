@@ -29,7 +29,7 @@ function benchmark_mapf(
     return benchmark_mapf(map_matrix, scenario; buckets=buckets)
 end
 
-function is_feasible(mapf::BenchmarkMAPF)
+function is_solvable(mapf::BenchmarkMAPF)
     all_connected_components = connected_components(mapf.g)
     largest_connected_component = all_connected_components[argmax(
         length.(all_connected_components)

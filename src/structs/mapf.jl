@@ -8,6 +8,8 @@ struct MAPF{G<:AbstractGraph{Int}}
     g::G
     # Edges-related
     edge_indices::Dict{Tuple{Int,Int},Int}
+    edge_colptr::Vector{Int}
+    edge_rowval::Vector{Int}
     edge_weights_vec::Vector{Float64}
     # Constraints-related
     vertex_conflicts::Vector{Vector{Int}}
@@ -30,6 +32,20 @@ function MAPF(
     edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(g)))
     edge_weights_mat = Graphs.weights(g)
     edge_weights_vec = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(g)]
+
+    edge_colptr = Vector{Int}(undef, nv(g) + 1)
+    edge_rowval = Vector{Int}(undef, ne(g))
+    e = 1
+    for i in vertices(g)
+        edge_colptr[i] = e
+        for j in outneighbors(g, i)
+            @assert edge_indices[i, j] == e
+            edge_rowval[e] = j
+            e += 1
+        end
+    end
+    edge_colptr[nv(g) + 1] = ne(g) + 1
+
     # Constraints-related
     vertex_conflicts = [sort(group) for group in vertex_conflicts]
     edge_conflicts = [sort(group) for group in edge_conflicts]
@@ -39,6 +55,8 @@ function MAPF(
         g,
         # Edges-related
         edge_indices,
+        edge_colptr,
+        edge_rowval,
         edge_weights_vec,
         # Constraints-related
         vertex_conflicts,
@@ -52,14 +70,10 @@ end
 
 nb_agents(mapf::MAPF) = length(mapf.sources)
 
-function compute_distances_to_destinations(
+function build_weights_matrix(
     mapf::MAPF, edge_weights_vec::AbstractVector=mapf.edge_weights_vec
 )
-    (; g, edge_indices, destinations) = mapf
-    distances_to_destinations = Dict{Int,Vector{Float64}}()
-    for d in unique(destinations)
-        spt_to_d = backward_dijkstra(g, d, edge_indices, edge_weights_vec)
-        distances_to_destinations[d] = spt_to_d.dists
-    end
-    return distances_to_destinations
+    (; g, edge_colptr, edge_rowval) = mapf
+    wᵀ = SparseMatrixCSC(nv(g), nv(g), edge_colptr, edge_rowval, edge_weights_vec)
+    return transpose(wᵀ)
 end

@@ -2,6 +2,7 @@ module MultiAgentPathFinding
 
 ## Dependencies
 
+using Base.Threads
 using ColorTypes
 using DataStructures
 using Graphs
@@ -25,8 +26,9 @@ include("eval/feasibility.jl")
 include("eval/cost.jl")
 
 include("paths/dijkstra.jl")
-include("paths/independent_dijkstra.jl")
+include("paths/bellman_ford.jl")
 include("paths/temporal_astar.jl")
+include("paths/independent_dijkstra.jl")
 include("paths/cooperative_astar.jl")
 
 include("local_search/neighborhood.jl")
@@ -42,7 +44,7 @@ include("benchmark/plot.jl")
 
 ## Exports
 
-export MAPF, nb_agents
+export MAPF, nb_agents, build_weights_matrix
 export TimedPath
 export path_to_vec, path_to_vec_sparse
 export Solution
@@ -56,6 +58,7 @@ export is_feasible
 
 export forward_dijkstra, backward_dijkstra
 export temporal_astar
+export dijkstra_to_destinations
 export independent_dijkstra, agent_dijkstra
 export cooperative_astar!, cooperative_astar
 
@@ -67,6 +70,7 @@ export agent_embedding, all_agents_embedding
 export edge_embedding, all_edges_embedding
 
 export read_benchmark_map, read_benchmark_scenario
+export is_solvable
 export display_benchmark_map
 export benchmark_mapf
 
