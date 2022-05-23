@@ -3,11 +3,13 @@ using MultiAgentPathFinding
 using ProgressMeter
 using Test
 
+data_dir = joinpath(@__DIR__, "..", "data")
+
 series = "maze"
 instance = "maze512-1-0"
 
-map_path = joinpath(@__DIR__, "..", "data", "$series-map", "$instance.map")
-scenario_path = joinpath(@__DIR__, "..", "data", "$series-scen", "$instance.map.scen")
+map_path = joinpath(data_dir, "$series-map", "$instance.map")
+scenario_path = joinpath(data_dir, "$series-scen", "$instance.map.scen")
 
 mapf = benchmark_mapf(map_path, scenario_path; buckets=1:40);
 
@@ -28,12 +30,12 @@ solution_lns = feasibility_search(mapf);
 testall = false
 
 if testall
-    @threads for map_folder in collect(filter(endswith("-map"), readdir("data")))
+    @threads for map_folder in collect(filter(endswith("-map"), readdir(data_dir)))
         scenario_folder = replace(map_folder, "-map" => "-scen")
-        for map_file in readdir(joinpath("data", map_folder))
+        for map_file in readdir(joinpath(data_dir, map_folder))
             scenario_file = replace(map_file, ".map" => ".map.scen")
-            map_path = joinpath("data", map_folder, map_file)
-            scenario_path = joinpath("data", scenario_folder, scenario_file)
+            map_path = joinpath(data_dir, map_folder, map_file)
+            scenario_path = joinpath(data_dir, scenario_folder, scenario_file)
             mapf = benchmark_mapf(map_path, scenario_path; buckets=1:typemax(Int));
         end
     end

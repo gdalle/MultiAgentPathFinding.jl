@@ -25,10 +25,11 @@ function benchmark_mapf(
             push!(sources, s)
             push!(destinations, d)
         else
+            short_scenario_path = joinpath(splitpath(scenario_path)[end-1:end]...)
             index = pb.index
-            start = (pb.start_i - 1, pb.start_j - 1)
-            goal = (pb.goal_i - 1, pb.goal_j - 1)
-            @info "Infeasible problem for scenario $scenario_path" index start goal
+            start_xy = (pb.start_j - 1, pb.start_i - 1)
+            goal_xy = (pb.goal_j - 1, pb.goal_i - 1)
+            @info "Infeasible problem for scenario $short_scenario_path" index start_xy goal_xy
         end
     end
     # Create MAPF
