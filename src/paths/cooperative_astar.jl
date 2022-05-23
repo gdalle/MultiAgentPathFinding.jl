@@ -7,6 +7,7 @@ function cooperative_astar!(
     conflict_price=Inf,
     show_progress=false,
 )
+    @assert all(>=(0), edge_weights_vec)
     prog = Progress(length(agents); enabled=show_progress)
     (; g, sources, destinations, starting_times) = mapf
     w = build_weights_matrix(mapf, edge_weights_vec)
@@ -33,14 +34,14 @@ function cooperative_astar!(
     conflict_price=Inf,
     show_progress=false,
 )
+    @assert all(>=(0), edge_weights_mat)
     prog = Progress(length(agents); enabled=show_progress)
     (; g, sources, destinations, starting_times) = mapf
     reservation = compute_reservation(solution, mapf)
     for a in agents
         next!(prog)
         s, d, t0 = sources[a], destinations[a], starting_times[a]
-        edge_weights_vec_for_a = view(edge_weights_mat, :, a)
-        w_for_a = build_weights_matrix(mapf, edge_weights_vec_for_a)
+        w_for_a = build_weights_matrix(mapf, edge_weights_mat[:, a])
         dists = backward_dijkstra(g, d, w_for_a).dists
         heuristic(v) = dists[v]
         timed_path = temporal_astar(
