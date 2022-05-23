@@ -16,3 +16,14 @@ solution_coop = cooperative_astar(mapf, 1:nb_agents(mapf));
 @test !is_feasible(solution_indep, mapf)
 @test is_feasible(solution_coop, mapf)
 @test flowtime(solution_indep, mapf) < flowtime(solution_coop, mapf)
+
+# map_paths = String[]
+# scenario_paths = String[]
+# for map_folder in filter(endswith("-map"), readdir("data"))
+#     scenario_folder = replace(map_folder, "-map" => "-scen")
+#     for map_file in readdir(joinpath("data", map_folder))
+#         scenario_file = replace(map_file, ".map" => ".map.scen")
+#         push!(map_paths, joinpath("data", map_folder, map_file))
+#         push!(scenario_paths, joinpath("data", scenario_folder, scenario_file))
+#     end
+# end

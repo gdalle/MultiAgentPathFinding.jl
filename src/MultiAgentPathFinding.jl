@@ -4,13 +4,10 @@ module MultiAgentPathFinding
 
 using ColorTypes
 using DataStructures
-using GLMakie
 using Graphs
 using GridGraphs
 using LinearAlgebra
-using MetaDataGraphs
 using ProgressMeter
-using PythonCall
 using Random
 using Statistics
 using StatsBase: StatsBase, sample
@@ -39,16 +36,9 @@ include("local_search/feasibility_search.jl")
 include("learning/features_agents.jl")
 include("learning/features_edges.jl")
 
-include("datasets/flatland/constants.jl")
-include("datasets/flatland/agent.jl")
-include("datasets/flatland/graph.jl")
-include("datasets/flatland/utils.jl")
-include("datasets/flatland/mapf.jl")
-include("datasets/flatland/plot.jl")
-
-include("datasets/benchmark/read.jl")
-include("datasets/benchmark/mapf.jl")
-include("datasets/benchmark/plot.jl")
+include("benchmark/read.jl")
+include("benchmark/mapf.jl")
+include("benchmark/plot.jl")
 
 ## Exports
 
@@ -75,9 +65,6 @@ export large_neighborhood_search!, large_neighborhood_search
 
 export agent_embedding, all_agents_embedding
 export edge_embedding, all_edges_embedding
-
-export FlatlandGraph, FlatlandMAPF
-export flatland_mapf
 
 export read_benchmark_map, read_benchmark_scenario
 export display_benchmark_map
