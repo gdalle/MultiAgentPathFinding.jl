@@ -5,9 +5,9 @@ function temporal_astar(
     t0::Integer,
     edge_indices::Dict,
     edge_weights_vec::AbstractVector{W};
-    heuristic=v -> 0.0,
+    heuristic::Function=v -> 0.0,
     reservation::Reservation=Reservation(),
-    conflict_price=Inf,
+    conflict_price::Float64=Inf,
 ) where {V,W<:AbstractFloat}
     if conflict_price == Inf
         return temporal_astar_hard(
@@ -86,10 +86,9 @@ function temporal_astar_soft(
     edge_weights_vec::AbstractVector{W};
     heuristic=v -> 0.0,
     reservation::Reservation=Reservation(),
-    conflict_price=0.0,
+    conflict_price::Float64=0.0,
 ) where {V,W}
     T = Int
-    conflict_price = float(conflict_price)
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},W}[])
     dists = Dict{Tuple{T,V},W}()

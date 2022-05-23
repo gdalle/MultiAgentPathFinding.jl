@@ -23,7 +23,7 @@ W = 40  # width
 H = 40  # height
 C = 5  # cities
 A = 100  # agents
-K = 30  # nb of instances
+K = 50  # nb of instances
 
 ## Data generation
 
@@ -53,7 +53,7 @@ end
 
 solutions_indep = Vector{Solution}(undef, K);
 @threads for k in 1:K
-    @info "Instance $k solved by thread $(threadid()) (indep)"
+    @info "Thread $(threadid()) - indep Dijkstra - instance $k"
     mapf = mapfs[k]
     solution = independent_dijkstra(mapf)
     solutions_indep[k] = solution
@@ -63,7 +63,7 @@ end
 
 solutions_coop = Vector{Solution}(undef, K);
 @threads for k in 1:K
-    @info "Instance $k solved by thread $(threadid()) (coop)"
+    @info "Thread $(threadid()) - coop A* - instance $k"
     mapf = mapfs[k]
     solution = cooperative_astar(mapf, 1:A)
     solutions_coop[k] = solution
@@ -71,11 +71,11 @@ end
 
 solutions_lns2 = Vector{Solution}(undef, K);
 @threads for k in 1:K
-    @info "Instance $k solved by thread $(threadid()) (LNS2)"
+    @info "Thread $(threadid()) - feasibility search - instance $k"
     mapf = mapfs[k]
     solution = feasibility_search(
         mapf;
-        conflict_price=1,
+        conflict_price=1.,
         conflict_price_increase=1e-2,
         neighborhood_size=5,
         progress=false,
@@ -155,7 +155,7 @@ end
 
 ## Initialization
 
-make_positive(z) = celu.(z) .+ 1.01;;
+make_positive(z) = celu.(z) .+ 1.;
 switch_sign(z) = -z;
 dropfirstdim(z) = dropdims(z; dims=1);
 
@@ -177,7 +177,7 @@ diversification = (
 
 ## Training
 
-nb_epochs = 50
+nb_epochs = 10
 losses, distances = Float64[], Float64[]
 for epoch in 1:nb_epochs
     l = 0.0

@@ -12,9 +12,9 @@ using MetaDataGraphs
 using ProgressMeter
 using PythonCall
 using Random
-using Statistics: mean
-using StatsBase: sample
-using SparseArrays: sparsevec, sparse
+using Statistics
+using StatsBase: StatsBase, sample
+using SparseArrays
 
 ## Includes
 

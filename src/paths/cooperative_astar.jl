@@ -30,6 +30,7 @@ function cooperative_astar!(
         solution[a] = timed_path
         update_reservation!(reservation, timed_path, mapf)
     end
+    return nothing
 end
 
 function cooperative_astar!(
@@ -64,6 +65,7 @@ function cooperative_astar!(
         solution[a] = timed_path
         update_reservation!(reservation, timed_path, mapf)
     end
+    return nothing
 end
 
 function cooperative_astar(
