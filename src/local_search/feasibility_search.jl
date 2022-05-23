@@ -1,19 +1,17 @@
 function feasibility_search!(
     solution::Solution,
     mapf::MAPF;
-    neighborhood_size=1,
-    conflict_price=Inf,
-    conflict_price_increase=0.0,
-    progress=true,
+    neighborhood_size::Integer,
+    conflict_price::Real,
+    conflict_price_increase::Real,
+    progress::Bool=false,
 )
     A = nb_agents(mapf)
     pathless_agents = shuffle([a for a in 1:A if length(solution[a]) == 0])
     cooperative_astar!(solution, pathless_agents, mapf; conflict_price=conflict_price)
     cp = colliding_pairs(solution, mapf)
     prog = ProgressUnknown("LNS2 steps: "; enabled=progress)
-    steps = 0
     while !is_feasible(solution, mapf)
-        steps += 1
         next!(prog; showvalues=[(:colliding_pairs, cp)])
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
@@ -28,17 +26,16 @@ function feasibility_search!(
                 solution[a] = backup[a]
             end
         end
-        conflict_price *= (1 + conflict_price_increase)
+        conflict_price *= (1. + conflict_price_increase)
     end
-    println("$steps steps")
     return solution
 end
 
 function feasibility_search(
     mapf::MAPF;
-    neighborhood_size=1,
-    conflict_price=Inf,
-    conflict_price_increase=0.0,
+    neighborhood_size=10,
+    conflict_price=1.,
+    conflict_price_increase=1e-2,
     progress=true,
 )
     solution = independent_dijkstra(mapf)

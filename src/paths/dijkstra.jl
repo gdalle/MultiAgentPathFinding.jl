@@ -4,7 +4,7 @@ struct ShortestPathTree{T<:Integer,W<:Real}
     dists::Vector{W}
 end
 
-function forwardist_dijkstra(
+function forward_dijkstra(
     g::AbstractGraph{T},
     s::Integer,
     edge_indices::Dict,

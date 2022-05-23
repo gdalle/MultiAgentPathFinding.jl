@@ -1,17 +1,17 @@
 function constant_features_edge(s::Integer, d::Integer, mapf::MAPF)
-    g = mapf.graph
-    e = mapf.edge_indices[s, d]
-    edge_weight = mapf.edge_weights_vec[e]
+    (; g, edge_indices, edge_weights_vec, sources, destinations) = mapf
+    e = edge_indices[s, d]
+    w = edge_weights_vec[e]
     indeg_s = indegree(g, s)
     outdeg_s = outdegree(g, s)
     indeg_d = indegree(g, d)
     outdeg_d = outdegree(g, d)
-    s_is_source = s in mapf.sources
-    d_is_source = d in mapf.sources
-    s_is_destination = s in mapf.destinations
-    d_is_destination = d in mapf.destinations
+    s_is_source = s in sources
+    d_is_source = d in sources
+    s_is_destination = s in destinations
+    d_is_destination = d in destinations
     return Float64[
-        edge_weight,
+        w,
         indeg_s,
         outdeg_s,
         indeg_d,
@@ -24,7 +24,7 @@ function constant_features_edge(s::Integer, d::Integer, mapf::MAPF)
 end
 
 function solution_features_edge(s::Integer, d::Integer, solution::Solution, mapf::MAPF)
-    g = mapf.graph
+    (; g) = mapf
     paths_visiting_s = 0
     paths_visiting_d = 0
     paths_crossing_e = 0
@@ -83,15 +83,14 @@ end
 
 function all_edges_embedding(solution::Solution, mapf::MAPF)
     x = reduce(
-        hcat, edge_embedding(src(ed), dst(ed), solution, mapf) for ed in edges(mapf.graph)
+        hcat, edge_embedding(src(ed), dst(ed), solution, mapf) for ed in edges(mapf.g)
     )
     return x
 end
 
 function all_edges_embedding(a::Integer, solution::Solution, mapf::MAPF)
     x = reduce(
-        hcat,
-        edge_embedding(src(ed), dst(ed), a, solution, mapf) for ed in edges(mapf.graph)
+        hcat, edge_embedding(src(ed), dst(ed), a, solution, mapf) for ed in edges(mapf.g)
     )
     return x
 end

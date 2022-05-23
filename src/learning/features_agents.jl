@@ -1,14 +1,11 @@
 function constant_features_agent(a::Integer, mapf::MAPF)
     t0 = mapf.starting_times[a]
-    s = mapf.sources[a]
-    d = mapf.destinations[a]
-    dist = mapf.distances_to_destinations[d][s]
-    return Float64[a, t0, dist]
+    return Float64[a, t0]
 end
 
 function path_features_agent(a::Integer, solution::Solution, mapf::MAPF)
+    (; g) = mapf
     path = solution[a]
-    g = mapf.graph
     duration = length(path)
     weight = path_weight(path, mapf)
     mean_outdegree = mean(outdegree(g, v) for (t, v) in path)
@@ -34,11 +31,7 @@ function agent_embedding(a::Integer, solution::Solution, mapf::MAPF)
     )
 end
 
-function all_agents_embedding(mapf::MAPF)
-    solution = independent_astar(mapf)
+function all_agents_embedding(solution::Solution, mapf::MAPF)
     x = reduce(hcat, all_features_agent(a, solution, mapf) for a in 1:nb_agents(mapf))
-    s = std(x; dims=2)
-    s[isapprox.(s, 0.0)] .= 1  # columns with zero variance
-    x = (x .- mean(x; dims=2)) ./ s
     return x
 end
