@@ -3,37 +3,47 @@ const BenchmarkMAPF = MAPF{SparseGridGraph{Int64,Float64}}
 is_passable(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 
 function benchmark_mapf(
-    map_matrix::Matrix{Char}, scenario::Vector{BenchmarkProblem}; buckets=1:10
+    map_path::AbstractString, scenario_path::AbstractString; buckets=1:10
 )
+    # Read files
+    map_matrix = read_benchmark_map(map_path)
+    scenario = read_benchmark_scenario(scenario_path, map_path)
+    # Create graph
     mask = map(is_passable, map_matrix)
     weights = zeros(Float64, size(mask))
     weights[mask] .= 1.0
     g = SparseGridGraph(weights, mask)
-    sources = [
-        GridGraphs.node_index(g, pb.start_i, pb.start_j) for
-        pb in scenario if pb.bucket in buckets
-    ]
-    destinations = [
-        GridGraphs.node_index(g, pb.goal_i, pb.goal_j) for
-        pb in scenario if pb.bucket in buckets
-    ]
+    # Add sources and destinations
+    ccs = weakly_connected_components(g)
+    largest_cc = ccs[argmax(length.(ccs))]
+    sources, destinations = Int[], Int[]
+    for pb in scenario
+        pb.bucket in buckets || continue
+        s = GridGraphs.node_index(g, pb.start_i, pb.start_j)
+        d = GridGraphs.node_index(g, pb.goal_i, pb.goal_j)
+        if (s in largest_cc) && (d in largest_cc)
+            push!(sources, s)
+            push!(destinations, d)
+        else
+            index = pb.index
+            start = (pb.start_i - 1, pb.start_j - 1)
+            goal = (pb.goal_i - 1, pb.goal_j - 1)
+            @info "Infeasible problem for scenario $scenario_path" index start goal
+        end
+    end
+    # Create MAPF
     mapf = MAPF(g, sources, destinations)
     return mapf
 end
 
-function benchmark_mapf(
-    map_path::AbstractString, scenario_path::AbstractString; buckets=1:10
-)
-    map_matrix = read_benchmark_map(map_path)
-    scenario = read_benchmark_scenario(scenario_path, map_path)
-    return benchmark_mapf(map_matrix, scenario; buckets=buckets)
-end
-
 function is_solvable(mapf::BenchmarkMAPF)
-    all_connected_components = connected_components(mapf.g)
-    largest_connected_component = all_connected_components[argmax(
-        length.(all_connected_components)
-    )]
-    return all(in(largest_connected_component), mapf.sources) &&
-           all(in(largest_connected_component), mapf.destinations)
+    (; g, sources, destinations) = mapf
+    ccs = connected_components(g)
+    largest_cc = ccs[argmax(length.(ccs))]
+    for (s, d) in zip(sources, destinations)
+        if !(s in largest_cc) || !(d in largest_cc)
+            return false
+        end
+    end
+    return true
 end

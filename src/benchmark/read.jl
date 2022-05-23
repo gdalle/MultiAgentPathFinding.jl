@@ -1,4 +1,5 @@
 Base.@kwdef struct BenchmarkProblem
+    index::Int
     bucket::Int
     map::String
     width::Int
@@ -35,7 +36,7 @@ function read_benchmark_scenario(scen_path::AbstractString, map_path::AbstractSt
 
     scenario = BenchmarkProblem[]
 
-    for line in @view lines[2:end]
+    for (l, line) in enumerate(view(lines, 2:length(lines)))
         line_split = split(line, "\t")
         bucket = parse(Int, line_split[1]) + 1
         map = line_split[2]
@@ -54,6 +55,7 @@ function read_benchmark_scenario(scen_path::AbstractString, map_path::AbstractSt
         goal_j = goal_x + 1
 
         problem = BenchmarkProblem(;
+            index=l,
             bucket=bucket,
             map=map,
             width=width,
