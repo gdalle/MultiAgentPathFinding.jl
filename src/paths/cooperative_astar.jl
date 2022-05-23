@@ -10,7 +10,6 @@ function cooperative_astar!(
     (; g, edge_indices, sources, destinations, starting_times) = mapf
     reservation = compute_reservation(solution, mapf)
     distances_to_destinations = compute_distances_to_destinations(mapf, edge_weights_vec)
-
     for a in agents
         next!(prog)
         s, d, t0 = sources[a], destinations[a], starting_times[a]
@@ -44,7 +43,6 @@ function cooperative_astar!(
     prog = Progress(length(agents); enabled=show_progress)
     (; g, edge_indices, sources, destinations, starting_times) = mapf
     reservation = compute_reservation(solution, mapf)
-
     for a in agents
         next!(prog)
         s, d, t0 = sources[a], destinations[a], starting_times[a]

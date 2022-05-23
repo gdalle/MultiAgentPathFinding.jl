@@ -30,7 +30,7 @@ function benchmark_mapf(
 end
 
 function is_feasible(mapf::BenchmarkMAPF)
-    all_connected_components = connected_components(mapf.graph)
+    all_connected_components = connected_components(mapf.g)
     largest_connected_component = all_connected_components[argmax(
         length.(all_connected_components)
     )]
