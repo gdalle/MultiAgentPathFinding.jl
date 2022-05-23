@@ -16,6 +16,21 @@ function dijkstra_to_destinations(
     return shortest_path_trees
 end
 
+function independent_dijkstra(
+    mapf::MAPF,
+    edge_weights_vec::AbstractVector=mapf.edge_weights_vec,
+    shortest_path_trees::Dict=dijkstra_to_destinations(mapf, edge_weights_vec),
+)
+    (; sources, destinations, starting_times) = mapf
+    A = nb_agents(mapf)
+    solution = Vector{TimedPath}(undef, A)
+    for a in 1:A
+        s, d, t0 = sources[a], destinations[a], starting_times[a]
+        solution[a] = build_dijkstra_path(shortest_path_trees[d], t0, s, d)
+    end
+    return solution
+end
+
 function agent_dijkstra(
     a::Integer, mapf::MAPF, edge_weights_vec::AbstractVector=mapf.edge_weights_vec
 )
@@ -28,17 +43,11 @@ function agent_dijkstra(
     return timed_path
 end
 
-function independent_dijkstra(
-    mapf::MAPF,
-    edge_weights_vec::AbstractVector=mapf.edge_weights_vec,
-    shortest_path_trees::Dict=dijkstra_to_destinations(mapf, edge_weights_vec),
-)
-    (; sources, destinations, starting_times) = mapf
+function independent_dijkstra(mapf::MAPF, edge_weights_mat::AbstractMatrix)
     A = nb_agents(mapf)
     solution = Vector{TimedPath}(undef, A)
-    for a in 1:A
-        s, d, t0 = sources[a], destinations[a], starting_times[a]
-        solution[a] = build_dijkstra_path(shortest_path_trees[d], t0, s, d)
+    @threads for a in 1:A
+        solution[a] = agent_dijkstra(a, mapf, edge_weights_mat[:, a])
     end
     return solution
 end

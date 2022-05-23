@@ -48,49 +48,36 @@ end
 function agent_features_edge(
     s::Integer, d::Integer, a::Integer, solution::Solution, mapf::MAPF
 )
-    s_belongs_to_path = false
-    d_belongs_to_path = false
-    edge_belongs_to_path = false
     timed_path = solution[a]
     (; t0, path) = timed_path
+    s_belongs_to_path = s in path
+    d_belongs_to_path = d in path
+    edge_belongs_to_path = false
     K = length(path)
-    for k in 1:(K - 1)
-        v1, v2 = path[k], path[k + 1]
-        if s in (v1, v2)
-            s_belongs_to_path = true
-        end
-        if d in (v1, v2)
-            d_belongs_to_path = true
-        end
-        if s in (v1, v2) && d in (v1, v2)
+    for (v1, v2) in zip(view(path, 1:K-1), view(path, 2:K))
+        if s == v1 && d == v2
             edge_belongs_to_path = true
+            break
         end
     end
     return Float64[s_belongs_to_path, d_belongs_to_path, edge_belongs_to_path]
 end
 
-function edge_embedding(s::Integer, d::Integer, solution::Solution, mapf::MAPF)
-    return vcat(
-        constant_features_edge(s, d, mapf), solution_features_edge(s, d, solution, mapf)
-    )
-end
-
 function edge_embedding(s::Integer, d::Integer, a::Integer, solution::Solution, mapf::MAPF)
-    return vcat(
-        edge_embedding(s, d, solution, mapf), agent_features_edge(s, d, a, solution, mapf)
-    )
-end
-
-function all_edges_embedding(solution::Solution, mapf::MAPF)
-    x = reduce(
-        hcat, edge_embedding(src(ed), dst(ed), solution, mapf) for ed in edges(mapf.g)
-    )
-    return x
+    f1 = constant_features_edge(s, d, mapf)
+    f2 = solution_features_edge(s, d, solution, mapf)
+    f3 = agent_features_edge(s, d, a, solution, mapf)
+    return vcat(f1, f2, f3)
 end
 
 function all_edges_embedding(a::Integer, solution::Solution, mapf::MAPF)
-    x = reduce(
-        hcat, edge_embedding(src(ed), dst(ed), a, solution, mapf) for ed in edges(mapf.g)
-    )
+    (; g) = mapf
+    ed = first(edges(g))
+    E = ne(g)
+    F = length(edge_embedding(src(ed), dst(ed), a, solution, mapf))
+    x = Matrix{Float64}(undef, F, E)
+    for (e, ed) in enumerate(edges(g))
+        x[:, e] .= edge_embedding(src(ed), dst(ed), a, solution, mapf)
+    end
     return x
 end

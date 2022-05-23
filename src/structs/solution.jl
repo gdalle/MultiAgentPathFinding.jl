@@ -16,9 +16,7 @@ function solution_to_mat(solution::Solution, mapf::MAPF)
         timed_path = solution[a]
         (; path) = timed_path
         K = length(path)
-        for k in 1:(K - 1)
-            _, v1 = path[k]
-            _, v2 = path[k + 1]
+        for (v1, v2) in zip(view(path, 1:K-1), view(path, 2:K))
             e = edge_indices[v1, v2]
             push!(I, e)
             push!(J, a)

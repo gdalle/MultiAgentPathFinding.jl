@@ -37,6 +37,7 @@ include("local_search/feasibility_search.jl")
 
 include("learning/features_agents.jl")
 include("learning/features_edges.jl")
+include("learning/embedding.jl")
 
 include("benchmark/read.jl")
 include("benchmark/mapf.jl")
@@ -68,6 +69,7 @@ export large_neighborhood_search!, large_neighborhood_search
 
 export agent_embedding, all_agents_embedding
 export edge_embedding, all_edges_embedding
+export mapf_embedding
 
 export read_benchmark_map, read_benchmark_scenario
 export is_solvable
