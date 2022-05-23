@@ -11,9 +11,8 @@ end
 Base.length(timed_path::TimedPath) = length(timed_path.path)
 
 function path_to_vec(timed_path::TimedPath, mapf::MAPF)
-    g = mapf.graph
-    path = timed_path.path
-    edge_indices = mapf.edge_indices
+    (; g, edge_indices) = mapf
+    (; path) = timed_path
     K = length(path)
     y = zeros(Int, ne(g))
     for k in 1:(K - 1)
@@ -25,9 +24,8 @@ function path_to_vec(timed_path::TimedPath, mapf::MAPF)
 end
 
 function path_to_vec_sparse(timed_path::TimedPath, mapf::MAPF)
-    g = mapf.graph
-    path = timed_path.path
-    edge_indices = mapf.edge_indices
+    (; g, edge_indices) = mapf
+    (; path) = timed_path
     K = length(path)
     I = Vector{Int}(undef, K - 1)
     V = Vector{Int}(undef, K - 1)

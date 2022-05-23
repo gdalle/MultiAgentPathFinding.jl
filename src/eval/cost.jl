@@ -3,8 +3,8 @@ function path_weight(
     mapf::MAPF,
     edge_weights_vec::AbstractVector{W}=mapf.edge_weights_vec,
 ) where {W}
-    path = timed_path.path
-    edge_indices = mapf.edge_indices
+    (; path) = timed_path
+    (; edge_indices) = mapf
     c = zero(W)
     for k in 1:(length(path) - 1)
         v1, v2 = path[k], path[k + 1]

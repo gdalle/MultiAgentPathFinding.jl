@@ -1,29 +1,23 @@
 function cooperative_astar!(
     solution::Solution,
     agents::AbstractVector{Int},
-    mapf::MAPF;
+    mapf::MAPF,
+    edge_weights_vec::AbstractVector=mapf.edge_weights_vec;
     conflict_price=Inf,
     show_progress=false,
 )
-    (;
-        graph,
-        edge_indices,
-        edge_weights_vec,
-        sources,
-        destinations,
-        starting_times,
-        distances_to_destinations,
-    ) = mapf
-
-    reservation = compute_reservation(solution, mapf)
     prog = Progress(length(agents); enabled=show_progress)
+    (; g, edge_indices, sources, destinations, starting_times) = mapf
+    reservation = compute_reservation(solution, mapf)
+    distances_to_destinations = compute_distances_to_destinations(mapf, edge_weights_vec)
+
     for a in agents
         next!(prog)
         s, d, t0 = sources[a], destinations[a], starting_times[a]
         dists = distances_to_destinations[d]
         heuristic(v) = dists[v]
         timed_path = temporal_astar(
-            graph,
+            g,
             s,
             d,
             t0,
@@ -46,24 +40,18 @@ function cooperative_astar!(
     conflict_price=Inf,
     show_progress=false,
 )
-    (;
-        graph,
-        edge_indices,
-        sources,
-        destinations,
-        starting_times,
-    ) = mapf
-
-    reservation = compute_reservation(solution, mapf)
     prog = Progress(length(agents); enabled=show_progress)
+    (; g, edge_indices, sources, destinations, starting_times) = mapf
+    reservation = compute_reservation(solution, mapf)
+
     for a in agents
         next!(prog)
         s, d, t0 = sources[a], destinations[a], starting_times[a]
         edge_weights_vec_for_a = view(edge_weights_mat, :, a)
-        dists = backward_dijkstra(graph, d, edge_indices, edge_weights_vec_for_a).dists
+        dists = backward_dijkstra(g, d, edge_indices, edge_weights_vec_for_a).dists
         heuristic(v) = dists[v]
         timed_path = temporal_astar(
-            graph,
+            g,
             s,
             d,
             t0,

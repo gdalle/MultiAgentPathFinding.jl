@@ -23,17 +23,23 @@ pyenv = rail_env.RailEnv(;
 pyenv.reset();
 mapf = flatland_mapf(pyenv);
 
-solution_indep = independent_astar(mapf);
-solution_indep2 = independent_dijkstra(mapf);
-solution_coop = cooperative_astar(mapf);
-solution_lns2 = feasibility_search(
-    mapf; neighborhood_size=5, conflict_price=1, conflict_price_increase=1e-2
-);
+solution_indep = independent_dijkstra(mapf);
+is_feasible(solution_indep, mapf)
+flowtime(solution_indep, mapf)
 
-@test !is_feasible(solution_indep2, mapf)
+solution_coop = cooperative_astar(mapf, 1:nb_agents(mapf));
+is_feasible(solution_coop, mapf)
+flowtime(solution_coop, mapf)
+
+solution_lns2 = feasibility_search(
+    mapf; neighborhood_size=5, conflict_price=1.0, conflict_price_increase=1e-2
+);
+is_feasible(solution_lns2, mapf)
+flowtime(solution_lns2, mapf)
+
+@test !is_feasible(solution_indep, mapf)
 @test is_feasible(solution_coop, mapf)
 @test is_feasible(solution_lns2, mapf)
-@test flowtime(solution_indep, mapf) ==
-    flowtime(solution_indep2, mapf) <=
-    flowtime(solution_lns2, mapf) <=
+@test flowtime(solution_indep, mapf) <
+    flowtime(solution_lns2, mapf) <
     flowtime(solution_coop, mapf)

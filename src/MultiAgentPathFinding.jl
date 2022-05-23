@@ -30,7 +30,6 @@ include("eval/cost.jl")
 include("paths/dijkstra.jl")
 include("paths/independent_dijkstra.jl")
 include("paths/temporal_astar.jl")
-include("paths/independent_astar.jl")
 include("paths/cooperative_astar.jl")
 
 include("local_search/neighborhood.jl")
@@ -67,7 +66,6 @@ export is_feasible
 
 export forward_dijkstra, backward_dijkstra
 export temporal_astar
-export independent_astar
 export independent_dijkstra, agent_dijkstra
 export cooperative_astar!, cooperative_astar
 

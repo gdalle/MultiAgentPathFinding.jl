@@ -5,10 +5,8 @@ Vector of [`TimedPath`](@ref)`s, one for each agent of a [`MAPF`](@ref).
 """
 const Solution = Vector{TimedPath}
 
-
 function solution_to_mat(solution::Solution, mapf::MAPF)
-    g = mapf.graph
-    edge_indices = mapf.edge_indices
+    (; g, edge_indices) = mapf
     V, E = nv(g), ne(g)
     A = nb_agents(mapf)
     I = Int[]
@@ -16,7 +14,7 @@ function solution_to_mat(solution::Solution, mapf::MAPF)
     val = Float64[]
     for a in 1:A
         timed_path = solution[a]
-        path = timed_path.path
+        (; path) = timed_path
         K = length(path)
         for k in 1:(K - 1)
             _, v1 = path[k]

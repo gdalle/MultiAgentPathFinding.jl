@@ -1,15 +1,83 @@
-function build_astar_path(came_from::Dict, t0::Integer, s::Integer, t::Integer, d::Integer)
-    path = Int[]
-    (τ, v) = (t, d)
-    pushfirst!(path, v)
-    while τ > t0
-        (τ, v) = came_from[τ, v]
-        pushfirst!(path, v)
+function temporal_astar(
+    g::AbstractGraph{V},
+    s::Integer,
+    d::Integer,
+    t0::Integer,
+    edge_indices::Dict,
+    edge_weights_vec::AbstractVector{W};
+    heuristic=v -> 0.0,
+    reservation::Reservation=Reservation(),
+    conflict_price=Inf,
+) where {V,W<:AbstractFloat}
+    if conflict_price == Inf
+        return temporal_astar_hard(
+            g,
+            s,
+            d,
+            t0,
+            edge_indices,
+            edge_weights_vec;
+            heuristic=heuristic,
+            reservation=reservation,
+        )
+    else
+        return temporal_astar_soft(
+            g,
+            s,
+            d,
+            t0,
+            edge_indices,
+            edge_weights_vec;
+            heuristic=heuristic,
+            reservation=reservation,
+            conflict_price=conflict_price
+        )
     end
-    return TimedPath(t0, path)
 end
 
-function temporal_astar(
+function temporal_astar_hard(
+    g::AbstractGraph{V},
+    s::Integer,
+    d::Integer,
+    t0::Integer,
+    edge_indices::Dict,
+    edge_weights_vec::AbstractVector{W};
+    heuristic=v -> 0.0,
+    reservation::Reservation=Reservation(),
+) where {V,W}
+    T = Int
+    # Init storage
+    heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},W}[])
+    dists = Dict{Tuple{T,V},W}()
+    parents = Dict{Tuple{T,V},Tuple{T,V}}()
+    # Add source
+    if !is_forbidden_vertex(reservation, t0, s)
+        dists[t0, s] = zero(W)
+        push!(heap, (t0, s) => heuristic(s))
+    end
+    # Main loop
+    while !isempty(heap)
+        (t, u), _ = pop!(heap)
+        if u == d
+            return build_astar_path(parents, t0, s, t, d)
+        end
+        for v in outneighbors(g, u)
+            is_forbidden_vertex(reservation, t + 1, v) && continue
+            e_uv = edge_indices[u, v]
+            w_uv = edge_weights_vec[e_uv]
+            dist_v = dists[t, u] + w_uv
+            old_dist_v = get(dists, (t + 1, v), typemax(W))
+            if dist_v < old_dist_v
+                parents[t + 1, v] = (t, u)
+                dists[t + 1, v] = dist_v
+                push!(heap, (t + 1, v) => dist_v + heuristic(v))
+            end
+        end
+    end
+    return TimedPath(t0, Int[])
+end
+
+function temporal_astar_soft(
     g::AbstractGraph{V},
     s::Integer,
     d::Integer,
@@ -18,62 +86,53 @@ function temporal_astar(
     edge_weights_vec::AbstractVector{W};
     heuristic=v -> 0.0,
     reservation::Reservation=Reservation(),
-    conflict_price=Inf,
+    conflict_price=0.0,
 ) where {V,W}
     T = Int
-    safe_conflict_price = conflict_price * (conflict_price < Inf)
-
-    # Initialize storage
-    came_from = Dict{Tuple{T,V},Tuple{T,V}}()
-    distance = Dict{Tuple{T,V},W}()
+    conflict_price = float(conflict_price)
+    # Init storage
+    heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},W}[])
+    dists = Dict{Tuple{T,V},W}()
     conflicts = Dict{Tuple{T,V},Int}()
-    queue = PriorityQueue{Tuple{T,V},Float64}()
-
-    # Add first node to storage
-    distance_s = zero(W)
+    parents = Dict{Tuple{T,V},Tuple{T,V}}()
+    # Add source
+    dists[t0, s] = zero(W)
     conflicts_s = is_forbidden_vertex(reservation, t0, s)
-    if conflicts_s == 0 || conflict_price < Inf
-        priority_s = safe_conflict_price * conflicts_s + heuristic(s)
-        distance[t0, s] = distance_s
-        conflicts[t0, s] = conflicts_s
-        queue[t0, s] = priority_s
-    end
-
-    # Explore
-    nodes_explored = 0
-    while !isempty(queue)
-        (t, v) = dequeue!(queue)
-        nodes_explored += 1
-
-        if v == d
-            return build_astar_path(came_from, t0, s, t, d)
+    conflicts[t0, s] = conflicts_s
+    push!(heap, (t0, s) => conflict_price * conflicts_s + heuristic(s))
+    # Main loop
+    while !isempty(heap)
+        (t, u), _ = pop!(heap)
+        if u == d
+            return build_astar_path(parents, t0, s, t, d)
         end
-
-        for w in outneighbors(g, v)
-            heur_w = heuristic(w)
-
-            e_vw = edge_indices[v, w]
-            weight_vw = edge_weights_vec[e_vw]
-            conflict_vw = is_forbidden_vertex(reservation, t + 1, w)
-
-            distance_w = distance[t, v] + weight_vw
-            conflicts_w = conflicts[t, v] + conflict_vw
-
-            if conflicts_w == 0 || conflict_price < Inf
-                old_distance_w = get(distance, (t + 1, w), Inf)
-                old_conflicts_w = get(conflicts, (t + 1, w), typemax(Int) ÷ 2)
-
-                old_cost_w = (safe_conflict_price * old_conflicts_w + old_distance_w)
-                cost_w = (safe_conflict_price * conflicts_w + distance_w)
-
-                if cost_w < old_cost_w
-                    came_from[t + 1, w] = (t, v)
-                    distance[t + 1, w] = distance_w
-                    conflicts[t + 1, w] = conflicts_w
-                    queue[t + 1, w] = cost_w + heur_w
-                end
+        for v in outneighbors(g, u)
+            e_uv = edge_indices[u, v]
+            w_uv = edge_weights_vec[e_uv]
+            dist_v = dists[t, u] + w_uv
+            conflicts_v = conflicts[t, u] + is_forbidden_vertex(reservation, t + 1, v)
+            old_dist_v = get(dists, (t + 1, v), typemax(W))
+            old_conflicts_v = get(conflicts, (t + 1, v), typemax(Int) ÷ 10)
+            cost_v = conflict_price * conflicts_v + dist_v
+            old_cost_v = conflict_price * old_conflicts_v + old_dist_v
+            if cost_v < old_cost_v
+                parents[t + 1, v] = (t, u)
+                dists[t + 1, v] = dist_v
+                conflicts[t + 1, v] = conflicts_v
+                push!(heap, (t + 1, v) => cost_v + heuristic(v))
             end
         end
     end
-    return Path()
+    return TimedPath(t0, Int[])
+end
+
+function build_astar_path(parents::Dict, t0::Integer, s::Integer, t::Integer, d::Integer)
+    path = Int[]
+    (τ, v) = (t, d)
+    pushfirst!(path, v)
+    while τ > t0
+        (τ, v) = parents[τ, v]
+        pushfirst!(path, v)
+    end
+    return TimedPath(t0, path)
 end

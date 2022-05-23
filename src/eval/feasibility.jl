@@ -3,11 +3,9 @@ function has_empty_paths(solution::Solution)
 end
 
 function is_feasible(solution::Solution, mapf::MAPF)
-    g = mapf.graph
+    (; g, sources, destinations, starting_times) = mapf
     for a in 1:nb_agents(mapf)
-        s = mapf.sources[a]
-        d = mapf.destinations[a]
-        t0 = mapf.starting_times[a]
+        s, d, t0 = sources[a], destinations[a], starting_times[a]
         timed_path = solution[a]
         path = timed_path.path
         if length(path) == 0
