@@ -1,9 +1,22 @@
+"""
+    ShortestPathTree{T,W}
+
+Storage for the result of Dijkstra's algorithm.
+
+# Fields
+- `forward::Bool`
+- `parents::Vector{T}`
+- `dists::Vector{W}`
+"""
 struct ShortestPathTree{T<:Integer,W<:Real}
     forward::Bool
     parents::Vector{T}
     dists::Vector{W}
 end
 
+"""
+    forward_dijkstra(g, s, w)
+"""
 function forward_dijkstra(
     g::AbstractGraph{T},
     s::Integer,
@@ -34,6 +47,9 @@ function forward_dijkstra(
     return ShortestPathTree{T,W}(true, parents, dists)
 end
 
+"""
+    backward_dijkstra(g, d, w)
+"""
 function backward_dijkstra(
     g::AbstractGraph{T},
     d::Integer,
@@ -64,6 +80,9 @@ function backward_dijkstra(
     return ShortestPathTree{T,W}(false, parents, dists)
 end
 
+"""
+    build_dijkstra_path(shortest_path_tree, t0, s, d)
+"""
 function build_dijkstra_path(spt::ShortestPathTree, t0::Integer, s::Integer, d::Integer)
     parents = spt.parents
     if spt.forward

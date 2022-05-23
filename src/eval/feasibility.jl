@@ -1,7 +1,13 @@
+"""
+    has_empty_paths(solution)
+"""
 function has_empty_paths(solution::Solution)
     return any(length(path) == 0 for path in solution)
 end
 
+"""
+    is_feasible(solution)
+"""
 function is_feasible(solution::Solution, mapf::MAPF)
     (; g, sources, destinations, starting_times) = mapf
     for a in 1:nb_agents(mapf)

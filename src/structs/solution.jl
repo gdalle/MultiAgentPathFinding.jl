@@ -1,7 +1,7 @@
 """
-Solution
+    Solution = Vector{TimedPath}
 
-Vector of [`TimedPath`](@ref)`s, one for each agent of a [`MAPF`](@ref).
+Vector of [`TimedPath`](@ref)s, one for each agent of a [`MAPF`](@ref).
 """
 const Solution = Vector{TimedPath}
 
@@ -28,6 +28,11 @@ function solution_to_mat(solution::Solution, mapf::MAPF)
     return sparse(I, J, val, E, A)
 end
 
+"""
+    remove_agents!(solution, agents, mapf)
+
+Remove a set of `agents` from a `solution` and return a back up of their paths.
+"""
 function remove_agents!(solution::Solution, agents, mapf::MAPF)
     backup = Dict(a => solution[a] for a in agents)
     for a in agents

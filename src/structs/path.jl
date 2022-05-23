@@ -1,7 +1,11 @@
 """
     TimedPath
 
-Timed path through a graph.
+Temporal path through a graph.
+
+# Fields
+- `t0::Int`
+- `path::Vector{Int}`
 """
 struct TimedPath
     t0::Int
@@ -10,6 +14,11 @@ end
 
 Base.length(timed_path::TimedPath) = length(timed_path.path)
 
+"""
+    path_to_vec(timed_path, mapf)
+
+Encode a `timed_path` as a dense integer vector that counts edge crossings.
+"""
 function path_to_vec(timed_path::TimedPath, mapf::MAPF)
     (; g, edge_indices) = mapf
     (; path) = timed_path
@@ -23,6 +32,11 @@ function path_to_vec(timed_path::TimedPath, mapf::MAPF)
     return y
 end
 
+"""
+    path_to_vec_sparse(timed_path, mapf)
+
+Encode a `timed_path` as a sparse integer vector that counts edge crossings.
+"""
 function path_to_vec_sparse(timed_path::TimedPath, mapf::MAPF)
     (; g, edge_indices) = mapf
     (; path) = timed_path

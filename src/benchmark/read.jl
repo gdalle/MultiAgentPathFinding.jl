@@ -1,3 +1,18 @@
+"""
+    BenchmarkProblem
+
+# Fields
+- `index::Int`
+- `bucket::Int`
+- `map::String`
+- `width::Int`
+- `height::Int`
+- `start_i::Int`
+- `start_j::Int`
+- `goal_i::Int`
+- `goal_j::Int`
+- `optimal_length::Float64`
+"""
 Base.@kwdef struct BenchmarkProblem
     index::Int
     bucket::Int
@@ -11,6 +26,9 @@ Base.@kwdef struct BenchmarkProblem
     optimal_length::Float64
 end
 
+"""
+    read_benchmark_map(map_path)
+"""
 function read_benchmark_map(map_path::AbstractString)
     lines = open(map_path, "r") do file
         readlines(file)
@@ -29,8 +47,11 @@ function read_benchmark_map(map_path::AbstractString)
     return map_matrix
 end
 
-function read_benchmark_scenario(scen_path::AbstractString, map_path::AbstractString)
-    lines = open(scen_path, "r") do file
+"""
+    read_benchmark_scenario(scenario_path, map_path)
+"""
+function read_benchmark_scenario(scenario_path::AbstractString, map_path::AbstractString)
+    lines = open(scenario_path, "r") do file
         readlines(file)
     end
 

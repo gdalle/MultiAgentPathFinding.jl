@@ -1,3 +1,6 @@
+"""
+    display_benchmark_mapf(map_matrix::Matrix{Char})
+"""
 function display_benchmark_map(map_matrix::Matrix{Char})
     height, width = size(map_matrix)
     map_colors = Matrix{RGB}(undef, height, width)

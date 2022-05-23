@@ -1,3 +1,6 @@
+"""
+    temporal_astar(g, s, d, t0, w[, reservation; heuristic, conflict_price])
+"""
 function temporal_astar(
     g::AbstractGraph{V},
     s::Integer,
@@ -17,6 +20,9 @@ function temporal_astar(
     end
 end
 
+"""
+    temporal_astar_hard(g, s, d, t0, w[, reservation; heuristic])
+"""
 function temporal_astar_hard(
     g::AbstractGraph{V},
     s::Integer,
@@ -56,6 +62,9 @@ function temporal_astar_hard(
     return TimedPath(t0, Int[])
 end
 
+"""
+    temporal_astar_soft(g, s, d, t0, w[, reservation; heuristic, conflict_price])
+"""
 function temporal_astar_soft(
     g::AbstractGraph{V},
     s::Integer,
@@ -101,9 +110,12 @@ function temporal_astar_soft(
     return TimedPath(t0, Int[])
 end
 
-function build_astar_path(parents::Dict, t0::Integer, s::Integer, t::Integer, d::Integer)
+"""
+    build_astar_path(parents, t0, s, tf, d)
+"""
+function build_astar_path(parents::Dict, t0::Integer, s::Integer, tf::Integer, d::Integer)
     path = Int[]
-    (τ, v) = (t, d)
+    (τ, v) = (tf, d)
     pushfirst!(path, v)
     while τ > t0
         (τ, v) = parents[τ, v]

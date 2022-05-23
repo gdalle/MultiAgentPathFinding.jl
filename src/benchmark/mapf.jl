@@ -1,7 +1,15 @@
+"""
+    BenchmarkMAPF = MAPF{SparseGridGraph{Int64,Float64}}
+
+Concrete subtype of [`MAPF`](@ref) designed for the benchmark instances of Sturtevant.
+"""
 const BenchmarkMAPF = MAPF{SparseGridGraph{Int64,Float64}}
 
 is_passable(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 
+"""
+    benchmark_mapf(map_path, scenario_path[; buckets])
+"""
 function benchmark_mapf(
     map_path::AbstractString, scenario_path::AbstractString; buckets=1:10
 )
@@ -37,6 +45,9 @@ function benchmark_mapf(
     return mapf
 end
 
+"""
+    is_solvable(mapf::BenchmarkMAPF)
+"""
 function is_solvable(mapf::BenchmarkMAPF)
     (; g, sources, destinations) = mapf
     ccs = connected_components(g)

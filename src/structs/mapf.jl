@@ -1,7 +1,20 @@
 """
     MAPF{G}
 
-Instance of a Multi-Agent PathFinding problem.
+Instance of a Multi-Agent PathFinding problem with custom conflict rules.
+
+# Fields
+
+- `g::G`
+- `edge_indices::Dict{Tuple{Int,Int},Int}`
+- `edge_colptr::Vector{Int}`
+- `edge_rowval::Vector{Int}`
+- `edge_weights_vec::Vector{Float64}`
+- `vertex_conflicts::Vector{Vector{Int}}`
+- `edge_conflicts::Vector{Vector{Int}}`
+- `sources::Vector{Int}`
+- `destinations::Vector{Int}`
+- `starting_times::Vector{Int}`
 """
 struct MAPF{G<:AbstractGraph{Int}}
     # Graph-related
@@ -68,8 +81,20 @@ function MAPF(
     )
 end
 
+"""
+    nb_agents(mapf)
+
+Count the number of agents in `mapf`.
+"""
 nb_agents(mapf::MAPF) = length(mapf.sources)
 
+"""
+    build_edge_weights_matrix(mapf[, edge_weights_vec])
+
+Turn a vector `edge_weights_vec` into a sparse weighted adjacency matrix for the graph `mapf.g`.
+
+This function doesn't allocate because the necessary index information is already in the [`MAPF`](@ref) object.
+"""
 function build_weights_matrix(
     mapf::MAPF, edge_weights_vec::AbstractVector=mapf.edge_weights_vec
 )
