@@ -3,18 +3,14 @@ module MultiAgentPathFinding
 ## Dependencies
 
 using Base.Threads
-using ColorTypes
 using DataStructures
 using Graphs
-using GridGraphs
-using HTTP
 using LinearAlgebra
 using ProgressMeter
 using Random
 using Statistics
 using StatsBase: StatsBase, sample
 using SparseArrays
-using ZipFile
 
 ## Includes
 
@@ -40,11 +36,6 @@ include("local_search/feasibility_search.jl")
 include("learning/features_agents.jl")
 include("learning/features_edges.jl")
 include("learning/embedding.jl")
-
-include("benchmark/read.jl")
-include("benchmark/mapf.jl")
-include("benchmark/plot.jl")
-include("benchmark/download.jl")
 
 ## Exports
 
@@ -74,9 +65,5 @@ export agent_embedding, all_agents_embedding
 export edge_embedding, all_edges_embedding
 export mapf_embedding
 
-export read_benchmark_map, read_benchmark_scenario
-export display_benchmark_map
-export benchmark_mapf
-export download_benchmark_mapf
 
 end # module

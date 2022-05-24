@@ -12,17 +12,6 @@ Pages = [
 ]
 ```
 
-## Benchmark
-
-```@autodocs
-Modules = [MultiAgentPathFinding]
-Pages = [
-    "benchmark/mapf.jl",
-    "benchmark/plot.jl",
-    "benchmark/read.jl",
-]
-```
-
 ## Shortest paths
 
 ```@autodocs
