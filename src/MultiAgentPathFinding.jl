@@ -2,6 +2,7 @@ module MultiAgentPathFinding
 
 ## Dependencies
 
+using Base.Iterators
 using Base.Threads
 
 using DataStructures
@@ -34,9 +35,10 @@ include("local_search/neighborhood.jl")
 include("local_search/large_neighborhood_search.jl")
 include("local_search/feasibility_search.jl")
 
-include("learning/features_agents.jl")
-include("learning/features_edges.jl")
-include("learning/embedding.jl")
+include("embedding/features_agents.jl")
+include("embedding/features_edges.jl")
+include("embedding/features_both.jl")
+include("embedding/embedding.jl")
 
 ## Exports
 
@@ -62,8 +64,6 @@ export local_search_permutations
 export feasibility_search!, feasibility_search
 export large_neighborhood_search!, large_neighborhood_search
 
-export agent_embedding, all_agents_embedding
-export edge_embedding, all_edges_embedding
 export mapf_embedding
 
 

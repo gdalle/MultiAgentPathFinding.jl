@@ -47,13 +47,15 @@ Pages = [
 ]
 ```
 
-## Machine learning
+## Embedding
 
 ```@autodocs
 Modules = [MultiAgentPathFinding]
 Pages = [
-    "learning/features_agents.jl",
-    "learning/features_edges.jl",
+    "embedding/features_agents.jl",
+    "embedding/features_edges.jl",
+    "embedding/features_both.jl",
+    "embedding/embedding.jl",
 ]
 ```
 

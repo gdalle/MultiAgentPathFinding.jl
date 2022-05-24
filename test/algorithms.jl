@@ -37,5 +37,6 @@ solution_feasibility_search = feasibility_search(mapf; show_progress=false);
     flowtime(solution_coop, mapf)
 @test flowtime(solution_indep, mapf) <= flowtime(solution_feasibility_search, mapf)
 
-x = all_edges_embedding(1, solution_indep, mapf);
+x = mapf_embedding(solution_indep, mapf);
 @test size(x, 2) == ne(g)
+@test size(x, 3) == nb_agents(mapf)
