@@ -23,7 +23,8 @@ function is_feasible(solution::Solution, mapf::MAPF)
         elseif last(path) != d
             return false  # wrong destination
         else
-            for k in 1:(length(path) - 1)
+            K = length(path)
+            for k in 1:(K - 1)
                 v1, v2 = path[k], path[k + 1]
                 if !has_edge(g, v1, v2)
                     return false  # invalid edge

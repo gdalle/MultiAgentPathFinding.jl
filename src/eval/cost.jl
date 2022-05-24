@@ -9,7 +9,8 @@ function path_weight(
     (; path) = timed_path
     (; edge_indices) = mapf
     c = zero(W)
-    for k in 1:(length(path) - 1)
+    K = length(path)
+    for k in 1:(K - 1)
         v1, v2 = path[k], path[k + 1]
         e = edge_indices[v1, v2]
         c += edge_weights_vec[e]

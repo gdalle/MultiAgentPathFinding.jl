@@ -3,6 +3,7 @@ module MultiAgentPathFinding
 ## Dependencies
 
 using Base.Threads
+
 using DataStructures
 using Graphs
 using LinearAlgebra

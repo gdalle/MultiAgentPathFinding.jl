@@ -24,7 +24,7 @@ mapf = MAPF(
 
 solution_indep = independent_dijkstra(mapf);
 solution_coop = cooperative_astar(mapf, 1:nb_agents(mapf));
-solution_lns = large_neighborhood_search(mapf)
+solution_lns = large_neighborhood_search(mapf);
 solution_feasibility_search = feasibility_search(mapf; show_progress=false);
 
 @test !is_feasible(solution_indep, mapf)
@@ -36,3 +36,6 @@ solution_feasibility_search = feasibility_search(mapf; show_progress=false);
     flowtime(solution_lns, mapf) <=
     flowtime(solution_coop, mapf)
 @test flowtime(solution_indep, mapf) <= flowtime(solution_feasibility_search, mapf)
+
+x = all_edges_embedding(1, solution_indep, mapf);
+@test size(x, 2) == ne(g)
