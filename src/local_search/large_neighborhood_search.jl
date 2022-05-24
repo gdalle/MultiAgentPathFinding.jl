@@ -35,7 +35,9 @@ function large_neighborhood_search(
     steps=10,
     show_progress=true,
 )
-    solution = cooperative_astar(mapf, shuffle(1:nb_agents(mapf)))
+    solution = cooperative_astar(
+        mapf, 1:nb_agents(mapf), edge_weights_vec, shortest_path_trees
+    )
     large_neighborhood_search!(
         solution,
         mapf,

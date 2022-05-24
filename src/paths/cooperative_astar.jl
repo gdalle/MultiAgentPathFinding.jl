@@ -63,12 +63,12 @@ end
 function cooperative_astar(
     mapf::MAPF,
     agents::AbstractVector{Int},
-    edge_weights_vec::AbstractVector=mapf.edge_weights_vec;
+    edge_weights_vec::AbstractVector=mapf.edge_weights_vec,
+    shortest_path_trees = dijkstra_to_destinations(mapf, edge_weights_vec);
     conflict_price=Inf,
     show_progress=false,
 )
     solution = [TimedPath(mapf.starting_times[a], Int[]) for a in 1:nb_agents(mapf)]
-    shortest_path_trees = dijkstra_to_destinations(mapf, edge_weights_vec)
     cooperative_astar!(
         solution,
         agents,

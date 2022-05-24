@@ -41,10 +41,11 @@ function MAPF(
     vertex_conflicts=[[v] for v in vertices(g)],
     edge_conflicts=[Int[] for ed in edges(g)],
 ) where {G}
+    @assert is_directed(g)
     # Edges-related
     edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(g)))
     edge_weights_mat = Graphs.weights(g)
-    edge_weights_vec = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(g)]
+    edge_weights_vec = Float64[edge_weights_mat[src(ed), dst(ed)] for ed in edges(g)]
 
     edge_colptr = Vector{Int}(undef, nv(g) + 1)
     edge_rowval = Vector{Int}(undef, ne(g))
