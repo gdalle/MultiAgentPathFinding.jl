@@ -20,13 +20,12 @@ function display_benchmark_map(map_matrix::Matrix{Char})
             x = RGB(0.0, 0.0, 0.0)
         elseif c == 'O'  # wall => black
             x = RGB(0.0, 0.0, 0.0)
+        elseif c == 'H'  # here => red
+            x = RGB(1.0, 0.0, 0.0)
         else  # ? => black
             x = RGB(0.0, 0.0, 0.0)
         end
         map_colors[i, j] = x
     end
-    fig, ax, plt = image(
-        map_colors'; interpolate=false, axis=(aspect=DataAspect(), yreversed=true)
-    )
-    return fig
+    return map_colors
 end

@@ -2,5 +2,5 @@ using MultiAgentPathFinding
 using Test
 
 @testset verbose = true "MultiAgentPathFinding.jl" begin
-    nothing
+    include("correctness.jl")
 end
