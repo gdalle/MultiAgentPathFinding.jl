@@ -25,7 +25,7 @@ mapf = MAPF(
 solution_indep = independent_dijkstra(mapf);
 solution_coop = cooperative_astar(mapf, 1:nb_agents(mapf));
 solution_lns = large_neighborhood_search(mapf);
-solution_feasibility_search = feasibility_search(mapf; show_progress=false);
+solution_feasibility_search, steps = feasibility_search(mapf; show_progress=false);
 
 @test !is_feasible(solution_indep, mapf)
 @test is_feasible(solution_coop, mapf)

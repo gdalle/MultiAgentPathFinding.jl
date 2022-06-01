@@ -20,8 +20,10 @@ function feasibility_search!(
     )
     cp = colliding_pairs(solution, mapf)
     prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
+    steps = 0
     while !is_feasible(solution, mapf)
         next!(prog; showvalues=[(:colliding_pairs, cp)])
+        steps += 1
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
         cooperative_astar!(
@@ -42,7 +44,7 @@ function feasibility_search!(
         end
         conflict_price *= (1.0 + conflict_price_increase)
     end
-    return solution
+    return solution, steps
 end
 
 function feasibility_search(
@@ -55,7 +57,7 @@ function feasibility_search(
     show_progress::Bool=true,
 )
     solution = independent_dijkstra(mapf, edge_weights_vec, shortest_path_trees)
-    feasibility_search!(
+    solution, steps = feasibility_search!(
         solution,
         mapf,
         edge_weights_vec,
@@ -65,5 +67,5 @@ function feasibility_search(
         conflict_price_increase=conflict_price_increase,
         show_progress=show_progress,
     )
-    return solution
+    return solution, steps
 end

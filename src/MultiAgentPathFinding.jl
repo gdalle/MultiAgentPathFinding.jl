@@ -26,7 +26,6 @@ include("eval/feasibility.jl")
 include("eval/cost.jl")
 
 include("paths/dijkstra.jl")
-include("paths/bellman_ford.jl")
 include("paths/temporal_astar.jl")
 include("paths/independent_dijkstra.jl")
 include("paths/cooperative_astar.jl")
