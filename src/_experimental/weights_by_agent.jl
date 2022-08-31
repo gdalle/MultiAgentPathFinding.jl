@@ -31,7 +31,6 @@ end
 
 ## Coop A*
 
-
 function cooperative_astar!(
     solution::Solution,
     mapf::MAPF,

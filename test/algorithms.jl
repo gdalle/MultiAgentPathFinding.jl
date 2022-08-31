@@ -63,6 +63,8 @@ f_indep = flowtime(solution_indep, mapf)
 f_coop = flowtime(solution_coop, mapf)
 f_os = flowtime(solution_os, mapf)
 f_fs = flowtime(solution_fs, mapf)
+f_ds = flowtime(solution_fs, mapf)
 
 @test f_indep <= f_os <= f_coop
 @test f_indep <= f_fs
+@test f_indep <= f_ds
