@@ -9,6 +9,7 @@ function build_astar_path(parents::Dict, t0::Integer, s::Integer, tf::Integer, d
         (τ, v) = parents[τ, v]
         pushfirst!(path, v)
     end
+    @assert first(path) == s
     return TimedPath(t0, path)
 end
 
@@ -46,8 +47,8 @@ function temporal_astar_hard(
     res::Reservation;
     heuristic=v -> 0.0,
 ) where {V,W}
-    T = Int
     # Init storage
+    T = Int
     heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},W}[])
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     dists = Dict{Tuple{T,V},W}()
@@ -59,14 +60,15 @@ function temporal_astar_hard(
     # Main loop
     while !isempty(heap)
         (t, u), h_u = pop!(heap)
+        Δ_u = dists[t, u]
         if u == d
             return build_astar_path(parents, t0, s, t, d)
         else
             for v in outneighbors(g, u)
-                is_forbidden_edge(res, t, u, v) && continue
                 is_forbidden_vertex(res, t + 1, v) && continue
+                is_forbidden_edge(res, t, u, v) && continue
                 Δ_v = get(dists, (t + 1, v), nothing)
-                Δ_v_through_u = dists[t, u] + w[u, v]
+                Δ_v_through_u = Δ_u + w[u, v]
                 if isnothing(Δ_v) || (Δ_v_through_u < Δ_v)
                     parents[t + 1, v] = (t, u)
                     dists[t + 1, v] = Δ_v_through_u
@@ -92,8 +94,8 @@ function temporal_astar_soft(
     heuristic=v -> 0.0,
     conflict_price=0.0,
 ) where {V,W}
-    T = Int
     # Init storage
+    T = Int
     P = promote_type(W, typeof(conflict_price))
     heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},P}[])
     dists = Dict{Tuple{T,V},W}()
@@ -107,18 +109,18 @@ function temporal_astar_soft(
     # Main loop
     while !isempty(heap)
         (t, u), priority_u = pop!(heap)
+        Δ_u = dists[t, u]
+        c_u = conflicts[t, u]
         if u == d
             return build_astar_path(parents, t0, s, t, d)
         end
         for v in outneighbors(g, u)
             c_v = get(conflicts, (t + 1, v), nothing)
             Δ_v = get(dists, (t + 1, v), nothing)
-            c_v_through_u = (
-                conflicts[t, u] +
-                is_forbidden_edge(res, t, u, v) +
-                is_forbidden_vertex(res, t + 1, v)
-            )
-            Δ_v_through_u = dists[t, u] + w[u, v]
+            c_v_after_u = is_forbidden_vertex(res, t + 1, v)
+            c_uv = is_forbidden_edge(res, t, u, v)
+            c_v_through_u = c_u + c_uv + c_v_after_u
+            Δ_v_through_u = Δ_u + w[u, v]
             cost_v_through_u = conflict_price * c_v_through_u + Δ_v_through_u
             if (
                 isnothing(c_v) ||

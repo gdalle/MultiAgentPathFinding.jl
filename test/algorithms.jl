@@ -31,6 +31,8 @@ for ed in edges(g)
     u, v = src(ed), dst(ed)
     if u != v
         edge_conflicts[(u, v)] = [(v, u)]
+    else
+        edge_conflicts[(u, v)] = Tuple{Int,Int}[]
     end
 end
 
@@ -43,15 +45,19 @@ mapf = MAPF(
     edge_conflicts=edge_conflicts,
 )
 
+show_progress = false
+
 solution_indep = independent_dijkstra(mapf);
-solution_coop = cooperative_astar(mapf, randperm(A));
-solution_os = optimality_search(mapf; show_progress=false);
-solution_fs = feasibility_search(mapf; show_progress=false);
+solution_coop = cooperative_astar(mapf);
+solution_os = optimality_search(mapf; show_progress=show_progress);
+solution_fs = feasibility_search(mapf; show_progress=show_progress);
+solution_ds = double_search(mapf; show_progress=show_progress);
 
 @test !is_feasible(solution_indep, mapf)
 @test is_feasible(solution_coop, mapf)
 @test is_feasible(solution_os, mapf)
 @test is_feasible(solution_fs, mapf)
+@test is_feasible(solution_ds, mapf)
 
 f_indep = flowtime(solution_indep, mapf)
 f_coop = flowtime(solution_coop, mapf)

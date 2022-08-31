@@ -5,6 +5,14 @@ Vector of [`TimedPath`](@ref)s, one for each agent of a [`MAPF`](@ref).
 """
 const Solution = Vector{TimedPath}
 
+function empty_solution(mapf::MAPF)
+    return [TimedPath(mapf.departure_times[a], Int[]) for a in 1:nb_agents(mapf)]
+end
+
+function all_non_empty(solution::Solution)
+    return all(length(timed_path) > 0 for timed_path in solution)
+end
+
 """
     remove_agents!(solution, agents, mapf)
 

@@ -24,6 +24,7 @@ include("structs/reservation.jl")
 include("eval/feasibility.jl")
 include("eval/cost.jl")
 
+include("paths/tree.jl")
 include("paths/dijkstra.jl")
 include("paths/temporal_astar.jl")
 include("paths/independent_dijkstra.jl")
@@ -32,12 +33,7 @@ include("paths/cooperative_astar.jl")
 include("local_search/neighborhood.jl")
 include("local_search/optimality_search.jl")
 include("local_search/feasibility_search.jl")
-
-include("embedding/paths.jl")
-include("embedding/features_agents.jl")
-include("embedding/features_edges.jl")
-include("embedding/features_both.jl")
-include("embedding/embedding.jl")
+include("local_search/double_search.jl")
 
 ## Exports
 
@@ -52,15 +48,12 @@ export find_conflict
 export is_feasible
 
 export forward_dijkstra, backward_dijkstra
+export independent_dijkstra
 export temporal_astar
-export dijkstra_to_destinations
-export independent_dijkstra, agent_dijkstra
 export cooperative_astar!, cooperative_astar
 
 export feasibility_search!, feasibility_search
 export optimality_search!, optimality_search
-
-export mapf_embedding
-export path_to_vec, path_to_vec_sparse, solution_to_mat
+export double_search
 
 end # module

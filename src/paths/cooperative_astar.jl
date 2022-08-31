@@ -2,20 +2,19 @@ function cooperative_astar!(
     solution::Solution,
     mapf::MAPF,
     agents::AbstractVector{<:Integer},
-    edge_weights_vec::AbstractVector,
-    shortest_path_trees::Dict;
+    edge_weights_vec::AbstractVector{<:Real},
+    spt_by_dest::Dict{Int,<:ShortestPathTree};
     conflict_price=Inf,
     show_progress=false,
 )
-    @assert all(>=(0), edge_weights_vec)
-    prog = Progress(length(agents); enabled=show_progress)
     (; g, sources, destinations, departure_times) = mapf
     w = build_weights_matrix(mapf, edge_weights_vec)
     reservation = compute_reservation(solution, mapf)
+    prog = Progress(length(agents); enabled=show_progress)
     for a in agents
         next!(prog)
         s, d, t0 = sources[a], destinations[a], departure_times[a]
-        dists = shortest_path_trees[d].dists
+        dists = spt_by_dest[d].dists
         heuristic(v) = dists[v]
         timed_path = temporal_astar(
             g, s, d, t0, w, reservation; heuristic=heuristic, conflict_price=conflict_price
@@ -26,74 +25,23 @@ function cooperative_astar!(
     return nothing
 end
 
-function cooperative_astar!(
-    solution::Solution,
-    mapf::MAPF,
-    agents::AbstractVector{<:Integer},
-    edge_weights_mat::AbstractMatrix{<:Real};
-    conflict_price=Inf,
-    show_progress=false,
-)
-    @assert all(>=(0), edge_weights_mat)
-    prog = Progress(length(agents); enabled=show_progress)
-    (; g, sources, destinations, departure_times) = mapf
-    reservation = compute_reservation(solution, mapf)
-    for a in agents
-        next!(prog)
-        s, d, t0 = sources[a], destinations[a], departure_times[a]
-        w_for_a = build_weights_matrix(mapf, edge_weights_mat[:, a])
-        dists = backward_dijkstra(g, d, w_for_a).dists
-        heuristic(v) = dists[v]
-        timed_path = temporal_astar(
-            g,
-            s,
-            d,
-            t0,
-            w_for_a,
-            reservation;
-            heuristic=heuristic,
-            conflict_price=conflict_price,
-        )
-        solution[a] = timed_path
-        update_reservation!(reservation, timed_path, mapf)
-    end
-    return nothing
-end
-
 function cooperative_astar(
     mapf::MAPF,
-    agents::AbstractVector{<:Integer},
+    agents::AbstractVector{<:Integer}=randperm(nb_agents(mapf)),
     edge_weights_vec::AbstractVector{<:Real}=mapf.edge_weights_vec,
-    shortest_path_trees=dijkstra_to_destinations(mapf, edge_weights_vec);
+    spt_by_dest::Dict{Int,<:ShortestPathTree}=dijkstra_by_destination(
+        mapf, edge_weights_vec; show_progress=false
+    );
     conflict_price=Inf,
     show_progress=false,
 )
-    solution = [TimedPath(mapf.departure_times[a], Int[]) for a in 1:nb_agents(mapf)]
+    solution = empty_solution(mapf)
     cooperative_astar!(
         solution,
         mapf,
         agents,
         edge_weights_vec,
-        shortest_path_trees;
-        conflict_price=conflict_price,
-        show_progress=show_progress,
-    )
-    return solution
-end
-
-function cooperative_astar(
-    mapf::MAPF,
-    agents::AbstractVector{<:Integer},
-    edge_weights_mat::AbstractMatrix{<:Real};
-    conflict_price=Inf,
-    show_progress=false,
-)
-    solution = [TimedPath(mapf.departure_times[a], Int[]) for a in 1:nb_agents(mapf)]
-    cooperative_astar!(
-        solution,
-        mapf,
-        agents,
-        edge_weights_mat;
+        spt_by_dest;
         conflict_price=conflict_price,
         show_progress=show_progress,
     )

@@ -11,8 +11,8 @@ end
 function feasibility_search!(
     solution::Solution,
     mapf::MAPF,
-    edge_weights_vec::AbstractVector,
-    shortest_path_trees::Dict;
+    edge_weights_vec::AbstractVector{<:Real},
+    spt_by_dest::Dict{Int,<:ShortestPathTree};
     neighborhood_size,
     conflict_price,
     conflict_price_increase,
@@ -25,15 +25,13 @@ function feasibility_search!(
         mapf,
         pathless_agents,
         edge_weights_vec,
-        shortest_path_trees;
+        spt_by_dest;
         conflict_price=conflict_price,
     )
     cp = colliding_pairs(solution, mapf)
     prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
-    steps = 0
     while !is_feasible(solution, mapf)
         next!(prog; showvalues=[(:colliding_pairs, cp)])
-        steps += 1
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
         cooperative_astar!(
@@ -41,7 +39,7 @@ function feasibility_search!(
             mapf,
             neighborhood_agents,
             edge_weights_vec,
-            shortest_path_trees;
+            spt_by_dest;
             conflict_price=conflict_price,
         )
         new_cp = colliding_pairs(solution, mapf)
@@ -59,19 +57,19 @@ end
 
 function feasibility_search(
     mapf::MAPF,
-    edge_weights_vec=mapf.edge_weights_vec,
-    shortest_path_trees=dijkstra_to_destinations(mapf, edge_weights_vec);
+    edge_weights_vec::AbstractVector{<:Real}=mapf.edge_weights_vec;
     neighborhood_size=10,
-    conflict_price=0.1,
+    conflict_price=1.0,
     conflict_price_increase=1e-2,
-    show_progress=true,
+    show_progress=false,
 )
-    solution = independent_dijkstra(mapf, edge_weights_vec, shortest_path_trees)
+    spt_by_dest = dijkstra_by_destination(mapf, edge_weights_vec)
+    solution = independent_dijkstra(mapf, spt_by_dest)
     feasibility_search!(
         solution,
         mapf,
         edge_weights_vec,
-        shortest_path_trees;
+        spt_by_dest;
         neighborhood_size=neighborhood_size,
         conflict_price=conflict_price,
         conflict_price_increase=conflict_price_increase,

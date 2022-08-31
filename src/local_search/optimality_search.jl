@@ -1,22 +1,22 @@
 function optimality_search!(
     solution::Solution,
     mapf::MAPF,
-    edge_weights_vec::AbstractVector{Int},
-    shortest_path_trees::Dict;
+    edge_weights_vec::AbstractVector{<:Real},
+    spt_by_dest::Dict{Int,<:ShortestPathTree};
     neighborhood_size,
     steps,
     show_progress,
 )
     @assert is_feasible(solution, mapf)
     cost = flowtime(solution, mapf)
-    p = Progress(steps; desc="Optimality search steps: ", enabled=show_progress)
+    prog = Progress(steps; desc="Optimality search steps: ", enabled=show_progress)
     for _ in 1:steps
-        next!(p)
+        next!(prog)
         agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, agents, mapf)
-        cooperative_astar!(solution, mapf, agents, edge_weights_vec, shortest_path_trees)
+        cooperative_astar!(solution, mapf, agents, edge_weights_vec, spt_by_dest;)
         new_cost = flowtime(solution, mapf)
-        if is_feasible(solution, mapf) && new_cost < cost  # keep
+        if all_non_empty(solution) && new_cost < cost  # keep, non-emptyness after A* ensures feasibility
             cost = new_cost
         else  # revert
             for a in agents
@@ -29,20 +29,19 @@ end
 
 function optimality_search(
     mapf::MAPF,
-    edge_weights_vec=mapf.edge_weights_vec,
-    shortest_path_trees=dijkstra_to_destinations(mapf, edge_weights_vec);
+    edge_weights_vec::AbstractVector{<:Real}=mapf.edge_weights_vec;
     neighborhood_size=10,
     steps=100,
-    show_progress=true,
+    show_progress=false,
 )
-    solution = cooperative_astar(
-        mapf, randperm(nb_agents(mapf)), edge_weights_vec, shortest_path_trees
-    )
+    agents = randperm(nb_agents(mapf))
+    spt_by_dest = dijkstra_by_destination(mapf, edge_weights_vec; show_progress=false)
+    solution = cooperative_astar(mapf, agents, edge_weights_vec, spt_by_dest;)
     optimality_search!(
         solution,
         mapf,
         edge_weights_vec,
-        shortest_path_trees;
+        spt_by_dest;
         neighborhood_size=neighborhood_size,
         steps=steps,
         show_progress=show_progress,
