@@ -27,11 +27,9 @@ function flowtime(
     return sum(path_weight(timed_path, mapf, edge_weights_vec) for timed_path in solution)
 end
 
-flowtime(::Nothing, ::MAPF; kwargs...) = Inf
-
-max_time(timed_path::TimedPath) = timed_path.t0 + length(timed_path.path) - 1
+flowtime(::Nothing, ::MAPF{W}; kwargs...) where {W} = typemax(W)
 
 """
     max_time(solution)
 """
-max_time(solution::Solution) = maximum(max_time(timed_path) for timed_path in solution)
+max_time(solution::Solution) = maximum(arrival_time(timed_path) for timed_path in solution)

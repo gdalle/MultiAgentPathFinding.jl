@@ -1,38 +1,25 @@
 """
-    has_empty_paths(solution)
-"""
-function has_empty_paths(solution::Solution)
-    return any(length(path) == 0 for path in solution)
-end
-
-"""
-    is_feasible(solution)
+    is_feasible(solution, mapf)
 """
 function is_feasible(solution::Solution, mapf::MAPF)
-    (; g, sources, destinations, starting_times) = mapf
+    (; g, sources, destinations, departure_times, max_arrival_times) = mapf
     for a in 1:nb_agents(mapf)
-        s, d, t0 = sources[a], destinations[a], starting_times[a]
         timed_path = solution[a]
-        path = timed_path.path
-        if length(path) == 0
+        if length(timed_path) == 0
             return false  # empty path
-        elseif timed_path.t0 != t0
+        elseif departure_time(timed_path) != departure_times[a]
             return false  # wrong starting time
-        elseif first(path) != s
+        elseif arrival_time(timed_path) > max_arrival_times[a]
+            return false  # late arrival
+        elseif first_vertex(timed_path) != sources[a]
             return false  # wrong source
-        elseif last(path) != d
+        elseif last_vertex(timed_path) != destinations[a]
             return false  # wrong destination
-        else
-            K = length(path)
-            for k in 1:(K - 1)
-                v1, v2 = path[k], path[k + 1]
-                if !has_edge(g, v1, v2)
-                    return false  # invalid edge
-                end
-            end
+        elseif !exists_in_graph(timed_path, g)
+            return false  # invalid vertices or edges
         end
     end
-    if conflict_exists(solution, mapf)
+    if find_conflict(solution, mapf) !== nothing
         return false
     else
         return true

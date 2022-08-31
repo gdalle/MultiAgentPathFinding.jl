@@ -1,7 +1,9 @@
 using MultiAgentPathFinding
 using Documenter
 
-DocMeta.setdocmeta!(MultiAgentPathFinding, :DocTestSetup, :(using MultiAgentPathFinding); recursive=true)
+DocMeta.setdocmeta!(
+    MultiAgentPathFinding, :DocTestSetup, :(using MultiAgentPathFinding); recursive=true
+)
 
 makedocs(;
     modules=[MultiAgentPathFinding],
@@ -14,13 +16,7 @@ makedocs(;
         assets=String[],
         edit_branch="main",
     ),
-    pages=[
-        "Home" => "index.md",
-        "API reference" => "api.md",
-    ],
+    pages=["Home" => "index.md", "API reference" => "api.md"],
 )
 
-deploydocs(;
-    repo="github.com/gdalle/MultiAgentPathFinding.jl",
-    devbranch="main",
-)
+deploydocs(; repo="github.com/gdalle/MultiAgentPathFinding.jl", devbranch="main")

@@ -9,10 +9,14 @@ Storage for vertices and edges that are already occupied.
 """
 struct Reservation
     forbidden_vertices::Set{Tuple{Int,Int}}
-    forbidden_edges::Set{Tuple{Int,Int}}
+    forbidden_edges::Set{Tuple{Int,Int,Int}}
 end
 
-Reservation() = Reservation(Set{Tuple{Int,Int}}(), Set{Tuple{Int,Int}}())
+function Reservation()
+    empty_forbidden_vertices = Set{Tuple{Int,Int}}()
+    empty_forbidden_edges = Set{Tuple{Int,Int,Int}}()
+    return Reservation(empty_forbidden_vertices, empty_forbidden_edges)
+end
 
 """
     is_forbidden_vertex(reservation, t, v)
@@ -24,11 +28,13 @@ function is_forbidden_vertex(res::Reservation, t::Integer, v::Integer)
 end
 
 """
-    is_forbidden_edge(reservation, t, e)
+    is_forbidden_edge(reservation, t, u, v)
 
-Check whether edge `e` is occupied at time `t`.
+Check whether edge `(u, v)` is occupied at time `t`.
 """
-is_forbidden_edge(res::Reservation, t::Integer, e::Integer) = (t, e) in res.forbidden_edges
+function is_forbidden_edge(res::Reservation, t::Integer, u::Integer, v::Integer)
+    return (t, u, v) in res.forbidden_edges
+end
 
 """
     compute_reservation(solution, mapf; [agents])
@@ -39,7 +45,7 @@ function compute_reservation(solution::Solution, mapf::MAPF; agents=1:nb_agents(
     reservation = Reservation()
     for a in agents
         timed_path = solution[a]
-        update_reservation!(reservation, timed_path, mapf::MAPF)
+        update_reservation!(reservation, timed_path, mapf)
     end
     return reservation
 end
@@ -50,10 +56,17 @@ end
 Add the vertices and edges occupied by `timed_path` to `reservation`.
 """
 function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF)
-    (; t0, path) = timed_path
-    for (k, u) in enumerate(path)
-        for v in mapf.vertex_conflicts[u]
-            push!(reservation.forbidden_vertices, (t0 + k - 1, v))
+    for t in departure_time(timed_path):arrival_time(timed_path)
+        v = vertex_at_time(timed_path, t)
+        for vv in mapf.vertex_conflicts[v]
+            push!(reservation.forbidden_vertices, (t, vv))
+        end
+    end
+    for t in departure_time(timed_path):(arrival_time(timed_path) - 1)
+        u, v = edge_at_time(timed_path, t)
+        haskey(mapf.edge_conflicts, (u, v)) || continue
+        for (uu, vv) in mapf.edge_conflicts[(u, v)]
+            push!(reservation.forbidden_edges, (t, uu, vv))
         end
     end
     return nothing

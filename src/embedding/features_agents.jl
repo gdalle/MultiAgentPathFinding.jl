@@ -1,5 +1,5 @@
 function mission_features_agent(a::Integer, mapf::MAPF)
-    t0 = mapf.starting_times[a]
+    t0 = mapf.departure_times[a]
     return (Float64(a), Float64(t0))
 end
 

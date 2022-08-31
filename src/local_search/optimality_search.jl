@@ -1,20 +1,20 @@
-function large_neighborhood_search!(
+function optimality_search!(
     solution::Solution,
     mapf::MAPF,
-    edge_weights_vec::AbstractVector,
+    edge_weights_vec::AbstractVector{Int},
     shortest_path_trees::Dict;
-    neighborhood_size::Integer,
-    steps::Integer,
-    show_progress::Bool=false,
+    neighborhood_size,
+    steps,
+    show_progress,
 )
     @assert is_feasible(solution, mapf)
     cost = flowtime(solution, mapf)
-    p = Progress(steps; desc="LNS steps: ", enabled=show_progress)
+    p = Progress(steps; desc="Optimality search steps: ", enabled=show_progress)
     for _ in 1:steps
         next!(p)
         agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, agents, mapf)
-        cooperative_astar!(solution, agents, mapf, edge_weights_vec, shortest_path_trees)
+        cooperative_astar!(solution, mapf, agents, edge_weights_vec, shortest_path_trees)
         new_cost = flowtime(solution, mapf)
         if is_feasible(solution, mapf) && new_cost < cost  # keep
             cost = new_cost
@@ -27,18 +27,18 @@ function large_neighborhood_search!(
     return solution
 end
 
-function large_neighborhood_search(
+function optimality_search(
     mapf::MAPF,
-    edge_weights_vec::AbstractVector=mapf.edge_weights_vec,
+    edge_weights_vec=mapf.edge_weights_vec,
     shortest_path_trees=dijkstra_to_destinations(mapf, edge_weights_vec);
     neighborhood_size=10,
-    steps=10,
+    steps=100,
     show_progress=true,
 )
     solution = cooperative_astar(
-        mapf, 1:nb_agents(mapf), edge_weights_vec, shortest_path_trees
+        mapf, randperm(nb_agents(mapf)), edge_weights_vec, shortest_path_trees
     )
-    large_neighborhood_search!(
+    optimality_search!(
         solution,
         mapf,
         edge_weights_vec,
