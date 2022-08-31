@@ -152,3 +152,23 @@ function build_weights_matrix(
     wᵀ = SparseMatrixCSC(nv(g), nv(g), edge_colptr, edge_rowval, edge_weights_vec)
     return transpose(wᵀ)
 end
+
+function select_agents(mapf::MAPF, agents::AbstractVector{<:Integer})
+    return MAPF(
+        # Graph-related
+        mapf.g,
+        # Edges-related
+        mapf.edge_indices,
+        mapf.edge_colptr,
+        mapf.edge_rowval,
+        mapf.edge_weights_vec,
+        # Constraints-related
+        mapf.vertex_conflicts,
+        mapf.edge_conflicts,
+        # Agents-related
+        view(mapf.sources, agents),
+        view(mapf.destinations, agents),
+        view(mapf.departure_times, agents),
+        view(mapf.max_arrival_times, agents),
+    )
+end

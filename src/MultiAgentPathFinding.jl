@@ -37,7 +37,7 @@ include("local_search/double_search.jl")
 
 ## Exports
 
-export MAPF, nb_agents, build_weights_matrix
+export MAPF, nb_agents, build_weights_matrix, select_agents
 export TimedPath
 export Solution
 export Reservation
