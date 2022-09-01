@@ -3,14 +3,14 @@
 function dijkstra_by_agent(
     mapf::MAPF, edge_weights_mat::AbstractMatrix{<:Real}; show_progress
 )
-    (; g, sources) = mapf
+    (; g, departures) = mapf
     A = nb_agents(mapf)
     spt_by_agent = Vector{ShortestPathTree}(undef, A)
     prog = Progress(A; desc="Dijkstra by agent: ", enabled=show_progress)
     for a in 1:A
         next!(prog)
         wa = build_weights_matrix(mapf, edge_weights_mat[:, a])
-        spt_by_agent[a] = forward_dijkstra(g, sources[a], wa)
+        spt_by_agent[a] = forward_dijkstra(g, departures[a], wa)
     end
     return spt_by_agent
 end
@@ -18,12 +18,12 @@ end
 function independent_dijkstra(
     mapf::MAPF, edge_weights_mat::AbstractMatrix{<:Real}; show_progress
 )
-    (; sources, destinations, departure_times) = mapf
+    (; departures, arrivals, departure_times) = mapf
     spt_by_agent = dijkstra_by_agent(mapf, edge_weights_mat; show_progress=show_progress)
     A = nb_agents(mapf)
     solution = Vector{TimedPath}(undef, A)
     for a in 1:A
-        s, d, t0 = sources[a], destinations[a], departure_times[a]
+        s, d, t0 = departures[a], arrivals[a], departure_times[a]
         solution[a] = build_timed_path(spt_by_agent[a], t0, s, d)
     end
     return solution
@@ -39,12 +39,12 @@ function cooperative_astar!(
     conflict_price,
     show_progress,
 )
-    (; g, sources, destinations, departure_times) = mapf
+    (; g, departures, arrivals, departure_times) = mapf
     reservation = compute_reservation(solution, mapf)
     prog = Progress(length(agents); enabled=show_progress)
     for a in agents
         next!(prog)
-        s, d, t0 = sources[a], destinations[a], departure_times[a]
+        s, d, t0 = departures[a], arrivals[a], departure_times[a]
         wa = build_weights_matrix(mapf, edge_weights_mat[:, a])
         dists = backward_dijkstra(g, d, wa).dists
         heuristic(v) = dists[v]

@@ -16,10 +16,10 @@ function graph_features_edge(s::Integer, d::Integer, mapf::MAPF)
 end
 
 function mission_features_edge(s::Integer, d::Integer, mapf::MAPF)
-    (; sources, destinations) = mapf
+    (; departures, arrivals) = mapf
     s_source_count = 0
     d_source_count = 0
-    for v in sources
+    for v in departures
         if v == s
             s_source_count += 1
         end
@@ -29,7 +29,7 @@ function mission_features_edge(s::Integer, d::Integer, mapf::MAPF)
     end
     s_destination_count = 0
     d_destination_count = 0
-    for v in destinations
+    for v in arrivals
         if v == s
             s_destination_count += 1
         end

@@ -62,9 +62,12 @@ function temporal_astar_hard(
         (t, u), h_u = pop!(heap)
         Δ_u = dists[t, u]
         if u == d
-            return build_astar_path(parents, t0, s, t, d)
+            timed_path = build_astar_path(parents, t0, s, t, d)
+            # @assert exists_in_graph(timed_path, g)
+            return timed_path
         else
             for v in outneighbors(g, u)
+                isnothing(heuristic(v)) && continue
                 is_forbidden_vertex(res, t + 1, v) && continue
                 is_forbidden_edge(res, t, u, v) && continue
                 Δ_v = get(dists, (t + 1, v), nothing)
@@ -115,6 +118,7 @@ function temporal_astar_soft(
             return build_astar_path(parents, t0, s, t, d)
         end
         for v in outneighbors(g, u)
+            isnothing(heuristic(v)) && continue
             c_v = get(conflicts, (t + 1, v), nothing)
             Δ_v = get(dists, (t + 1, v), nothing)
             c_v_after_u = is_forbidden_vertex(res, t + 1, v)

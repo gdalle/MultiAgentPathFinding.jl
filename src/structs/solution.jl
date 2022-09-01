@@ -21,7 +21,7 @@ Remove a set of `agents` from a `solution` and return a back up of their paths.
 function remove_agents!(solution::Solution, agents, mapf::MAPF)
     backup = Dict(a => solution[a] for a in agents)
     for a in agents
-        solution[a] = TimedPath(mapf.sources[a], Int[])
+        solution[a] = TimedPath(mapf.departures[a], Int[])
     end
     return backup
 end

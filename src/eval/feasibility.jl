@@ -2,20 +2,25 @@
     is_feasible(solution, mapf)
 """
 function is_feasible(solution::Solution, mapf::MAPF)
-    (; g, sources, destinations, departure_times, max_arrival_times) = mapf
+    (; g, departures, arrivals, departure_times, max_arrival_times) = mapf
     for a in 1:nb_agents(mapf)
         timed_path = solution[a]
         if length(timed_path) == 0
             return false  # empty path
         elseif departure_time(timed_path) != departure_times[a]
-            return false  # wrong starting time
+            @warn "Wrong departure time for agent $a"
+            return false  # wrong departure time
         elseif arrival_time(timed_path) > max_arrival_times[a]
-            return false  # late arrival
-        elseif first_vertex(timed_path) != sources[a]
-            return false  # wrong source
-        elseif last_vertex(timed_path) != destinations[a]
-            return false  # wrong destination
+            @warn "Late arrival time for agent $a"
+            return false  # late arrival time
+        elseif first_vertex(timed_path) != departures[a]
+            @warn "Wrong departure vertex for agent $a"
+            return false  # wrong departure vertex
+        elseif last_vertex(timed_path) != arrivals[a]
+            @warn "Wrong arrival vertex for agent $a"
+            return false  # wrong arrival vertex
         elseif !exists_in_graph(timed_path, g)
+            @warn "Path of agent $a does not exist in graph"
             return false  # invalid vertices or edges
         end
     end

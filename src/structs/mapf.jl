@@ -12,8 +12,8 @@ Instance of a Multi-Agent PathFinding problem with custom conflict rules.
 - `edge_weights_vec::Vector{W}`
 - `vertex_conflicts::Vector{Vector{Int}}`
 - `edge_conflicts::Dict{Tuple{Int,Int},Vector{Tuple{Int,Int}}}`
-- `sources::Vector{Int}`
-- `destinations::Vector{Int}`
+- `departures::Vector{Int}`
+- `arrivals::Vector{Int}`
 - `departure_times::Vector{Int}`
 - `arrival_times::Vector{Int}`
 """
@@ -26,11 +26,11 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
     edge_rowval::Vector{Int}
     edge_weights_vec::Vector{W}
     # Constraints-related
-    vertex_conflicts::Vector{Vector{Int}}
+    vertex_conflicts::Dict{Int,Vector{Int}}
     edge_conflicts::Dict{Tuple{Int,Int},Vector{Tuple{Int,Int}}}
     # Agents-related
-    sources::Vector{Int}
-    destinations::Vector{Int}
+    departures::Vector{Int}
+    arrivals::Vector{Int}
     departure_times::Vector{Int}
     max_arrival_times::Vector{Int}
 
@@ -42,18 +42,18 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
         edge_weights_vec::Vector{W},
         vertex_conflicts,
         edge_conflicts,
-        sources,
-        destinations,
+        departures,
+        arrivals,
         departure_times,
         max_arrival_times,
     ) where {W,G}
         # Check arguments
         @assert is_directed(g)
-        A = length(sources)
-        @assert A == length(destinations)
+        A = length(departures)
+        @assert A == length(arrivals)
         @assert A == length(departure_times)
         @assert A == length(max_arrival_times)
-        for group in vertex_conflicts
+        for group in values(vertex_conflicts)
             @assert issorted(group)
         end
         for group in values(edge_conflicts)
@@ -67,8 +67,8 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
             edge_weights_vec,
             vertex_conflicts,
             edge_conflicts,
-            sources,
-            destinations,
+            departures,
+            arrivals,
             departure_times,
             max_arrival_times,
         )
@@ -78,38 +78,39 @@ end
 function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
     return print(
         io,
-        "Multi-Agent Path Finding problem\nGraph type: $G with $W weights\nNb of agents: $(length(mapf.sources))",
+        "Multi-Agent Path Finding problem\nGraph type: $G with $W weights\nNb of agents: $(length(mapf.departures))",
     )
 end
 
 function build_edge_data(g::AbstractGraph)
     edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(g)))
+    edge_weights_mat = Graphs.weights(g)
 
     edge_colptr = Vector{Int}(undef, nv(g) + 1)
     edge_rowval = Vector{Int}(undef, ne(g))
+    edge_weights_vec = Vector{eltype(edge_weights_mat)}(undef, ne(g))
+
     e = 1
     for i in vertices(g)
-        edge_colptr[i] = e
+        edge_colptr[i] = e  # i is the column
         for j in outneighbors(g, i)
-            edge_rowval[e] = j
+            edge_rowval[e] = j  # j is the row
+            edge_weights_vec[e] = edge_weights_mat[i, j]
             e += 1
         end
     end
     edge_colptr[nv(g) + 1] = ne(g) + 1
-
-    edge_weights_mat = Graphs.weights(g)
-    edge_weights_vec = [edge_weights_mat[src(ed), dst(ed)] for ed in edges(g)]
 
     return edge_indices, edge_colptr, edge_rowval, edge_weights_vec
 end
 
 function MAPF(
     g::G,
-    sources::Vector{<:Integer},
-    destinations::Vector{<:Integer};
-    departure_times=[1 for a in 1:length(sources)],
-    max_arrival_times=[typemax(Int) for a in 1:length(sources)],
-    vertex_conflicts=[[v] for v in vertices(g)],
+    departures::Vector{<:Integer},
+    arrivals::Vector{<:Integer};
+    departure_times=[1 for a in 1:length(departures)],
+    max_arrival_times=[typemax(Int) for a in 1:length(departures)],
+    vertex_conflicts=Dict(v => [v] for v in vertices(g)),
     edge_conflicts=Dict((src(ed), dst(ed)) => [(dst(ed), src(ed))] for ed in edges(g)),
 ) where {G}
     edge_indices, edge_colptr, edge_rowval, edge_weights_vec = build_edge_data(g)
@@ -125,8 +126,8 @@ function MAPF(
         vertex_conflicts,
         edge_conflicts,
         # Agents-related
-        sources,
-        destinations,
+        departures,
+        arrivals,
         departure_times,
         max_arrival_times,
     )
@@ -137,7 +138,7 @@ end
 
 Count the number of agents in `mapf`.
 """
-nb_agents(mapf::MAPF) = length(mapf.sources)
+nb_agents(mapf::MAPF) = length(mapf.departures)
 
 """
     build_edge_weights_matrix(mapf[, edge_weights_vec])
@@ -167,11 +168,55 @@ function select_agents(mapf::MAPF, agents::AbstractVector{<:Integer})
         mapf.vertex_conflicts,
         mapf.edge_conflicts,
         # Agents-related
-        view(mapf.sources, agents),
-        view(mapf.destinations, agents),
+        view(mapf.departures, agents),
+        view(mapf.arrivals, agents),
         view(mapf.departure_times, agents),
         view(mapf.max_arrival_times, agents),
     )
 end
 
 select_agents(mapf::MAPF, nb_agents::Integer) = select_agents(mapf, 1:nb_agents)
+
+## Add dummy vertices
+
+function add_dummy_vertices(mapf::MAPF; appear_at_departure=true, disappear_at_arrival=true)
+    A = length(mapf.departures)
+    V = nv(mapf.g)
+    edge_weights_mat = Graphs.weights(mapf.g)
+
+    augmented_sources = src.(edges(mapf.g))
+    augmented_destinations = dst.(edges(mapf.g))
+    augmented_weights = Float64[edge_weights_mat[src(ed), dst(ed)] for ed in edges(mapf.g)]
+
+    new_departures = copy(mapf.departures)
+    new_arrivals = copy(mapf.arrivals)
+
+    if appear_at_departure
+        new_departures .= (V + 1):(V + A)
+        append!(augmented_sources, new_departures, new_departures)
+        append!(augmented_destinations, new_departures, mapf.departures)
+        append!(augmented_weights, fill(eps(), 2A))
+        V += A
+    end
+
+    if disappear_at_arrival
+        new_arrivals .= (V + 1):(V + A)
+        append!(augmented_sources, mapf.arrivals, new_arrivals)
+        append!(augmented_destinations, new_arrivals, new_arrivals)
+        append!(augmented_weights, fill(eps(), 2A))
+    end
+
+    augmented_g = SimpleWeightedDiGraph(
+        augmented_sources, augmented_destinations, augmented_weights
+    )
+
+    return MAPF(
+        augmented_g,
+        new_departures,
+        new_arrivals;
+        departure_times=mapf.departure_times,
+        max_arrival_times=mapf.max_arrival_times,
+        vertex_conflicts=mapf.vertex_conflicts,
+        edge_conflicts=mapf.edge_conflicts,
+    )
+end

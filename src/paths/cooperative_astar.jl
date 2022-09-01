@@ -2,18 +2,18 @@ function cooperative_astar!(
     solution::Solution,
     mapf::MAPF,
     agents::AbstractVector{<:Integer},
-    edge_weights_vec::AbstractVector{<:Real},
+    edge_weights_vec::AbstractVector{W},
     spt_by_dest::Dict{Int,<:ShortestPathTree};
     conflict_price=Inf,
     show_progress=false,
-)
-    (; g, sources, destinations, departure_times) = mapf
+) where {W}
+    (; g, departures, arrivals, departure_times) = mapf
     w = build_weights_matrix(mapf, edge_weights_vec)
     reservation = compute_reservation(solution, mapf)
     prog = Progress(length(agents); enabled=show_progress)
     for a in agents
         next!(prog)
-        s, d, t0 = sources[a], destinations[a], departure_times[a]
+        s, d, t0 = departures[a], arrivals[a], departure_times[a]
         dists = spt_by_dest[d].dists
         heuristic(v) = dists[v]
         timed_path = temporal_astar(

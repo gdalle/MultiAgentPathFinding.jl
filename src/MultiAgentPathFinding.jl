@@ -2,17 +2,21 @@ module MultiAgentPathFinding
 
 ## Dependencies
 
-using Base.Iterators
 using Base.Threads
 
-using DataStructures
-using Graphs
+using DataStructures: BinaryHeap
+using Graphs: Graphs, AbstractGraph
+using Graphs: nv, ne, src, dst
+using Graphs: vertices, edges, inneighbors, outneighbors, has_vertex, has_edge
+using Graphs: is_directed
 using LinearAlgebra
-using ProgressMeter
+using ProgressMeter: Progress, ProgressUnknown
+using ProgressMeter: @showprogress, next!
 using Random
-using Statistics
+using SimpleWeightedGraphs: SimpleWeightedDiGraph
+using SparseArrays: SparseMatrixCSC, sparse
+using Statistics: mean
 using StatsBase: StatsBase, sample
-using SparseArrays
 
 ## Includes
 
@@ -37,7 +41,8 @@ include("local_search/double_search.jl")
 
 ## Exports
 
-export MAPF, nb_agents, build_weights_matrix, select_agents
+export MAPF, nb_agents, build_weights_matrix
+export select_agents, add_dummy_vertices
 export TimedPath
 export Solution
 export Reservation

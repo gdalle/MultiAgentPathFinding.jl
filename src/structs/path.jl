@@ -63,6 +63,7 @@ function find_vertex_conflict(
 )
     for t1 in departure_time(timed_path1):arrival_time(timed_path1)
         u1 = vertex_at_time(timed_path1, t1)
+        haskey(mapf.vertex_conflicts, u1) || continue
         u1_conflicts = mapf.vertex_conflicts[u1]
         isempty(u1_conflicts) && continue
         for t2 in (t1 - tol):(t1 + tol)
@@ -81,6 +82,7 @@ function find_edge_conflict(
 )
     for t1 in departure_time(timed_path1):(arrival_time(timed_path1) - 1)
         u1v1 = edge_at_time(timed_path1, t1)
+        haskey(mapf.edge_conflicts, u1v1) || continue
         u1v1_conflicts = mapf.edge_conflicts[u1v1]
         isempty(u1v1_conflicts) && continue
         for t2 in (t1 - tol):(t1 + tol)

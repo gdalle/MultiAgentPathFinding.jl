@@ -58,6 +58,7 @@ Add the vertices and edges occupied by `timed_path` to `reservation`.
 function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF)
     for t in departure_time(timed_path):arrival_time(timed_path)
         v = vertex_at_time(timed_path, t)
+        haskey(mapf.vertex_conflicts, v) || continue
         for vv in mapf.vertex_conflicts[v]
             push!(reservation.forbidden_vertices, (t, vv))
         end

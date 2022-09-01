@@ -6,46 +6,19 @@ using Test
 Random.seed!(63)
 
 # Grid graph where the first and last vertex are departure zones
-L = 30
+L = 5
 g = SimpleDiGraph(Graphs.grid([L, L]))
-add_edge!(g, 1, 1)
-add_edge!(g, nv(g), nv(g))
 Graphs.weights(g)
 
-A = 50
-sources = fill(1, A);
-destinations = fill(nv(g), A);
+A = 10
+departures = rand(1:nv(g), A);
+arrivals = rand(1:nv(g), A);
 departure_times = rand(1:10, A);
 
-vertex_conflicts = Vector{Vector{Int}}(undef, nv(g));
-for v in vertices(g)
-    if 1 < v < nv(g)
-        vertex_conflicts[v] = [v]
-    else
-        vertex_conflicts[v] = Int[]
-    end
-end
+original_mapf = MAPF(g, departures, arrivals;)
+mapf = add_dummy_vertices(mapf)
 
-edge_conflicts = Dict{Tuple{Int,Int},Vector{Tuple{Int,Int}}}();
-for ed in edges(g)
-    u, v = src(ed), dst(ed)
-    if u != v
-        edge_conflicts[(u, v)] = [(v, u)]
-    else
-        edge_conflicts[(u, v)] = Tuple{Int,Int}[]
-    end
-end
-
-mapf = MAPF(
-    g,
-    sources,
-    destinations;
-    departure_times=departure_times,
-    vertex_conflicts=vertex_conflicts,
-    edge_conflicts=edge_conflicts,
-)
-
-show_progress = false
+show_progress = true
 
 solution_indep = independent_dijkstra(mapf);
 solution_coop = cooperative_astar(mapf);
