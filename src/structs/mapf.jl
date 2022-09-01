@@ -53,19 +53,20 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
         @assert A == length(destinations)
         @assert A == length(departure_times)
         @assert A == length(max_arrival_times)
-        sorted_vertex_conflicts = [sort(group) for group in vertex_conflicts]
-        sorted_edge_conflicts = Dict(
-            key => sort(group) for (key, group) in pairs(edge_conflicts)
-        )
-
+        for group in vertex_conflicts
+            @assert issorted(group)
+        end
+        for group in values(edge_conflicts)
+            @assert issorted(group)
+        end
         return new{W,G}(
             g,
             edge_indices,
             edge_colptr,
             edge_rowval,
             edge_weights_vec,
-            sorted_vertex_conflicts,
-            sorted_edge_conflicts,
+            vertex_conflicts,
+            edge_conflicts,
             sources,
             destinations,
             departure_times,
@@ -172,3 +173,5 @@ function select_agents(mapf::MAPF, agents::AbstractVector{<:Integer})
         view(mapf.max_arrival_times, agents),
     )
 end
+
+select_agents(mapf::MAPF, nb_agents::Integer) = select_agents(mapf, 1:nb_agents)
