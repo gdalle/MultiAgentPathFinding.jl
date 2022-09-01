@@ -19,7 +19,7 @@ arrival_time(timed_path::TimedPath) = timed_path.t0 + length(timed_path) - 1
 first_vertex(timed_path::TimedPath) = first(timed_path.path)
 last_vertex(timed_path::TimedPath) = last(timed_path.path)
 
-function vertex_at_time(timed_path::TimedPath, t::Integer)
+function vertex_at_time(timed_path::TimedPath, t)
     k = t - timed_path.t0 + 1
     if k in 1:length(timed_path)
         return timed_path.path[k]
@@ -28,7 +28,7 @@ function vertex_at_time(timed_path::TimedPath, t::Integer)
     end
 end
 
-function edge_at_time(timed_path::TimedPath, t::Integer)
+function edge_at_time(timed_path::TimedPath, t)
     k = t - timed_path.t0 + 1
     if k in 1:(length(timed_path) - 1)
         return timed_path.path[k], timed_path.path[k + 1]
@@ -47,6 +47,31 @@ function exists_in_graph(timed_path::TimedPath, g::AbstractGraph)
         has_edge(g, u, v) || return false
     end
     return true
+end
+
+## Cost
+
+function flowtime(
+    timed_path::TimedPath,
+    mapf::MAPF,
+    edge_weights_vec::AbstractVector{W}=mapf.edge_weights_vec,
+) where {W}
+    (; path) = timed_path
+    (; edge_indices) = mapf
+    K = lastindex(path)
+    v = last(path)
+    while K > firstindex(path) && path[prevind(path, K)] == v
+        K = prevind(path, K)
+    end
+    c = zero(W)
+    for k in eachindex(path)
+        if k < K
+            v1, v2 = path[k], path[nextind(path, k)]
+            e = edge_indices[v1, v2]
+            c += edge_weights_vec[e]
+        end
+    end
+    return c
 end
 
 ## Conflicts

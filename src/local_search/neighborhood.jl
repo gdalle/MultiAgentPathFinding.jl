@@ -1,9 +1,9 @@
-function random_neighborhood(mapf::MAPF, neighborhood_size::Integer)
+function random_neighborhood(mapf::MAPF, neighborhood_size)
     return sample(1:nb_agents(mapf), neighborhood_size; replace=false)
 end
 
 function random_neighborhood_collision_degree(
-    solution::Solution, mapf::MAPF, neighborhood_size::Integer
+    solution::Solution, mapf::MAPF, neighborhood_size
 )
     wv = StatsBase.weights(collision_degrees(solution, mapf) .+ 1)
     return sample(1:nb_agents(mapf), wv, neighborhood_size; replace=false)
@@ -26,7 +26,7 @@ end
 
 ## Utilities
 
-function collision_degree(a1::Integer, solution::Solution, mapf::MAPF; tol=0)
+function collision_degree(a1, solution::Solution, mapf::MAPF; tol=0)
     deg = 0
     for a2 in 1:nb_agents(mapf)
         if find_conflict(a1, a2, solution, mapf; tol=tol) !== nothing

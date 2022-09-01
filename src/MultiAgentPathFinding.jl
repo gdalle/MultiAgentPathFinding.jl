@@ -25,9 +25,6 @@ include("structs/path.jl")
 include("structs/solution.jl")
 include("structs/reservation.jl")
 
-include("eval/feasibility.jl")
-include("eval/cost.jl")
-
 include("paths/tree.jl")
 include("paths/dijkstra.jl")
 include("paths/temporal_astar.jl")

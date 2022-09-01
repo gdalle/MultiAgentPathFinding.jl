@@ -17,24 +17,23 @@ function dijkstra_by_destination(
     return spt_by_dest
 end
 
-function independent_dijkstra(mapf::MAPF, spt_by_dest::Dict{Int,<:ShortestPathTree})
+function independent_dijkstra_from_trees(mapf::MAPF, spt_by_dest)
     (; departures, arrivals, departure_times) = mapf
     A = nb_agents(mapf)
     solution = Vector{TimedPath}(undef, A)
     for a in 1:A
         s, d, t0 = departures[a], arrivals[a], departure_times[a]
-        solution[a] = build_timed_path(spt_by_dest[d], t0, s, d)
+        timed_path = build_timed_path(spt_by_dest[d], t0, s, d)
+        solution[a] = timed_path
     end
     return solution
 end
 
 function independent_dijkstra(
-    mapf::MAPF,
-    edge_weights_vec::AbstractVector{<:Real}=mapf.edge_weights_vec;
-    show_progress=false,
+    mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec; show_progress=false
 )
     spt_by_dest = dijkstra_by_destination(
         mapf, edge_weights_vec; show_progress=show_progress
     )
-    return independent_dijkstra(mapf, spt_by_dest)
+    return independent_dijkstra_from_trees(mapf, spt_by_dest)
 end

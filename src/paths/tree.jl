@@ -17,9 +17,7 @@ end
 """
     build_timed_path(shortest_path_tree, t0, s, d)
 """
-function build_timed_path(
-    spt::ShortestPathTree{T}, t0::Integer, s::Integer, d::Integer
-) where {T}
+function build_timed_path(spt::ShortestPathTree{T}, t0, s, d) where {T}
     parents = spt.parents
     if spt.forward
         v = d
@@ -27,7 +25,7 @@ function build_timed_path(
         while v != s
             v = parents[v]
             if iszero(v)
-                return T[]
+                return TimedPath(t0, T[])
             else
                 pushfirst!(path, v)
             end
@@ -38,7 +36,7 @@ function build_timed_path(
         while v != d
             v = parents[v]
             if iszero(v)
-                return T[]
+                return TimedPath(t0, T[])
             else
                 push!(path, v)
             end

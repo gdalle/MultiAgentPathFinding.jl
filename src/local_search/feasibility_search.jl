@@ -11,8 +11,8 @@ end
 function feasibility_search!(
     solution::Solution,
     mapf::MAPF,
-    edge_weights_vec::AbstractVector{<:Real},
-    spt_by_dest::Dict{Int,<:ShortestPathTree};
+    edge_weights_vec,
+    spt_by_dest;
     neighborhood_size,
     conflict_price,
     conflict_price_increase,
@@ -57,14 +57,14 @@ end
 
 function feasibility_search(
     mapf::MAPF,
-    edge_weights_vec::AbstractVector{<:Real}=mapf.edge_weights_vec;
+    edge_weights_vec=mapf.edge_weights_vec;
     neighborhood_size=10,
-    conflict_price=1.0,
+    conflict_price=1e-1,
     conflict_price_increase=1e-2,
     show_progress=false,
 )
     spt_by_dest = dijkstra_by_destination(mapf, edge_weights_vec)
-    solution = independent_dijkstra(mapf, spt_by_dest)
+    solution = independent_dijkstra_from_trees(mapf, spt_by_dest)
     feasibility_search!(
         solution,
         mapf,

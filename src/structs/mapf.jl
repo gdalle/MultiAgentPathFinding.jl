@@ -32,7 +32,7 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
     departures::Vector{Int}
     arrivals::Vector{Int}
     departure_times::Vector{Int}
-    max_arrival_times::Vector{Int}
+    max_arrival_times::Vector{Union{Nothing,Int}}
 
     function MAPF(
         g::G,
@@ -106,10 +106,10 @@ end
 
 function MAPF(
     g::G,
-    departures::Vector{<:Integer},
-    arrivals::Vector{<:Integer};
-    departure_times=[1 for a in 1:length(departures)],
-    max_arrival_times=[typemax(Int) for a in 1:length(departures)],
+    departures,
+    arrivals;
+    departure_times=fill(1, length(departures)),
+    max_arrival_times=fill(nothing, length(arrivals)),
     vertex_conflicts=Dict(v => [v] for v in vertices(g)),
     edge_conflicts=Dict((src(ed), dst(ed)) => [(dst(ed), src(ed))] for ed in edges(g)),
 ) where {G}
@@ -147,15 +147,13 @@ Turn a vector `edge_weights_vec` into a sparse weighted adjacency matrix for the
 
 This function doesn't allocate because the necessary index information is already in the [`MAPF`](@ref) object.
 """
-function build_weights_matrix(
-    mapf::MAPF, edge_weights_vec::AbstractVector=mapf.edge_weights_vec
-)
+function build_weights_matrix(mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec)
     (; g, edge_colptr, edge_rowval) = mapf
     wᵀ = SparseMatrixCSC(nv(g), nv(g), edge_colptr, edge_rowval, edge_weights_vec)
     return transpose(wᵀ)
 end
 
-function select_agents(mapf::MAPF, agents::AbstractVector{<:Integer})
+function select_agents(mapf::MAPF, agents)
     return MAPF(
         # Graph-related
         mapf.g,
@@ -179,7 +177,16 @@ select_agents(mapf::MAPF, nb_agents::Integer) = select_agents(mapf, 1:nb_agents)
 
 ## Add dummy vertices
 
-function add_dummy_vertices(mapf::MAPF; appear_at_departure=true, disappear_at_arrival=true)
+function add_dummy_vertices(
+    mapf::MAPF;
+    appear_at_departure=true,
+    disappear_at_arrival=true,
+    departure_loop_weight=1.0,
+    arrival_loop_weight=eps(0.0),
+)
+    @assert departure_loop_weight > 0
+    @assert arrival_loop_weight > 0
+
     A = length(mapf.departures)
     V = nv(mapf.g)
     edge_weights_mat = Graphs.weights(mapf.g)
@@ -195,7 +202,7 @@ function add_dummy_vertices(mapf::MAPF; appear_at_departure=true, disappear_at_a
         new_departures .= (V + 1):(V + A)
         append!(augmented_sources, new_departures, new_departures)
         append!(augmented_destinations, new_departures, mapf.departures)
-        append!(augmented_weights, fill(eps(), 2A))
+        append!(augmented_weights, fill(departure_loop_weight, A), fill(eps(0.0), A))
         V += A
     end
 
@@ -203,19 +210,21 @@ function add_dummy_vertices(mapf::MAPF; appear_at_departure=true, disappear_at_a
         new_arrivals .= (V + 1):(V + A)
         append!(augmented_sources, mapf.arrivals, new_arrivals)
         append!(augmented_destinations, new_arrivals, new_arrivals)
-        append!(augmented_weights, fill(eps(), 2A))
+        append!(augmented_weights, fill(eps(0.0), A), fill(arrival_loop_weight, A))
     end
 
     augmented_g = SimpleWeightedDiGraph(
         augmented_sources, augmented_destinations, augmented_weights
     )
 
+    new_max_arrival_times = [isnothing(t) ? nothing : t + 2 for t in mapf.max_arrival_times]
+
     return MAPF(
         augmented_g,
         new_departures,
         new_arrivals;
         departure_times=mapf.departure_times,
-        max_arrival_times=mapf.max_arrival_times,
+        max_arrival_times=new_max_arrival_times,
         vertex_conflicts=mapf.vertex_conflicts,
         edge_conflicts=mapf.edge_conflicts,
     )

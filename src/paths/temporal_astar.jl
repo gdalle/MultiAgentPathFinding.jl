@@ -1,51 +1,29 @@
-"""
-    build_astar_path(parents, t0, s, tf, d)
-"""
-function build_astar_path(parents::Dict, t0::Integer, s::Integer, tf::Integer, d::Integer)
+function build_astar_path(parents::Dict, s, d, tmin, t)
     path = Int[]
-    (τ, v) = (tf, d)
+    (τ, v) = (t, d)
     pushfirst!(path, v)
-    while τ > t0
+    while τ > tmin
         (τ, v) = parents[τ, v]
         pushfirst!(path, v)
     end
     @assert first(path) == s
-    return TimedPath(t0, path)
+    return TimedPath(tmin, path)
 end
 
-"""
-    temporal_astar(g, s, d, t0, w[, res; heuristic, conflict_price])
-"""
 function temporal_astar(
-    g::AbstractGraph{V},
-    s::Integer,
-    d::Integer,
-    t0::Integer,
-    w::AbstractMatrix{W},
-    res::Reservation=Reservation();
-    heuristic::Function=v -> 0.0,
-    conflict_price::Float64=Inf,
-) where {V,W}
+    g, s, d, tmin, tmax, w, res=Reservation(); heuristic=v -> 0.0, conflict_price=Inf
+)
     if conflict_price == Inf
-        return temporal_astar_hard(g, s, d, t0, w, res; heuristic=heuristic)
+        return temporal_astar_hard(g, s, d, tmin, tmax, w, res; heuristic=heuristic)
     else
         return temporal_astar_soft(
-            g, s, d, t0, w, res; heuristic=heuristic, conflict_price=conflict_price
+            g, s, d, tmin, tmax, w, res; heuristic=heuristic, conflict_price=conflict_price
         )
     end
 end
 
-"""
-    temporal_astar_hard(g, s, d, t0, w[, res; heuristic])
-"""
 function temporal_astar_hard(
-    g::AbstractGraph{V},
-    s::Integer,
-    d::Integer,
-    t0::Integer,
-    w::AbstractMatrix{W},
-    res::Reservation;
-    heuristic=v -> 0.0,
+    g::AbstractGraph{V}, s, d, tmin, tmax, w::AbstractMatrix{W}, res; heuristic=v -> 0.0
 ) where {V,W}
     # Init storage
     T = Int
@@ -53,18 +31,19 @@ function temporal_astar_hard(
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     dists = Dict{Tuple{T,V},W}()
     # Add source
-    if !is_forbidden_vertex(res, t0, s)
-        dists[t0, s] = zero(W)
-        push!(heap, (t0, s) => heuristic(s))
+    if !is_forbidden_vertex(res, tmin, s) && !isnothing(heuristic(s))
+        dists[tmin, s] = zero(W)
+        push!(heap, (tmin, s) => heuristic(s))
     end
     # Main loop
     while !isempty(heap)
         (t, u), h_u = pop!(heap)
         Δ_u = dists[t, u]
-        if u == d
-            timed_path = build_astar_path(parents, t0, s, t, d)
-            # @assert exists_in_graph(timed_path, g)
+        if u == d && (isnothing(tmax) || t == tmax)
+            timed_path = build_astar_path(parents, s, d, tmin, t)
             return timed_path
+        elseif !isnothing(tmax) && t > tmax
+            continue
         else
             for v in outneighbors(g, u)
                 isnothing(heuristic(v)) && continue
@@ -81,19 +60,17 @@ function temporal_astar_hard(
             end
         end
     end
-    return TimedPath(t0, Int[])
+    return TimedPath(tmin, Int[])
 end
 
-"""
-    temporal_astar_soft(g, s, d, t0, w[, res; heuristic, conflict_price])
-"""
 function temporal_astar_soft(
     g::AbstractGraph{V},
-    s::Integer,
-    d::Integer,
-    t0::Integer,
+    s,
+    d,
+    tmin,
+    tmax,
     w::AbstractMatrix{W},
-    res::Reservation;
+    res;
     heuristic=v -> 0.0,
     conflict_price=0.0,
 ) where {V,W}
@@ -105,39 +82,44 @@ function temporal_astar_soft(
     conflicts = Dict{Tuple{T,V},Int}()
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     # Add source
-    c_s = is_forbidden_vertex(res, t0, s)
-    dists[t0, s] = zero(W)
-    conflicts[t0, s] = c_s
-    push!(heap, (t0, s) => conflict_price * c_s + heuristic(s))
+    if !isnothing(heuristic(s))
+        c_s = is_forbidden_vertex(res, tmin, s)
+        dists[tmin, s] = zero(W)
+        conflicts[tmin, s] = c_s
+        push!(heap, (tmin, s) => conflict_price * c_s + heuristic(s))
+    end
     # Main loop
     while !isempty(heap)
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         c_u = conflicts[t, u]
-        if u == d
-            return build_astar_path(parents, t0, s, t, d)
-        end
-        for v in outneighbors(g, u)
-            isnothing(heuristic(v)) && continue
-            c_v = get(conflicts, (t + 1, v), nothing)
-            Δ_v = get(dists, (t + 1, v), nothing)
-            c_v_after_u = is_forbidden_vertex(res, t + 1, v)
-            c_uv = is_forbidden_edge(res, t, u, v)
-            c_v_through_u = c_u + c_uv + c_v_after_u
-            Δ_v_through_u = Δ_u + w[u, v]
-            cost_v_through_u = conflict_price * c_v_through_u + Δ_v_through_u
-            if (
-                isnothing(c_v) ||
-                isnothing(Δ_v) ||
-                cost_v_through_u < conflict_price * c_v + Δ_v
-            )
-                parents[t + 1, v] = (t, u)
-                dists[t + 1, v] = Δ_v_through_u
-                conflicts[t + 1, v] = c_v_through_u
-                priority_v = cost_v_through_u + heuristic(v)
-                push!(heap, (t + 1, v) => priority_v)
+        if u == d && (isnothing(tmax) || t == tmax)
+            return build_astar_path(parents, s, d, tmin, t)
+        elseif !isnothing(tmax) && t > tmax
+            continue
+        else
+            for v in outneighbors(g, u)
+                isnothing(heuristic(v)) && continue
+                c_v = get(conflicts, (t + 1, v), nothing)
+                Δ_v = get(dists, (t + 1, v), nothing)
+                c_v_after_u = is_forbidden_vertex(res, t + 1, v)
+                c_uv = is_forbidden_edge(res, t, u, v)
+                c_v_through_u = c_u + c_uv + c_v_after_u
+                Δ_v_through_u = Δ_u + w[u, v]
+                cost_v_through_u = conflict_price * c_v_through_u + Δ_v_through_u
+                if (
+                    isnothing(c_v) ||
+                    isnothing(Δ_v) ||
+                    cost_v_through_u < conflict_price * c_v + Δ_v
+                )
+                    parents[t + 1, v] = (t, u)
+                    dists[t + 1, v] = Δ_v_through_u
+                    conflicts[t + 1, v] = c_v_through_u
+                    priority_v = cost_v_through_u + heuristic(v)
+                    push!(heap, (t + 1, v) => priority_v)
+                end
             end
         end
     end
-    return TimedPath(t0, Int[])
+    return TimedPath(tmin, Int[])
 end

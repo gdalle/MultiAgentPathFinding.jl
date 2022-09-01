@@ -1,7 +1,7 @@
 """
     forward_dijkstra(g, s, w)
 """
-function forward_dijkstra(g::AbstractGraph{T}, s::Integer, w::AbstractMatrix{W}) where {T,W}
+function forward_dijkstra(g::AbstractGraph{T}, s, w::AbstractMatrix{W}) where {T,W}
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
     parents = zeros(T, nv(g))
@@ -31,9 +31,7 @@ end
 """
     backward_dijkstra(g, d, w)
 """
-function backward_dijkstra(
-    g::AbstractGraph{T}, d::Integer, w::AbstractMatrix{W}
-) where {T,W}
+function backward_dijkstra(g::AbstractGraph{T}, d, w::AbstractMatrix{W}) where {T,W}
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
     parents = zeros(T, nv(g))

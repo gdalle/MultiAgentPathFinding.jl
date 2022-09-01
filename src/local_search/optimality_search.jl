@@ -1,27 +1,30 @@
 function optimality_search!(
     solution::Solution,
     mapf::MAPF,
-    edge_weights_vec::AbstractVector{<:Real},
-    spt_by_dest::Dict{Int,<:ShortestPathTree};
+    edge_weights_vec,
+    spt_by_dest;
     neighborhood_size,
-    steps,
+    max_steps_without_improvement,
     show_progress,
 )
     @assert is_feasible(solution, mapf)
     cost = flowtime(solution, mapf)
-    prog = Progress(steps; desc="Optimality search steps: ", enabled=show_progress)
-    for _ in 1:steps
-        next!(prog)
+    prog = ProgressUnknown("Optimality search steps: ", enabled=show_progress)
+    steps_without_improvement = 0
+    while steps_without_improvement < max_steps_without_improvement
+        next!(prog, showvalues=[(:steps_without_improvement, steps_without_improvement)])
         agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, agents, mapf)
         cooperative_astar!(solution, mapf, agents, edge_weights_vec, spt_by_dest;)
         new_cost = flowtime(solution, mapf)
         if all_non_empty(solution) && new_cost < cost  # keep, non-emptyness after A* ensures feasibility
             cost = new_cost
+            steps_without_improvement = 0
         else  # revert
             for a in agents
                 solution[a] = backup[a]
             end
+            steps_without_improvement += 1
         end
     end
     return solution
@@ -29,9 +32,9 @@ end
 
 function optimality_search(
     mapf::MAPF,
-    edge_weights_vec::AbstractVector{<:Real}=mapf.edge_weights_vec;
+    edge_weights_vec=mapf.edge_weights_vec;
     neighborhood_size=10,
-    steps=100,
+    max_steps_without_improvement=100,
     show_progress=false,
 )
     agents = randperm(nb_agents(mapf))
@@ -43,7 +46,7 @@ function optimality_search(
         edge_weights_vec,
         spt_by_dest;
         neighborhood_size=neighborhood_size,
-        steps=steps,
+        max_steps_without_improvement=max_steps_without_improvement,
         show_progress=show_progress,
     )
     return solution

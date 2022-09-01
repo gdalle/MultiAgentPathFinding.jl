@@ -6,19 +6,26 @@ using Test
 Random.seed!(63)
 
 # Grid graph where the first and last vertex are departure zones
-L = 5
+
+L = 20
 g = SimpleDiGraph(Graphs.grid([L, L]))
 Graphs.weights(g)
 
-A = 10
-departures = rand(1:nv(g), A);
-arrivals = rand(1:nv(g), A);
+A = 50
+sources = fill(1, A);
+destinations = fill(nv(g), A);
 departure_times = rand(1:10, A);
 
-original_mapf = MAPF(g, departures, arrivals;)
+mapf = MAPF(
+    g,
+    sources,
+    destinations;
+    departure_times=departure_times,
+)
+
 mapf = add_dummy_vertices(mapf)
 
-show_progress = true
+show_progress = false
 
 solution_indep = independent_dijkstra(mapf);
 solution_coop = cooperative_astar(mapf);
@@ -36,7 +43,7 @@ f_indep = flowtime(solution_indep, mapf)
 f_coop = flowtime(solution_coop, mapf)
 f_os = flowtime(solution_os, mapf)
 f_fs = flowtime(solution_fs, mapf)
-f_ds = flowtime(solution_fs, mapf)
+f_ds = flowtime(solution_ds, mapf)
 
 @test f_indep <= f_os <= f_coop
 @test f_indep <= f_fs
