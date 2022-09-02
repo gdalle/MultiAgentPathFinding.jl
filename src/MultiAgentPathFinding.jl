@@ -44,7 +44,7 @@ export Solution
 export Reservation
 export compute_reservation, update_reservation!
 
-export flowtime, makespan
+export path_weight, flowtime, makespan
 export find_conflict
 export is_feasible
 

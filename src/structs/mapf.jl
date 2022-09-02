@@ -88,10 +88,7 @@ graph_type(::MAPF{W,G}) where {W,G} = G
 function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
     return print(
         io,
-        "Multi-Agent Path Finding problem\n
-        Graph type: $G with $W weights\n
-        Graph size:$(nv(mapf.g)) vertices and $(ne(mapf.g)) edges\n
-        Nb of agents: $(nb_agents(mapf))",
+        "Multi-Agent Path Finding problem\nGraph type: $G with $W weights\nGraph size: $(nv(mapf.g)) vertices and $(ne(mapf.g)) edges\nNb of agents: $(nb_agents(mapf))",
     )
 end
 

@@ -20,7 +20,7 @@ function feasibility_search!(
 )
     A = nb_agents(mapf)
     pathless_agents = shuffle([a for a in 1:A if length(solution[a]) == 0])
-    cooperative_astar!(
+    cooperative_astar_from_trees!(
         solution,
         mapf,
         pathless_agents,
@@ -34,7 +34,7 @@ function feasibility_search!(
         next!(prog; showvalues=[(:colliding_pairs, cp)])
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
-        cooperative_astar!(
+        cooperative_astar_from_trees!(
             solution,
             mapf,
             neighborhood_agents,
@@ -63,7 +63,9 @@ function feasibility_search(
     conflict_price_increase=1e-2,
     show_progress=false,
 )
-    spt_by_dest = dijkstra_by_destination(mapf, edge_weights_vec)
+    spt_by_dest = dijkstra_by_destination(
+        mapf, edge_weights_vec; show_progress=show_progress
+    )
     solution = independent_dijkstra_from_trees(mapf, spt_by_dest)
     feasibility_search!(
         solution,

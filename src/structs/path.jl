@@ -66,18 +66,28 @@ function standstill_time(timed_path::TimedPath)
     return timed_path.tdep + k - 1
 end
 
-function flowtime(
+function path_weight(
     timed_path::TimedPath,
     mapf::MAPF,
-    edge_weights_vec::AbstractVector{W}=mapf.edge_weights_vec,
+    edge_weights_vec::AbstractVector{W}=mapf.edge_weights_vec;
+    tmin=departure_time(timed_path),
+    tmax=arrival_time(timed_path),
 ) where {W}
     c = zero(W)
-    for t in departure_time(timed_path):(standstill_time(timed_path) - 1)
+    for t in tmin:(tmax - 1)
         u, v = edge_at_time(timed_path, t)
         e = mapf.edge_indices[u, v]
         c += edge_weights_vec[e]
     end
     return c
+end
+
+function flowtime(
+    timed_path::TimedPath,
+    mapf::MAPF,
+    edge_weights_vec::AbstractVector{W}=mapf.edge_weights_vec,
+) where {W}
+    return path_weight(timed_path, mapf, edge_weights_vec; tmax=standstill_time(timed_path))
 end
 
 ## Conflicts

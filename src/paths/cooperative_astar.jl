@@ -1,4 +1,4 @@
-function cooperative_astar!(
+function cooperative_astar_from_trees!(
     solution::Solution,
     mapf::MAPF,
     agents,
@@ -9,7 +9,7 @@ function cooperative_astar!(
 )
     w = build_weights_matrix(mapf, edge_weights_vec)
     res = compute_reservation(solution, mapf)
-    prog = Progress(length(agents); enabled=show_progress)
+    prog = Progress(length(agents); desc="Cooperative A*: ", enabled=show_progress)
     for i in eachindex(agents)
         next!(prog)
         a = agents[i]
@@ -34,16 +34,16 @@ function cooperative_astar!(
     return nothing
 end
 
-function cooperative_astar(
+function cooperative_astar_from_trees(
     mapf::MAPF,
-    agents=randperm(nb_agents(mapf)),
-    edge_weights_vec=mapf.edge_weights_vec,
-    spt_by_dest=dijkstra_by_destination(mapf, edge_weights_vec; show_progress=false);
+    agents,
+    edge_weights_vec,
+    spt_by_dest;
     conflict_price=Inf,
     show_progress=false,
 )
     solution = empty_solution(mapf)
-    cooperative_astar!(
+    cooperative_astar_from_trees!(
         solution,
         mapf,
         agents,
@@ -53,4 +53,24 @@ function cooperative_astar(
         show_progress=show_progress,
     )
     return solution
+end
+
+function cooperative_astar(
+    mapf::MAPF,
+    agents=randperm(nb_agents(mapf)),
+    edge_weights_vec=mapf.edge_weights_vec;
+    conflict_price=Inf,
+    show_progress=false,
+)
+    spt_by_dest = dijkstra_by_destination(
+        mapf, edge_weights_vec; show_progress=show_progress
+    )
+    return cooperative_astar_from_trees(
+        mapf,
+        agents,
+        edge_weights_vec,
+        spt_by_dest;
+        conflict_price=conflict_price,
+        show_progress=show_progress,
+    )
 end

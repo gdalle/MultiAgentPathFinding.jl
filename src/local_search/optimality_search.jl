@@ -9,13 +9,15 @@ function optimality_search!(
 )
     @assert is_feasible(solution, mapf)
     cost = flowtime(solution, mapf)
-    prog = ProgressUnknown("Optimality search steps: ", enabled=show_progress)
+    prog = ProgressUnknown("Optimality search steps: "; enabled=show_progress)
     steps_without_improvement = 0
     while steps_without_improvement < max_steps_without_improvement
-        next!(prog, showvalues=[(:steps_without_improvement, steps_without_improvement)])
+        next!(prog; showvalues=[(:steps_without_improvement, steps_without_improvement)])
         agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, agents, mapf)
-        cooperative_astar!(solution, mapf, agents, edge_weights_vec, spt_by_dest;)
+        cooperative_astar_from_trees!(
+            solution, mapf, agents, edge_weights_vec, spt_by_dest;
+        )
         new_cost = flowtime(solution, mapf)
         if all_non_empty(solution) && new_cost < cost  # keep, non-emptyness after A* ensures feasibility
             cost = new_cost
@@ -38,8 +40,12 @@ function optimality_search(
     show_progress=false,
 )
     agents = randperm(nb_agents(mapf))
-    spt_by_dest = dijkstra_by_destination(mapf, edge_weights_vec; show_progress=false)
-    solution = cooperative_astar(mapf, agents, edge_weights_vec, spt_by_dest;)
+    spt_by_dest = dijkstra_by_destination(
+        mapf, edge_weights_vec; show_progress=show_progress
+    )
+    solution = cooperative_astar_from_trees(
+        mapf, agents, edge_weights_vec, spt_by_dest; show_progress=show_progress
+    )
     optimality_search!(
         solution,
         mapf,

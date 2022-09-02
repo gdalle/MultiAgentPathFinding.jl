@@ -6,7 +6,7 @@ function dijkstra_by_destination(
     K = length(unique_arrivals)
     spt_by_dest_vec = Vector{ShortestPathTree{Int,Union{Nothing,W}}}(undef, K)
     prog = Progress(K; desc="Dijkstra by destination: ", enabled=show_progress)
-    for k in 1:K
+    @threads for k in 1:K
         next!(prog)
         spt_by_dest_vec[k] = backward_dijkstra(mapf.g, unique_arrivals[k], w)
     end
