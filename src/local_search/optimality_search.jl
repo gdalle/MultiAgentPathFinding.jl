@@ -39,7 +39,7 @@ function optimality_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;
     neighborhood_size=10,
-    max_steps_without_improvement=1000,
+    max_steps_without_improvement=100,
     show_progress=false,
 )
     agents = randperm(nb_agents(mapf))

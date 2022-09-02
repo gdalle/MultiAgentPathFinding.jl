@@ -4,7 +4,7 @@ function double_search(
     neighborhood_size=10,
     conflict_price=1e-1,
     conflict_price_increase=1e-2,
-    max_steps_without_improvement=1000,
+    max_steps_without_improvement=100,
     show_progress=false,
 )
     spt_by_dest = dijkstra_by_destination(

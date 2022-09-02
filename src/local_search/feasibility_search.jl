@@ -53,7 +53,7 @@ function feasibility_search!(
         new_cp = colliding_pairs(solution, mapf)
         if is_feasible(solution, mapf) || (new_cp <= cp)  # keep
             cp = new_cp
-            steps_without_improvement
+            steps_without_improvement = 0
         else  # revert
             for a in neighborhood_agents
                 solution[a] = backup[a]
@@ -74,7 +74,7 @@ function feasibility_search(
     neighborhood_size=10,
     conflict_price=1e-1,
     conflict_price_increase=1e-2,
-    max_steps_without_improvement=1000,
+    max_steps_without_improvement=100,
     show_progress=false,
 )
     spt_by_dest = dijkstra_by_destination(

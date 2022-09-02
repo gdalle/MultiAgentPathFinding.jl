@@ -60,8 +60,9 @@ function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
             return false  # invalid vertices or edges
         end
     end
-    if find_conflict(solution, mapf) !== nothing
-        verbose && @warn "Conflict in solution"
+    conflict = find_conflict(solution, mapf)
+    if conflict !== nothing
+        verbose && @warn "$conflict in solution"
         return false
     else
         return true
