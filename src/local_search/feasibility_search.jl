@@ -16,6 +16,7 @@ function feasibility_search!(
     neighborhood_size,
     conflict_price,
     conflict_price_increase,
+    max_steps_without_improvement,
     show_progress,
 )
     A = nb_agents(mapf)
@@ -29,9 +30,16 @@ function feasibility_search!(
         conflict_price=conflict_price,
     )
     cp = colliding_pairs(solution, mapf)
+    steps_without_improvement = 0
     prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
     while !is_feasible(solution, mapf)
-        next!(prog; showvalues=[(:colliding_pairs, cp)])
+        next!(
+            prog;
+            showvalues=[
+                (:colliding_pairs, cp),
+                (:steps_without_improvement, steps_without_improvement),
+            ],
+        )
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
         cooperative_astar_from_trees!(
@@ -45,12 +53,17 @@ function feasibility_search!(
         new_cp = colliding_pairs(solution, mapf)
         if is_feasible(solution, mapf) || (new_cp <= cp)  # keep
             cp = new_cp
+            steps_without_improvement
         else  # revert
             for a in neighborhood_agents
                 solution[a] = backup[a]
             end
+            steps_without_improvement += 1
         end
         conflict_price *= (one(conflict_price_increase) + conflict_price_increase)
+        if steps_without_improvement > max_steps_without_improvement
+            break
+        end
     end
     return solution
 end
@@ -61,6 +74,7 @@ function feasibility_search(
     neighborhood_size=10,
     conflict_price=1e-1,
     conflict_price_increase=1e-2,
+    max_steps_without_improvement=1000,
     show_progress=false,
 )
     spt_by_dest = dijkstra_by_destination(
@@ -75,6 +89,7 @@ function feasibility_search(
         neighborhood_size=neighborhood_size,
         conflict_price=conflict_price,
         conflict_price_increase=conflict_price_increase,
+        max_steps_without_improvement=max_steps_without_improvement,
         show_progress=show_progress,
     )
     return solution

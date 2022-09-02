@@ -40,34 +40,6 @@ flowtime(::Nothing, ::MAPF{W}; kwargs...) where {W} = typemax(W)
 makespan(solution::Solution) = maximum(arrival_time(timed_path) for timed_path in solution)
 makespan(::Nothing) = Inf
 
-## Conflicts
-
-function find_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
-    return find_conflict(solution[a1], solution[a2], mapf; tol=tol)
-end
-
-function find_conflict(a1, solution::Solution, mapf::MAPF; tol=0)
-    for a2 in 1:nb_agents(mapf)
-        if a2 != a1
-            conflict = find_conflict(a1, a2, solution, mapf; tol=tol)
-            if !isnothing(conflict)
-                return conflict
-            end
-        end
-    end
-    return nothing
-end
-
-function find_conflict(solution::Solution, mapf::MAPF; tol=0)
-    for a1 in 1:nb_agents(mapf), a2 in 1:(a1 - 1)
-        conflict = find_conflict(a1, a2, solution, mapf; tol=tol)
-        if !isnothing(conflict)
-            return conflict
-        end
-    end
-    return nothing
-end
-
 function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
     for a in 1:nb_agents(mapf)
         timed_path = solution[a]
@@ -77,12 +49,6 @@ function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
         elseif departure_time(timed_path) != mapf.departure_times[a]
             verbose && @warn "Wrong departure time for agent $a"
             return false  # wrong departure time
-        elseif (
-            (mapf.arrival_times[a] !== nothing) &&
-            (arrival_time(timed_path) > mapf.arrival_times[a])
-        )
-            verbose && @warn "Late arrival time for agent $a"
-            return false  # late arrival time
         elseif first_vertex(timed_path) != mapf.departures[a]
             verbose && @warn "Wrong departure vertex for agent $a"
             return false  # wrong departure vertex

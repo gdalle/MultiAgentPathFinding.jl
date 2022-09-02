@@ -7,10 +7,13 @@ function optimality_search!(
     max_steps_without_improvement,
     show_progress,
 )
-    @assert is_feasible(solution, mapf)
+    if !is_feasible(solution, mapf)
+        @warn "Infeasible starting solution"
+        return solution
+    end
     cost = flowtime(solution, mapf)
-    prog = ProgressUnknown("Optimality search steps: "; enabled=show_progress)
     steps_without_improvement = 0
+    prog = ProgressUnknown("Optimality search steps: "; enabled=show_progress)
     while steps_without_improvement < max_steps_without_improvement
         next!(prog; showvalues=[(:steps_without_improvement, steps_without_improvement)])
         agents = random_neighborhood(mapf, neighborhood_size)
@@ -19,7 +22,7 @@ function optimality_search!(
             solution, mapf, agents, edge_weights_vec, spt_by_dest;
         )
         new_cost = flowtime(solution, mapf)
-        if all_non_empty(solution) && new_cost < cost  # keep, non-emptyness after A* ensures feasibility
+        if all_non_empty(solution) && new_cost < cost  # keep
             cost = new_cost
             steps_without_improvement = 0
         else  # revert
@@ -36,7 +39,7 @@ function optimality_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;
     neighborhood_size=10,
-    max_steps_without_improvement=100,
+    max_steps_without_improvement=1000,
     show_progress=false,
 )
     agents = randperm(nb_agents(mapf))

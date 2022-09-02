@@ -2,32 +2,36 @@ function cooperative_astar_from_trees!(
     solution::Solution,
     mapf::MAPF,
     agents,
-    edge_weights_vec,
+    edge_weights_vec::AbstractVector{W},
     spt_by_dest;
     conflict_price=Inf,
     show_progress=false,
-)
+) where {W}
     w = build_weights_matrix(mapf, edge_weights_vec)
     res = compute_reservation(solution, mapf)
     prog = Progress(length(agents); desc="Cooperative A*: ", enabled=show_progress)
-    for i in eachindex(agents)
+    for a in agents
         next!(prog)
-        a = agents[i]
         s, d = mapf.departures[a], mapf.arrivals[a]
-        tdep, tarr = mapf.departure_times[a], mapf.arrival_times[a]
-        dists = spt_by_dest[d].dists
-        heuristic(v) = dists[v]
-        timed_path = temporal_astar(
-            mapf.g,
-            s,
-            d,
-            tdep,
-            tarr,
-            w,
-            res;
-            heuristic=heuristic,
-            conflict_price=conflict_price,
-        )
+        tdep = mapf.departure_times[a]
+        tmax = max_time(res) + nv(mapf.g)
+        if is_arrival_reached(res, d)
+            timed_path = TimedPath(tdep, Int[])
+        else
+            dists = spt_by_dest[d].dists
+            heuristic(v) = dists[v]
+            timed_path = temporal_astar(
+                mapf.g,
+                s,
+                d,
+                tdep,
+                tmax,
+                w,
+                res;
+                heuristic=heuristic,
+                conflict_price=conflict_price,
+            )
+        end
         solution[a] = timed_path
         update_reservation!(res, timed_path, mapf)
     end

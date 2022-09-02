@@ -11,19 +11,19 @@ function build_astar_path(parents::Dict, s, d, tdep, t)
 end
 
 function temporal_astar(
-    g, s, d, tdep, tarr, w, res=Reservation(); heuristic=v -> zero(W), conflict_price=Inf
+    g, s, d, tdep, tmax, w, res=Reservation(); heuristic=v -> zero(W), conflict_price=Inf
 )
     if conflict_price == Inf
-        return temporal_astar_hard(g, s, d, tdep, tarr, w, res; heuristic=heuristic)
+        return temporal_astar_hard(g, s, d, tdep, tmax, w, res; heuristic=heuristic)
     else
         return temporal_astar_soft(
-            g, s, d, tdep, tarr, w, res; heuristic=heuristic, conflict_price=conflict_price
+            g, s, d, tdep, tmax, w, res; heuristic=heuristic, conflict_price=conflict_price
         )
     end
 end
 
 function temporal_astar_hard(
-    g::AbstractGraph{V}, s, d, tdep, tarr, w::AbstractMatrix{W}, res; heuristic=v -> zero(W)
+    g::AbstractGraph{V}, s, d, tdep, tmax, w::AbstractMatrix{W}, res; heuristic=v -> zero(W)
 ) where {V,W}
     # Init storage
     T = Int
@@ -39,10 +39,10 @@ function temporal_astar_hard(
     while !isempty(heap)
         (t, u), h_u = pop!(heap)
         Δ_u = dists[t, u]
-        if u == d && (isnothing(tarr) || t == tarr)
+        if u == d
             timed_path = build_astar_path(parents, s, d, tdep, t)
             return timed_path
-        elseif !isnothing(tarr) && t > tarr
+        elseif t > tmax
             continue
         else
             for v in outneighbors(g, u)
@@ -68,7 +68,7 @@ function temporal_astar_soft(
     s,
     d,
     tdep,
-    tarr,
+    tmax,
     w::AbstractMatrix{W},
     res;
     heuristic=v -> zero(W),
@@ -93,9 +93,9 @@ function temporal_astar_soft(
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         c_u = conflicts[t, u]
-        if u == d && (isnothing(tarr) || t == tarr)
+        if u == d
             return build_astar_path(parents, s, d, tdep, t)
-        elseif !isnothing(tarr) && t > tarr
+        elseif t > tmax
             continue
         else
             for v in outneighbors(g, u)

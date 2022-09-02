@@ -32,7 +32,7 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
     departures::Vector{Int}
     arrivals::Vector{Int}
     departure_times::Vector{Int}
-    arrival_times::Vector{Union{Nothing,Int}}
+    stay_at_arrival::Bool
 
     function MAPF(
         g::G,
@@ -45,19 +45,21 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
         departures,
         arrivals,
         departure_times,
-        arrival_times,
+        stay_at_arrival;
+        check_sorted=true,
     ) where {W,G}
         # Check arguments
         @assert is_directed(g)
         A = length(departures)
         @assert A == length(arrivals)
         @assert A == length(departure_times)
-        @assert A == length(arrival_times)
-        for group in values(vertex_conflicts)
-            @assert issorted(group)
-        end
-        for group in values(edge_conflicts)
-            @assert issorted(group)
+        if check_sorted
+            for group in values(vertex_conflicts)
+                @assert issorted(group)
+            end
+            for group in values(edge_conflicts)
+                @assert issorted(group)
+            end
         end
         return new{W,G}(
             g,
@@ -70,7 +72,7 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
             departures,
             arrivals,
             departure_times,
-            arrival_times,
+            stay_at_arrival,
         )
     end
 end
@@ -100,6 +102,7 @@ function MAPF(
     arrival_times=fill(nothing, length(arrivals)),
     vertex_conflicts=Dict(v => [v] for v in vertices(g)),
     edge_conflicts=Dict((src(ed), dst(ed)) => [(dst(ed), src(ed))] for ed in edges(g)),
+    stay_at_arrival=true
 ) where {G}
     edge_indices, edge_colptr, edge_rowval, edge_weights_vec = build_edge_data(g)
     return MAPF(
@@ -117,7 +120,7 @@ function MAPF(
         departures,
         arrivals,
         departure_times,
-        arrival_times,
+        stay_at_arrival,
     )
 end
 
@@ -153,11 +156,7 @@ This function doesn't allocate because the necessary index information is alread
 function build_weights_matrix(mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec)
     return transpose(
         SparseMatrixCSC(
-            nv(mapf.g),
-            nv(mapf.g),
-            mapf.edge_colptr,
-            mapf.edge_rowval,
-            edge_weights_vec,
+            nv(mapf.g), nv(mapf.g), mapf.edge_colptr, mapf.edge_rowval, edge_weights_vec
         ),
     )
 end

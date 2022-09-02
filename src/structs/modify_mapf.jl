@@ -1,4 +1,5 @@
 function select_agents(mapf::MAPF, agents)
+    @assert issubset(agents, eachindex(mapf.departures))
     return MAPF(
         # Graph-related
         mapf.g,
@@ -14,11 +15,37 @@ function select_agents(mapf::MAPF, agents)
         view(mapf.departures, agents),
         view(mapf.arrivals, agents),
         view(mapf.departure_times, agents),
-        view(mapf.arrival_times, agents),
+        mapf.stay_at_arrival;
+        # Checks
+        check_sorted=false,
     )
 end
 
 select_agents(mapf::MAPF, nb_agents::Integer) = select_agents(mapf, 1:nb_agents)
+
+function replace_agents(
+    mapf::MAPF, new_departures, new_arrivals, new_departure_times
+)
+    return MAPF(
+        # Graph-related
+        mapf.g,
+        # Edges-related
+        mapf.edge_indices,
+        mapf.edge_colptr,
+        mapf.edge_rowval,
+        mapf.edge_weights_vec,
+        # Constraints-related
+        mapf.vertex_conflicts,
+        mapf.edge_conflicts,
+        # Agents-related
+        new_departures,
+        new_arrivals,
+        new_departure_times,
+        mapf.stay_at_arrival;
+        # Checks
+        check_sorted=false,
+    )
+end
 
 function add_dummy_vertices(
     mapf::MAPF{W};
@@ -60,15 +87,13 @@ function add_dummy_vertices(
         augmented_sources, augmented_destinations, augmented_weights
     )
 
-    new_arrival_times = [isnothing(t) ? nothing : t + 2 for t in mapf.arrival_times]
-
     return MAPF(
         augmented_g,
         new_departures,
         new_arrivals;
-        departure_times=mapf.departure_times,
-        arrival_times=new_arrival_times,
         vertex_conflicts=mapf.vertex_conflicts,
         edge_conflicts=mapf.edge_conflicts,
+        departure_times=mapf.departure_times,
+        stay_at_arrival=mapf.stay_at_arrival,
     )
 end

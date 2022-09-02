@@ -23,6 +23,7 @@ include("structs/modify_mapf.jl")
 include("structs/path.jl")
 include("structs/solution.jl")
 include("structs/reservation.jl")
+include("structs/conflict.jl")
 
 include("paths/tree.jl")
 include("paths/dijkstra.jl")
@@ -38,7 +39,7 @@ include("local_search/double_search.jl")
 ## Exports
 
 export MAPF, nb_agents, build_weights_matrix
-export select_agents, add_dummy_vertices
+export select_agents, replace_agents, add_dummy_vertices
 export TimedPath
 export Solution
 export Reservation
@@ -51,10 +52,10 @@ export is_feasible
 export forward_dijkstra, backward_dijkstra
 export independent_dijkstra
 export temporal_astar
-export cooperative_astar!, cooperative_astar
+export cooperative_astar
 
-export feasibility_search!, feasibility_search
-export optimality_search!, optimality_search
+export feasibility_search
+export optimality_search
 export double_search
 
 end # module
