@@ -1,29 +1,29 @@
-function build_astar_path(parents::Dict, s, d, tmin, t)
+function build_astar_path(parents::Dict, s, d, tdep, t)
     path = Int[]
     (τ, v) = (t, d)
     pushfirst!(path, v)
-    while τ > tmin
+    while τ > tdep
         (τ, v) = parents[τ, v]
         pushfirst!(path, v)
     end
     @assert first(path) == s
-    return TimedPath(tmin, path)
+    return TimedPath(tdep, path)
 end
 
 function temporal_astar(
-    g, s, d, tmin, tmax, w, res=Reservation(); heuristic=v -> 0.0, conflict_price=Inf
+    g, s, d, tdep, tarr, w, res=Reservation(); heuristic=v -> zero(W), conflict_price=Inf
 )
     if conflict_price == Inf
-        return temporal_astar_hard(g, s, d, tmin, tmax, w, res; heuristic=heuristic)
+        return temporal_astar_hard(g, s, d, tdep, tarr, w, res; heuristic=heuristic)
     else
         return temporal_astar_soft(
-            g, s, d, tmin, tmax, w, res; heuristic=heuristic, conflict_price=conflict_price
+            g, s, d, tdep, tarr, w, res; heuristic=heuristic, conflict_price=conflict_price
         )
     end
 end
 
 function temporal_astar_hard(
-    g::AbstractGraph{V}, s, d, tmin, tmax, w::AbstractMatrix{W}, res; heuristic=v -> 0.0
+    g::AbstractGraph{V}, s, d, tdep, tarr, w::AbstractMatrix{W}, res; heuristic=v -> zero(W)
 ) where {V,W}
     # Init storage
     T = Int
@@ -31,18 +31,18 @@ function temporal_astar_hard(
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     dists = Dict{Tuple{T,V},W}()
     # Add source
-    if !is_forbidden_vertex(res, tmin, s) && !isnothing(heuristic(s))
-        dists[tmin, s] = zero(W)
-        push!(heap, (tmin, s) => heuristic(s))
+    if !is_forbidden_vertex(res, tdep, s) && !isnothing(heuristic(s))
+        dists[tdep, s] = zero(W)
+        push!(heap, (tdep, s) => heuristic(s))
     end
     # Main loop
     while !isempty(heap)
         (t, u), h_u = pop!(heap)
         Δ_u = dists[t, u]
-        if u == d && (isnothing(tmax) || t == tmax)
-            timed_path = build_astar_path(parents, s, d, tmin, t)
+        if u == d && (isnothing(tarr) || t == tarr)
+            timed_path = build_astar_path(parents, s, d, tdep, t)
             return timed_path
-        elseif !isnothing(tmax) && t > tmax
+        elseif !isnothing(tarr) && t > tarr
             continue
         else
             for v in outneighbors(g, u)
@@ -60,19 +60,19 @@ function temporal_astar_hard(
             end
         end
     end
-    return TimedPath(tmin, Int[])
+    return TimedPath(tdep, Int[])
 end
 
 function temporal_astar_soft(
     g::AbstractGraph{V},
     s,
     d,
-    tmin,
-    tmax,
+    tdep,
+    tarr,
     w::AbstractMatrix{W},
     res;
-    heuristic=v -> 0.0,
-    conflict_price=0.0,
+    heuristic=v -> zero(W),
+    conflict_price=zero(W),
 ) where {V,W}
     # Init storage
     T = Int
@@ -83,19 +83,19 @@ function temporal_astar_soft(
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     # Add source
     if !isnothing(heuristic(s))
-        c_s = is_forbidden_vertex(res, tmin, s)
-        dists[tmin, s] = zero(W)
-        conflicts[tmin, s] = c_s
-        push!(heap, (tmin, s) => conflict_price * c_s + heuristic(s))
+        c_s = is_forbidden_vertex(res, tdep, s)
+        dists[tdep, s] = zero(W)
+        conflicts[tdep, s] = c_s
+        push!(heap, (tdep, s) => conflict_price * c_s + heuristic(s))
     end
     # Main loop
     while !isempty(heap)
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         c_u = conflicts[t, u]
-        if u == d && (isnothing(tmax) || t == tmax)
-            return build_astar_path(parents, s, d, tmin, t)
-        elseif !isnothing(tmax) && t > tmax
+        if u == d && (isnothing(tarr) || t == tarr)
+            return build_astar_path(parents, s, d, tdep, t)
+        elseif !isnothing(tarr) && t > tarr
             continue
         else
             for v in outneighbors(g, u)
@@ -121,5 +121,5 @@ function temporal_astar_soft(
             end
         end
     end
-    return TimedPath(tmin, Int[])
+    return TimedPath(tdep, Int[])
 end

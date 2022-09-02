@@ -4,23 +4,24 @@
 Temporal path through a graph.
 
 # Fields
-- `t0::Int`
+- `tdep::Int`
 - `path::Vector{Int}`
 """
 struct TimedPath
-    t0::Int
+    tdep::Int
     path::Vector{Int}
 end
 
 Base.length(timed_path::TimedPath) = length(timed_path.path)
-departure_time(timed_path::TimedPath) = timed_path.t0
-arrival_time(timed_path::TimedPath) = timed_path.t0 + length(timed_path) - 1
+
+departure_time(timed_path::TimedPath) = timed_path.tdep
+arrival_time(timed_path::TimedPath) = timed_path.tdep + length(timed_path) - 1
 
 first_vertex(timed_path::TimedPath) = first(timed_path.path)
 last_vertex(timed_path::TimedPath) = last(timed_path.path)
 
 function vertex_at_time(timed_path::TimedPath, t)
-    k = t - timed_path.t0 + 1
+    k = t - timed_path.tdep + 1
     if k in 1:length(timed_path)
         return timed_path.path[k]
     else
@@ -29,7 +30,7 @@ function vertex_at_time(timed_path::TimedPath, t)
 end
 
 function edge_at_time(timed_path::TimedPath, t)
-    k = t - timed_path.t0 + 1
+    k = t - timed_path.tdep + 1
     if k in 1:(length(timed_path) - 1)
         return timed_path.path[k], timed_path.path[k + 1]
     else
@@ -51,25 +52,30 @@ end
 
 ## Cost
 
+function standstill_time(timed_path::TimedPath)
+    path = timed_path.path
+    k = length(path)
+    v = last(path)
+    while k > 1
+        if path[k - 1] == v
+            k -= 1
+        else
+            break
+        end
+    end
+    return timed_path.tdep + k - 1
+end
+
 function flowtime(
     timed_path::TimedPath,
     mapf::MAPF,
     edge_weights_vec::AbstractVector{W}=mapf.edge_weights_vec,
 ) where {W}
-    (; path) = timed_path
-    (; edge_indices) = mapf
-    K = lastindex(path)
-    v = last(path)
-    while K > firstindex(path) && path[prevind(path, K)] == v
-        K = prevind(path, K)
-    end
     c = zero(W)
-    for k in eachindex(path)
-        if k < K
-            v1, v2 = path[k], path[nextind(path, k)]
-            e = edge_indices[v1, v2]
-            c += edge_weights_vec[e]
-        end
+    for t in departure_time(timed_path):(standstill_time(timed_path) - 1)
+        u, v = edge_at_time(timed_path, t)
+        e = mapf.edge_indices[u, v]
+        c += edge_weights_vec[e]
     end
     return c
 end

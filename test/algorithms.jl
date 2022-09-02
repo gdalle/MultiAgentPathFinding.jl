@@ -7,25 +7,25 @@ Random.seed!(63)
 
 # Grid graph where the first and last vertex are departure zones
 
-L = 20
+L = 10
 g = SimpleDiGraph(Graphs.grid([L, L]))
 Graphs.weights(g)
 
 A = 50
-sources = fill(1, A);
-destinations = fill(nv(g), A);
-departure_times = rand(1:10, A);
+sources = rand(1:nv(g), A);
+destinations = rand(1:nv(g), A);
+departure_times = rand(1:5, A);
 
-mapf = MAPF(
+original_mapf = MAPF(
     g,
     sources,
     destinations;
     departure_times=departure_times,
 )
 
-mapf = add_dummy_vertices(mapf)
+mapf = add_dummy_vertices(original_mapf)
 
-show_progress = false
+show_progress = true
 
 solution_indep = independent_dijkstra(mapf);
 solution_coop = cooperative_astar(mapf);

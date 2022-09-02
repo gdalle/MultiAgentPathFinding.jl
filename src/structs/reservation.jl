@@ -23,7 +23,7 @@ end
 
 Check whether vertex `v` is occupied at time `t`.
 """
-function is_forbidden_vertex(res::Reservation, t::Integer, v::Integer)
+function is_forbidden_vertex(res::Reservation, t, v)
     return (t, v) in res.forbidden_vertices
 end
 
@@ -32,7 +32,7 @@ end
 
 Check whether edge `(u, v)` is occupied at time `t`.
 """
-function is_forbidden_edge(res::Reservation, t::Integer, u::Integer, v::Integer)
+function is_forbidden_edge(res::Reservation, t, u, v)
     return (t, u, v) in res.forbidden_edges
 end
 

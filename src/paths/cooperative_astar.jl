@@ -7,19 +7,26 @@ function cooperative_astar!(
     conflict_price=Inf,
     show_progress=false,
 )
-    (; g, departures, arrivals, departure_times, max_arrival_times) = mapf
     w = build_weights_matrix(mapf, edge_weights_vec)
     res = compute_reservation(solution, mapf)
     prog = Progress(length(agents); enabled=show_progress)
     for i in eachindex(agents)
         next!(prog)
         a = agents[i]
-        s, d = departures[a], arrivals[a]
-        tmin, tmax = departure_times[a], max_arrival_times[a]
+        s, d = mapf.departures[a], mapf.arrivals[a]
+        tdep, tarr = mapf.departure_times[a], mapf.arrival_times[a]
         dists = spt_by_dest[d].dists
         heuristic(v) = dists[v]
         timed_path = temporal_astar(
-            g, s, d, tmin, tmax, w, res; heuristic=heuristic, conflict_price=conflict_price
+            mapf.g,
+            s,
+            d,
+            tdep,
+            tarr,
+            w,
+            res;
+            heuristic=heuristic,
+            conflict_price=conflict_price,
         )
         solution[a] = timed_path
         update_reservation!(res, timed_path, mapf)

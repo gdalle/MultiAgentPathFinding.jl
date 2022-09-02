@@ -14,10 +14,7 @@ struct ShortestPathTree{T,W}
     dists::Vector{W}
 end
 
-"""
-    build_timed_path(shortest_path_tree, t0, s, d)
-"""
-function build_timed_path(spt::ShortestPathTree{T}, t0, s, d) where {T}
+function build_timed_path(spt::ShortestPathTree{T}, s, d, tdep) where {T}
     parents = spt.parents
     if spt.forward
         v = d
@@ -25,7 +22,7 @@ function build_timed_path(spt::ShortestPathTree{T}, t0, s, d) where {T}
         while v != s
             v = parents[v]
             if iszero(v)
-                return TimedPath(t0, T[])
+                return TimedPath(tdep, T[])
             else
                 pushfirst!(path, v)
             end
@@ -36,11 +33,11 @@ function build_timed_path(spt::ShortestPathTree{T}, t0, s, d) where {T}
         while v != d
             v = parents[v]
             if iszero(v)
-                return TimedPath(t0, T[])
+                return TimedPath(tdep, T[])
             else
                 push!(path, v)
             end
         end
     end
-    return TimedPath(t0, path)
+    return TimedPath(tdep, path)
 end
