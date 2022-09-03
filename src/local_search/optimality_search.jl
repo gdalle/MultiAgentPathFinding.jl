@@ -8,7 +8,7 @@ function optimality_search!(
     show_progress,
 )
     if !is_feasible(solution, mapf)
-        @warn "Infeasible starting solution"
+        @warn "Infeasible solution"
         return solution
     end
     cost = flowtime(solution, mapf)

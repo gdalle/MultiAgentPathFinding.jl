@@ -99,10 +99,9 @@ function MAPF(
     departures,
     arrivals;
     departure_times=fill(1, length(departures)),
-    arrival_times=fill(nothing, length(arrivals)),
     vertex_conflicts=Dict(v => [v] for v in vertices(g)),
     edge_conflicts=Dict((src(ed), dst(ed)) => [(dst(ed), src(ed))] for ed in edges(g)),
-    stay_at_arrival=true
+    stay_at_arrival=true,
 ) where {G}
     edge_indices, edge_colptr, edge_rowval, edge_weights_vec = build_edge_data(g)
     return MAPF(

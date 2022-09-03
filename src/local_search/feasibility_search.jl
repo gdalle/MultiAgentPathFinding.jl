@@ -1,13 +1,3 @@
-function colliding_pairs(solution::Solution, mapf::MAPF; tol=0)
-    cp = 0
-    for a1 in 1:nb_agents(mapf), a2 in 1:(a1 - 1)
-        if find_conflict(a1, a2, solution, mapf; tol=tol) !== nothing
-            cp += 1
-        end
-    end
-    return cp
-end
-
 function feasibility_search!(
     solution::Solution,
     mapf::MAPF,
@@ -29,14 +19,14 @@ function feasibility_search!(
         spt_by_dest;
         conflict_price=conflict_price,
     )
-    cp = colliding_pairs(solution, mapf)
+    conflicts_count = count_conflicts(solution, mapf)
     steps_without_improvement = 0
     prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
     while !is_feasible(solution, mapf)
         next!(
             prog;
             showvalues=[
-                (:colliding_pairs, cp),
+                (:conflicts_count, conflicts_count),
                 (:steps_without_improvement, steps_without_improvement),
             ],
         )
@@ -50,11 +40,11 @@ function feasibility_search!(
             spt_by_dest;
             conflict_price=conflict_price,
         )
-        new_cp = colliding_pairs(solution, mapf)
-        if is_feasible(solution, mapf) || (new_cp <= cp)  # keep
-            cp = new_cp
+        new_conflicts_count = count_conflicts(solution, mapf)
+        if new_conflicts_count < conflicts_count  # keep
+            conflicts_count = new_conflicts_count
             steps_without_improvement = 0
-        else  # revert
+        elseif new_conflicts_count > conflicts_count # revert
             for a in neighborhood_agents
                 solution[a] = backup[a]
             end

@@ -14,11 +14,12 @@ function cooperative_astar_from_trees!(
         next!(prog)
         s, d = mapf.departures[a], mapf.arrivals[a]
         tdep = mapf.departure_times[a]
-        tmax = max_time(res) + nv(mapf.g)
-        if is_arrival_reached(res, d)
+        spt = spt_by_dest[d]
+        dists = spt.dists
+        if isnothing(dists[s]) || is_arrival_reached(res, d)
             timed_path = TimedPath(tdep, Int[])
         else
-            dists = spt_by_dest[d].dists
+            tmax = max(tdep, max_time(res)) + path_length(spt, s, d)
             heuristic(v) = dists[v]
             timed_path = temporal_astar(
                 mapf.g,
@@ -56,6 +57,9 @@ function cooperative_astar_from_trees(
         conflict_price=conflict_price,
         show_progress=show_progress,
     )
+    if !is_feasible(solution, mapf)
+        @warn "Infeasible solution"
+    end
     return solution
 end
 

@@ -41,3 +41,30 @@ function build_timed_path(spt::ShortestPathTree{T}, s, d, tdep) where {T}
     end
     return TimedPath(tdep, path)
 end
+
+function path_length(spt::ShortestPathTree, s, d)
+    parents = spt.parents
+    l = 0
+    if spt.forward
+        v = d
+        while v != s
+            v = parents[v]
+            if iszero(v)
+                return nothing
+            else
+                l += 1
+            end
+        end
+    else
+        v = s
+        while v != d
+            v = parents[v]
+            if iszero(v)
+                return nothing
+            else
+                l += 1
+            end
+        end
+    end
+    return l + 1
+end

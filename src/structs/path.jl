@@ -12,7 +12,10 @@ struct TimedPath
     path::Vector{Int}
 end
 
+TimedPath(tdep::Int) = TimedPath(tdep, Int[])
+
 Base.length(timed_path::TimedPath) = length(timed_path.path)
+Base.isempty(timed_path::TimedPath) = length(timed_path) == 0
 
 departure_time(timed_path::TimedPath) = timed_path.tdep
 arrival_time(timed_path::TimedPath) = timed_path.tdep + length(timed_path) - 1

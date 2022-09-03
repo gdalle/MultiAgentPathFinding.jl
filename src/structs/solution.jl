@@ -43,7 +43,7 @@ makespan(::Nothing) = Inf
 function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
     for a in 1:nb_agents(mapf)
         timed_path = solution[a]
-        if length(timed_path) == 0
+        if isempty(timed_path)
             verbose && @warn "Empty path for agent $a"
             return false  # empty path
         elseif departure_time(timed_path) != mapf.departure_times[a]

@@ -23,9 +23,7 @@ end
 
 select_agents(mapf::MAPF, nb_agents::Integer) = select_agents(mapf, 1:nb_agents)
 
-function replace_agents(
-    mapf::MAPF, new_departures, new_arrivals, new_departure_times
-)
+function replace_agents(mapf::MAPF, new_departures, new_arrivals, new_departure_times)
     return MAPF(
         # Graph-related
         mapf.g,
@@ -64,6 +62,8 @@ function add_dummy_vertices(
     augmented_sources = src.(edges(mapf.g))
     augmented_destinations = dst.(edges(mapf.g))
     augmented_weights = Float64[edge_weights_mat[src(ed), dst(ed)] for ed in edges(mapf.g)]
+    augmented_vertex_conflicts = copy(mapf.vertex_conflicts)
+    augmented_edge_conflicts = copy(mapf.edge_conflicts)
 
     new_departures = copy(mapf.departures)
     new_arrivals = copy(mapf.arrivals)
@@ -73,6 +73,11 @@ function add_dummy_vertices(
         append!(augmented_sources, new_departures, new_departures)
         append!(augmented_destinations, new_departures, mapf.departures)
         append!(augmented_weights, fill(departure_loop_weight, A), fill(eps(0.0), A))
+        for (u, v) in zip(new_departures, mapf.departures)
+            augmented_vertex_conflicts[u] = Int[]
+            augmented_edge_conflicts[(u, u)] = Tuple{Int,Int}[]
+            augmented_edge_conflicts[(u, v)] = Tuple{Int,Int}[]
+        end
         V += A
     end
 
@@ -81,6 +86,12 @@ function add_dummy_vertices(
         append!(augmented_sources, mapf.arrivals, new_arrivals)
         append!(augmented_destinations, new_arrivals, new_arrivals)
         append!(augmented_weights, fill(eps(0.0), A), fill(arrival_loop_weight, A))
+        for (u, v) in zip(mapf.arrivals, new_arrivals)
+            augmented_vertex_conflicts[v] = Int[]
+            augmented_edge_conflicts[(u, v)] = Tuple{Int,Int}[]
+            augmented_edge_conflicts[(v, v)] = Tuple{Int,Int}[]
+        end
+        V += A
     end
 
     augmented_g = SimpleWeightedDiGraph(
@@ -91,8 +102,8 @@ function add_dummy_vertices(
         augmented_g,
         new_departures,
         new_arrivals;
-        vertex_conflicts=mapf.vertex_conflicts,
-        edge_conflicts=mapf.edge_conflicts,
+        vertex_conflicts=augmented_vertex_conflicts,
+        edge_conflicts=augmented_edge_conflicts,
         departure_times=mapf.departure_times,
         stay_at_arrival=mapf.stay_at_arrival,
     )
