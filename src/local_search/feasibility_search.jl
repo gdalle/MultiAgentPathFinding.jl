@@ -10,15 +10,7 @@ function feasibility_search!(
     show_progress,
 )
     A = nb_agents(mapf)
-    pathless_agents = shuffle([a for a in 1:A if length(solution[a]) == 0])
-    cooperative_astar_from_trees!(
-        solution,
-        mapf,
-        pathless_agents,
-        edge_weights_vec,
-        spt_by_dest;
-        conflict_price=conflict_price,
-    )
+    @assert all_non_empty(solution)
     conflicts_count = count_conflicts(solution, mapf)
     steps_without_improvement = 0
     prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
@@ -41,10 +33,10 @@ function feasibility_search!(
             conflict_price=conflict_price,
         )
         new_conflicts_count = count_conflicts(solution, mapf)
-        if new_conflicts_count < conflicts_count  # keep
+        if all_non_empty(solution) && new_conflicts_count < conflicts_count  # keep
             conflicts_count = new_conflicts_count
             steps_without_improvement = 0
-        elseif new_conflicts_count > conflicts_count # revert
+        else  # revert
             for a in neighborhood_agents
                 solution[a] = backup[a]
             end

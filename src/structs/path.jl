@@ -65,6 +65,7 @@ end
 ## Cost
 
 function standstill_time(timed_path::TimedPath)
+    isempty(timed_path) && return 0
     path = list_vertices(timed_path)
     k = length(path)
     v = last(path)

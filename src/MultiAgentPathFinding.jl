@@ -39,7 +39,7 @@ include("local_search/double_search.jl")
 ## Exports
 
 export MAPF, nb_agents, build_weights_matrix
-export select_agents, replace_agents, add_dummy_vertices
+export select_agents, replace_agents
 export TimedPath
 export Solution
 export Reservation

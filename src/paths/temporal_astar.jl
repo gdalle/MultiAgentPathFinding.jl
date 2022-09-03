@@ -60,7 +60,7 @@ function temporal_astar_hard(
             end
         end
     end
-    return TimedPath(tdep, Int[])
+    return TimedPath(tdep)
 end
 
 function temporal_astar_soft(
@@ -121,5 +121,5 @@ function temporal_astar_soft(
             end
         end
     end
-    return TimedPath(tdep, Int[])
+    return TimedPath(tdep)
 end

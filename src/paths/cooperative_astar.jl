@@ -57,9 +57,6 @@ function cooperative_astar_from_trees(
         conflict_price=conflict_price,
         show_progress=show_progress,
     )
-    if !is_feasible(solution, mapf)
-        @warn "Infeasible solution"
-    end
     return solution
 end
 
