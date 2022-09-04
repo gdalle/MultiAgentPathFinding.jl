@@ -49,10 +49,10 @@ function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
         elseif departure_time(timed_path) != mapf.departure_times[a]
             verbose && @warn "Wrong departure time for agent $a"
             return false  # wrong departure time
-        elseif first_vertex(timed_path) != mapf.departures[a]
+        elseif departure_vertex(timed_path) != mapf.departures[a]
             verbose && @warn "Wrong departure vertex for agent $a"
             return false  # wrong departure vertex
-        elseif last_vertex(timed_path) != mapf.arrivals[a]
+        elseif arrival_vertex(timed_path) != mapf.arrivals[a]
             verbose && @warn "Wrong arrival vertex for agent $a"
             return false  # wrong arrival vertex
         elseif !exists_in_graph(timed_path, mapf.g)

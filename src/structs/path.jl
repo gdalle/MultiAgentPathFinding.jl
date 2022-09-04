@@ -12,7 +12,7 @@ struct TimedPath
     path::Vector{Int}
 end
 
-TimedPath(tdep::Int) = TimedPath(tdep, Int[])
+TimedPath(tdep) = TimedPath(tdep, Int[])
 
 Base.length(timed_path::TimedPath) = length(timed_path.path)
 Base.isempty(timed_path::TimedPath) = length(timed_path) == 0
@@ -20,16 +20,8 @@ Base.isempty(timed_path::TimedPath) = length(timed_path) == 0
 departure_time(timed_path::TimedPath) = timed_path.tdep
 arrival_time(timed_path::TimedPath) = timed_path.tdep + length(timed_path) - 1
 
-function first_vertex(timed_path::TimedPath)
-    return length(timed_path) > 0 ? first(timed_path.path) : nothing
-end
-
-function last_vertex(timed_path::TimedPath)
-    return length(timed_path) > 0 ? last(timed_path.path) : nothing
-end
-
-function list_vertices(timed_path::TimedPath)
-    return timed_path.path
+function remove_arrival_vertex(timed_path::TimedPath)
+    return TimedPath(timed_path.tdep, timed_path.path[1:(end - 1)])
 end
 
 function vertex_at_time(timed_path::TimedPath, t)
@@ -41,12 +33,35 @@ function vertex_at_time(timed_path::TimedPath, t)
     end
 end
 
+function departure_vertex(timed_path::TimedPath)
+    return vertex_at_time(timed_path, departure_time(timed_path))
+end
+
+function arrival_vertex(timed_path::TimedPath)
+    return vertex_at_time(timed_path, arrival_time(timed_path))
+end
+
 function edge_at_time(timed_path::TimedPath, t)
     k = t - timed_path.tdep + 1
     if k in 1:(length(timed_path) - 1)
         return timed_path.path[k], timed_path.path[k + 1]
     else
         return nothing
+    end
+end
+
+function concat_paths(timed_path1::TimedPath, timed_path2::TimedPath)
+    if isempty(timed_path1)
+        return timed_path2
+    elseif isempty(timed_path2)
+        return timed_path1
+    else
+        @assert arrival_time(timed_path1) == departure_time(timed_path2)
+        @assert arrival_vertex(timed_path1) == departure_vertex(timed_path2)
+        tdep = departure_time(timed_path1)
+        path = vcat(timed_path1.path, timed_path2.path[2:end])
+        timed_path = TimedPath(tdep, path)
+        return timed_path
     end
 end
 
@@ -66,7 +81,7 @@ end
 
 function standstill_time(timed_path::TimedPath)
     isempty(timed_path) && return 0
-    path = list_vertices(timed_path)
+    path = timed_path.path
     k = length(path)
     v = last(path)
     while k > 1

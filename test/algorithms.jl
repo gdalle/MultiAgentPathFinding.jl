@@ -7,29 +7,30 @@ Random.seed!(63)
 
 # Grid graph where the first and last vertex are departure zones
 
-L = 10
+L = 5
 g = SimpleDiGraph(Graphs.grid([L, L]))
+for v in vertices(g)
+    add_edge!(g, v, v)
+end
 
-A = 50
+A = 20
 departures = rand(1:nv(g), A);
 arrivals = rand(1:nv(g), A);
 
-mapf = MultiAgentPathFinding.add_dummy_vertices(
-    MAPF(g, departures, arrivals; stay_at_arrival=false);
-    appear_at_departure=true,
-    disappear_at_arrival=true,
-)
+mapf = MAPF(g, departures, arrivals; stay_at_arrival=false);
+
+mapf = MultiAgentPathFinding.add_departure_waiting_vertices(mapf)
 
 show_progress = true
 
 sol_indep = independent_dijkstra(mapf);
-sol_coop = cooperative_astar(mapf);
+sol_coop = cooperative_astar(mapf, 1:nb_agents(mapf));
 sol_os = optimality_search(mapf; show_progress=show_progress);
 sol_fs = feasibility_search(mapf; show_progress=show_progress);
 sol_ds = double_search(mapf; show_progress=show_progress);
 
 @test !is_feasible(sol_indep, mapf)
-@test is_feasible(sol_coop, mapf)
+@test is_feasible(sol_coop, mapf, verbose=true)
 @test is_feasible(sol_os, mapf)
 @test is_feasible(sol_fs, mapf)
 @test is_feasible(sol_ds, mapf)

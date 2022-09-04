@@ -6,6 +6,7 @@ Storage for vertices and edges that are already occupied.
 # Fields
 - `forbidden_vertices::Set{Tuple{Int,Int}}`: set of tuples `(t,v)`
 - `forbidden_edges::Set{Tuple{Int,Int}}`: set of tuples `(t,e)`
+- `arrivals_reached::Dict{Int,Int}`
 """
 struct Reservation
     forbidden_vertices::Set{Tuple{Int,Int}}
@@ -58,11 +59,11 @@ end
 
 Compute a [`Reservation`](@ref) based on the vertices and edges occupied by `solution` (or a subset of its `agents`).
 """
-function compute_reservation(solution::Solution, mapf::MAPF; agents=1:nb_agents(mapf))
+function compute_reservation(solution::Solution, mapf::MAPF, agents=1:nb_agents(mapf))
     reservation = Reservation()
     for a in agents
         timed_path = solution[a]
-        update_reservation!(reservation, timed_path, mapf)
+        update_reservation!(reservation, timed_path, mapf, a)
     end
     return reservation
 end
@@ -72,7 +73,7 @@ end
 
 Add the vertices and edges occupied by `timed_path` to `reservation`.
 """
-function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF)
+function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF, a)
     length(timed_path) > 0 || return nothing
     for t in departure_time(timed_path):arrival_time(timed_path)
         v = vertex_at_time(timed_path, t)
@@ -88,8 +89,8 @@ function update_reservation!(reservation::Reservation, timed_path::TimedPath, ma
             push!(reservation.forbidden_edges, (t, uu, vv))
         end
     end
-    if mapf.stay_at_arrival
-        reservation.arrivals_reached[last_vertex(timed_path)] = arrival_time(timed_path)
+    if mapf.stay_at_arrival && arrival_vertex(timed_path) == mapf.arrivals[a]
+        reservation.arrivals_reached[arrival_vertex(timed_path)] = arrival_time(timed_path)
     end
     return nothing
 end

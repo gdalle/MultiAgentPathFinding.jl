@@ -1,14 +1,14 @@
 """
-    forward_dijkstra(g, s, w)
+    forward_dijkstra(g, dep, w)
 """
-function forward_dijkstra(g::AbstractGraph{T}, s, w::AbstractMatrix{W}) where {T,W}
+function forward_dijkstra(g::AbstractGraph{T}, dep, w::AbstractMatrix{W}) where {T,W}
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
     parents = zeros(T, nv(g))
     dists = Vector{Union{Nothing,W}}(undef, nv(g))
     # Add source
-    dists[s] = zero(W)
-    push!(heap, s => zero(W))
+    dists[dep] = zero(W)
+    push!(heap, dep => zero(W))
     # Main loop
     while !isempty(heap)
         u, Δ_u = pop!(heap)
@@ -29,16 +29,16 @@ function forward_dijkstra(g::AbstractGraph{T}, s, w::AbstractMatrix{W}) where {T
 end
 
 """
-    backward_dijkstra(g, d, w)
+    backward_dijkstra(g, arr, w)
 """
-function backward_dijkstra(g::AbstractGraph{T}, d, w::AbstractMatrix{W}) where {T,W}
+function backward_dijkstra(g::AbstractGraph{T}, arr, w::AbstractMatrix{W}) where {T,W}
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
     parents = zeros(T, nv(g))
     dists = Vector{Union{Nothing,W}}(undef, nv(g))
     # Add source
-    dists[d] = zero(W)
-    push!(heap, d => zero(W))
+    dists[arr] = zero(W)
+    push!(heap, arr => zero(W))
     # Main loop
     while !isempty(heap)
         v, Δ_v = pop!(heap)

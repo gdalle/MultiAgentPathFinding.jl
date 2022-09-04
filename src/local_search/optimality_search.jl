@@ -2,7 +2,8 @@ function optimality_search!(
     solution::Solution,
     mapf::MAPF,
     edge_weights_vec,
-    spt_by_dest;
+    spt_by_arr;
+    window,
     neighborhood_size,
     max_steps_without_improvement,
     show_progress,
@@ -19,7 +20,13 @@ function optimality_search!(
         agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, agents, mapf)
         cooperative_astar_from_trees!(
-            solution, mapf, agents, edge_weights_vec, spt_by_dest;
+            solution,
+            mapf,
+            agents,
+            edge_weights_vec,
+            spt_by_arr;
+            window=window,
+            conflict_price=Inf,
         )
         new_cost = flowtime(solution, mapf)
         if all_non_empty(solution) && new_cost < cost  # keep
@@ -38,22 +45,28 @@ end
 function optimality_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;
+    window=10,
     neighborhood_size=10,
     max_steps_without_improvement=100,
     show_progress=false,
 )
     agents = randperm(nb_agents(mapf))
-    spt_by_dest = dijkstra_by_destination(
-        mapf, edge_weights_vec; show_progress=show_progress
-    )
+    spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
     solution = cooperative_astar_from_trees(
-        mapf, agents, edge_weights_vec, spt_by_dest; show_progress=show_progress
+        mapf,
+        agents,
+        edge_weights_vec,
+        spt_by_arr;
+        window=window,
+        conflict_price=Inf,
+        show_progress=show_progress,
     )
     optimality_search!(
         solution,
         mapf,
         edge_weights_vec,
-        spt_by_dest;
+        spt_by_arr;
+        window=window,
         neighborhood_size=neighborhood_size,
         max_steps_without_improvement=max_steps_without_improvement,
         show_progress=show_progress,

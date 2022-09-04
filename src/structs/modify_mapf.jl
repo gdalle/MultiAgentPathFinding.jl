@@ -45,15 +45,8 @@ function replace_agents(mapf::MAPF, new_departures, new_arrivals, new_departure_
     )
 end
 
-function add_dummy_vertices(
-    mapf::MAPF{W};
-    appear_at_departure=true,
-    disappear_at_arrival=true,
-    departure_loop_weight=one(W),
-    arrival_loop_weight=one(W),
-) where {W}
-    @assert departure_loop_weight > 0
-    @assert arrival_loop_weight > 0
+function add_departure_waiting_vertices(mapf::MAPF{W}; waiting_cost=one(W)) where {W}
+    @assert waiting_cost > 0
 
     A = length(mapf.departures)
     V = nv(mapf.g)
@@ -65,33 +58,14 @@ function add_dummy_vertices(
     augmented_vertex_conflicts = copy(mapf.vertex_conflicts)
     augmented_edge_conflicts = copy(mapf.edge_conflicts)
 
-    new_departures = copy(mapf.departures)
-    new_arrivals = copy(mapf.arrivals)
-
-    if appear_at_departure
-        new_departures .= (V + 1):(V + A)
-        append!(augmented_sources, new_departures, new_departures)
-        append!(augmented_destinations, new_departures, mapf.departures)
-        append!(augmented_weights, fill(departure_loop_weight, A), fill(eps(0.0), A))
-        for (u, v) in zip(new_departures, mapf.departures)
-            augmented_vertex_conflicts[u] = Int[]
-            augmented_edge_conflicts[(u, u)] = Tuple{Int,Int}[]
-            augmented_edge_conflicts[(u, v)] = Tuple{Int,Int}[]
-        end
-        V += A
-    end
-
-    if disappear_at_arrival
-        new_arrivals .= (V + 1):(V + A)
-        append!(augmented_sources, mapf.arrivals, new_arrivals)
-        append!(augmented_destinations, new_arrivals, new_arrivals)
-        append!(augmented_weights, fill(eps(0.0), A), fill(arrival_loop_weight, A))
-        for (u, v) in zip(mapf.arrivals, new_arrivals)
-            augmented_vertex_conflicts[v] = Int[]
-            augmented_edge_conflicts[(u, v)] = Tuple{Int,Int}[]
-            augmented_edge_conflicts[(v, v)] = Tuple{Int,Int}[]
-        end
-        V += A
+    new_departures = (V + 1):(V + A)
+    append!(augmented_sources, new_departures, new_departures)
+    append!(augmented_destinations, new_departures, mapf.departures)
+    append!(augmented_weights, fill(waiting_cost, A), fill(waiting_cost, A))
+    for (u, v) in zip(new_departures, mapf.departures)
+        augmented_vertex_conflicts[u] = Int[]
+        augmented_edge_conflicts[(u, u)] = Tuple{Int,Int}[]
+        augmented_edge_conflicts[(u, v)] = Tuple{Int,Int}[]
     end
 
     augmented_g = SimpleWeightedDiGraph(
@@ -101,7 +75,7 @@ function add_dummy_vertices(
     return MAPF(
         augmented_g,
         new_departures,
-        new_arrivals;
+        mapf.arrivals;
         vertex_conflicts=augmented_vertex_conflicts,
         edge_conflicts=augmented_edge_conflicts,
         departure_times=mapf.departure_times,
