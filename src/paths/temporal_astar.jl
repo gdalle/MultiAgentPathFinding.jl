@@ -48,16 +48,21 @@ function temporal_astar_hard(
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     dists = Dict{Tuple{T,V},W}()
     # Add source
-    is_forbidden_vertex(res, tdep, dep) && return TimedPath(tdep)
-    dists[tdep, dep] = zero(W)
-    push!(heap, (tdep, dep) => heuristic(dep))
+    if !is_forbidden_vertex(res, tdep, dep)
+        dists[tdep, dep] = zero(W)
+        push!(heap, (tdep, dep) => heuristic(dep))
+    end
     # Main loop
     while !isempty(heap)
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
-        if t <= tmax && u == arr
+        if u == arr
             timed_path = build_path_astar(parents, arr, t)
-            return timed_path
+            if t == tmax + 1
+                return remove_arrival_vertex(timed_path)
+            else
+                return timed_path
+            end
         elseif t == tmax
             v = arr
             Δ_v = get(dists, (t + 1, v), nothing)
@@ -84,8 +89,7 @@ function temporal_astar_hard(
             end
         end
     end
-    timed_path = build_path_astar(parents, arr, tmax + 1)
-    return remove_arrival_vertex(timed_path)
+    return TimedPath(tdep)
 end
 
 function temporal_astar_soft(
@@ -116,9 +120,13 @@ function temporal_astar_soft(
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         c_u = conflicts[t, u]
-        if t <= tmax && u == arr
+        if u == arr
             timed_path = build_path_astar(parents, arr, t)
-            return timed_path
+            if t == tmax + 1
+                return remove_arrival_vertex(timed_path)
+            else
+                return timed_path
+            end
         elseif t == tmax
             v = arr
             c_v = get(conflicts, (t + 1, v), nothing)
@@ -163,6 +171,5 @@ function temporal_astar_soft(
             end
         end
     end
-    timed_path = build_path_astar(parents, arr, tmax + 1)
-    return remove_arrival_vertex(timed_path)
+    return TimedPath(tdep)
 end

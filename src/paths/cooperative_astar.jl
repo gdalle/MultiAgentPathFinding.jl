@@ -14,12 +14,13 @@ function cooperative_astar_from_trees!(
     for a in agents
         next!(prog)
         dep, arr = mapf.departures[a], mapf.arrivals[a]
-        spt = spt_by_arr[arr]
-        heuristic(v) = spt.dists[v]
         tdep = mapf.departure_times[a]
+        spt = spt_by_arr[arr]
         tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)
-        nb_windows = 1 + (tmax - tdep) ÷ window
+        heuristic(v) = spt.dists[v]
+        isnothing(heuristic(dep)) && return TimedPath(tdep)
         timed_path = TimedPath(tdep)
+        nb_windows = 1 + (tmax - tdep) ÷ window
         for _ in 1:nb_windows
             arrival_vertex(timed_path) == arr && break
             emp = isempty(timed_path)
