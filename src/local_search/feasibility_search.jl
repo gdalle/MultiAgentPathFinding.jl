@@ -10,11 +10,11 @@ function feasibility_search!(
     max_steps_without_improvement,
     show_progress,
 )
-    @assert all_non_empty(solution)
+    is_individually_feasible(solution, mapf) || return solution
     conflicts_count = count_conflicts(solution, mapf)
     steps_without_improvement = 0
     prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
-    while !is_feasible(solution, mapf)
+    while conflicts_count > 0 && steps_without_improvement < max_steps_without_improvement
         next!(
             prog;
             showvalues=[
@@ -34,7 +34,10 @@ function feasibility_search!(
             conflict_price=conflict_price,
         )
         new_conflicts_count = count_conflicts(solution, mapf)
-        if all_non_empty(solution) && new_conflicts_count < conflicts_count  # keep
+        if (
+            is_individually_feasible(solution, mapf) &&
+            new_conflicts_count < conflicts_count
+        )  # keep
             conflicts_count = new_conflicts_count
             steps_without_improvement = 0
         else  # revert
@@ -44,9 +47,6 @@ function feasibility_search!(
             steps_without_improvement += 1
         end
         conflict_price *= (one(conflict_price_increase) + conflict_price_increase)
-        if steps_without_improvement > max_steps_without_improvement
-            break
-        end
     end
     return solution
 end
@@ -60,6 +60,7 @@ function feasibility_search(
     conflict_price_increase=1e-2,
     max_steps_without_improvement=100,
     show_progress=false,
+    kwargs...,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
     solution = independent_dijkstra_from_trees(mapf, spt_by_arr)

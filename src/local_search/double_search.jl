@@ -8,6 +8,7 @@ function double_search(
     feasibility_max_steps_without_improvement=100,
     optimality_max_steps_without_improvement=100,
     show_progress=false,
+    kwargs...,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
     solution = independent_dijkstra_from_trees(mapf, spt_by_arr)

@@ -8,10 +8,7 @@ function optimality_search!(
     max_steps_without_improvement,
     show_progress,
 )
-    if !is_feasible(solution, mapf)
-        show_progress && @warn "Infeasible solution"
-        return solution
-    end
+    is_feasible(solution, mapf) || return solution
     cost = flowtime(solution, mapf)
     steps_without_improvement = 0
     prog = ProgressUnknown("Optimality search steps: "; enabled=show_progress)
@@ -29,7 +26,7 @@ function optimality_search!(
             conflict_price=Inf,
         )
         new_cost = flowtime(solution, mapf)
-        if all_non_empty(solution) && new_cost < cost  # keep
+        if is_individually_feasible(solution, mapf) && new_cost < cost  # keep
             cost = new_cost
             steps_without_improvement = 0
         else  # revert
@@ -49,6 +46,7 @@ function optimality_search(
     neighborhood_size=10,
     max_steps_without_improvement=100,
     show_progress=false,
+    kwargs...,
 )
     agents = randperm(nb_agents(mapf))
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)

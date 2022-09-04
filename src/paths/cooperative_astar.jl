@@ -76,6 +76,7 @@ function cooperative_astar(
     window=10,
     conflict_price=Inf,
     show_progress=false,
+    kwargs...,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
     return cooperative_astar_from_trees(

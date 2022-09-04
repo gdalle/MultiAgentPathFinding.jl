@@ -40,7 +40,7 @@ flowtime(::Nothing, ::MAPF{W}; kwargs...) where {W} = typemax(W)
 makespan(solution::Solution) = maximum(arrival_time(timed_path) for timed_path in solution)
 makespan(::Nothing) = Inf
 
-function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
+function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
     for a in 1:nb_agents(mapf)
         timed_path = solution[a]
         if isempty(timed_path)
@@ -60,6 +60,10 @@ function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
             return false  # invalid vertices or edges
         end
     end
+    return true
+end
+
+function is_collectively_feasible(solution::Solution, mapf::MAPF; verbose=false)
     conflict = find_conflict(solution, mapf)
     if conflict !== nothing
         verbose && @warn "$conflict in solution"
@@ -67,6 +71,11 @@ function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
     else
         return true
     end
+end
+
+function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
+    return is_individually_feasible(solution, mapf; verbose=verbose) &&
+           is_collectively_feasible(solution, mapf; verbose=verbose)
 end
 
 is_feasible(::Nothing, ::MAPF; kwargs...) = false
