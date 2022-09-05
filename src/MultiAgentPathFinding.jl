@@ -52,7 +52,7 @@ export is_feasible
 export forward_dijkstra, backward_dijkstra
 export independent_dijkstra
 export temporal_astar
-export cooperative_astar
+export cooperative_astar, cooperative_astar_repeated_trials
 
 export feasibility_search
 export optimality_search

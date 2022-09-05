@@ -94,14 +94,17 @@ function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
     )
 end
 
+default_vertex_conflicts(v) = [v]
+default_edge_conflicts(u, v) = sort([(u, v), (v, u)])
+
 function MAPF(
     g::G,
     departures,
     arrivals;
     departure_times=fill(1, length(departures)),
-    vertex_conflicts=Dict(v => [v] for v in vertices(g)),
+    vertex_conflicts=Dict(v => default_vertex_conflicts(v) for v in vertices(g)),
     edge_conflicts=Dict(
-        (src(ed), dst(ed)) => [(src(ed), dst(ed)), (dst(ed), src(ed))] for ed in edges(g)
+        (src(ed), dst(ed)) => default_edge_conflicts(src(ed), dst(ed)) for ed in edges(g)
     ),
     stay_at_arrival=true,
 ) where {G}

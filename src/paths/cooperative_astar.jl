@@ -89,3 +89,30 @@ function cooperative_astar(
         show_progress=show_progress,
     )
 end
+
+function cooperative_astar_repeated_trials(
+    mapf::MAPF,
+    edge_weights_vec=mapf.edge_weights_vec;
+    window=10,
+    max_trials=10,
+    conflict_price=Inf,
+    show_progress=false,
+    kwargs...,
+)
+    spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
+    for _ in 1:max_trials
+        agents = randperm(nb_agents(mapf))
+        solution = cooperative_astar_from_trees(
+            mapf,
+            agents,
+            edge_weights_vec,
+            spt_by_arr;
+            window=window,
+            conflict_price=conflict_price,
+            show_progress=show_progress,
+        )
+        if is_feasible(solution, mapf)
+            return solution
+        end
+    end
+end
