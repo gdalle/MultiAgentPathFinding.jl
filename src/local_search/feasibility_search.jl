@@ -7,20 +7,17 @@ function feasibility_search!(
     neighborhood_size,
     conflict_price,
     conflict_price_increase,
-    max_steps_without_improvement,
+    max_stagnation,
     show_progress,
 )
     is_individually_feasible(solution, mapf) || return solution
     conflicts_count = count_conflicts(solution, mapf)
-    steps_without_improvement = 0
+    stagnation = 0
     prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
-    while conflicts_count > 0 && steps_without_improvement < max_steps_without_improvement
+    while conflicts_count > 0 && stagnation < max_stagnation
         next!(
             prog;
-            showvalues=[
-                (:conflicts_count, conflicts_count),
-                (:steps_without_improvement, steps_without_improvement),
-            ],
+            showvalues=[(:conflicts_count, conflicts_count), (:stagnation, stagnation)],
         )
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
@@ -39,12 +36,12 @@ function feasibility_search!(
             new_conflicts_count < conflicts_count
         )  # keep
             conflicts_count = new_conflicts_count
-            steps_without_improvement = 0
+            stagnation = 0
         else  # revert
             for a in neighborhood_agents
                 solution[a] = backup[a]
             end
-            steps_without_improvement += 1
+            stagnation += 1
         end
         conflict_price *= (one(conflict_price_increase) + conflict_price_increase)
     end
@@ -58,7 +55,7 @@ function feasibility_search(
     neighborhood_size=10,
     conflict_price=1e-1,
     conflict_price_increase=1e-2,
-    max_steps_without_improvement=100,
+    max_stagnation=100,
     show_progress=false,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
@@ -72,7 +69,7 @@ function feasibility_search(
         neighborhood_size=neighborhood_size,
         conflict_price=conflict_price,
         conflict_price_increase=conflict_price_increase,
-        max_steps_without_improvement=max_steps_without_improvement,
+        max_stagnation=max_stagnation,
         show_progress=show_progress,
     )
     return solution

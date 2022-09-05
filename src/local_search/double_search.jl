@@ -5,8 +5,8 @@ function double_search(
     neighborhood_size=10,
     conflict_price=1e-1,
     conflict_price_increase=1e-2,
-    feasibility_max_steps_without_improvement=100,
-    optimality_max_steps_without_improvement=100,
+    feasibility_max_stagnation=100,
+    optimality_max_stagnation=100,
     show_progress=false,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
@@ -20,7 +20,7 @@ function double_search(
         neighborhood_size=neighborhood_size,
         conflict_price=conflict_price,
         conflict_price_increase=conflict_price_increase,
-        max_steps_without_improvement=feasibility_max_steps_without_improvement,
+        max_stagnation=feasibility_max_stagnation,
         show_progress=show_progress,
     )
     optimality_search!(
@@ -30,7 +30,7 @@ function double_search(
         spt_by_arr;
         window=window,
         neighborhood_size=neighborhood_size,
-        max_steps_without_improvement=optimality_max_steps_without_improvement,
+        max_stagnation=optimality_max_stagnation,
         show_progress=show_progress,
     )
     return solution
