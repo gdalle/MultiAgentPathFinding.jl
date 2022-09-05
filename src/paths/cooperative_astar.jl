@@ -1,4 +1,4 @@
-function cooperative_astar_from_trees!(
+function single_cooperative_astar_from_trees!(
     solution::Solution,
     mapf::MAPF,
     agents,
@@ -48,31 +48,41 @@ end
 
 function cooperative_astar_from_trees(
     mapf::MAPF,
-    agents,
     edge_weights_vec,
     spt_by_arr;
+    max_trials,
     window,
     conflict_price,
     show_progress=false,
 )
-    solution = empty_solution(mapf)
-    cooperative_astar_from_trees!(
-        solution,
-        mapf,
-        agents,
-        edge_weights_vec,
-        spt_by_arr;
-        window=window,
-        conflict_price=conflict_price,
-        show_progress=show_progress,
+    prog = Progress(
+        max_trials; desc="Cooperative A* trials", enabled=show_progress && max_trials > 1
     )
-    return solution
+    for _ in 1:max_trials
+        solution = empty_solution(mapf)
+        agents = randperm(nb_agents(mapf))
+        single_cooperative_astar_from_trees!(
+            solution,
+            mapf,
+            agents,
+            edge_weights_vec,
+            spt_by_arr;
+            window=window,
+            conflict_price=conflict_price,
+            show_progress=show_progress && max_trials == 1,
+        )
+        if is_feasible(solution, mapf)
+            return solution
+        end
+        next!(prog)
+    end
+    return empty_solution(mapf)
 end
 
 function cooperative_astar(
     mapf::MAPF,
-    agents=randperm(nb_agents(mapf)),
     edge_weights_vec=mapf.edge_weights_vec;
+    max_trials=10,
     window=10,
     conflict_price=Inf,
     show_progress=false,
@@ -81,38 +91,11 @@ function cooperative_astar(
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
     return cooperative_astar_from_trees(
         mapf,
-        agents,
         edge_weights_vec,
         spt_by_arr;
+        max_trials=max_trials,
         window=window,
         conflict_price=conflict_price,
         show_progress=show_progress,
     )
-end
-
-function cooperative_astar_repeated_trials(
-    mapf::MAPF,
-    edge_weights_vec=mapf.edge_weights_vec;
-    window=10,
-    max_trials=10,
-    conflict_price=Inf,
-    show_progress=false,
-    kwargs...,
-)
-    spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
-    for _ in 1:max_trials
-        agents = randperm(nb_agents(mapf))
-        solution = cooperative_astar_from_trees(
-            mapf,
-            agents,
-            edge_weights_vec,
-            spt_by_arr;
-            window=window,
-            conflict_price=conflict_price,
-            show_progress=show_progress,
-        )
-        if is_feasible(solution, mapf)
-            return solution
-        end
-    end
 end

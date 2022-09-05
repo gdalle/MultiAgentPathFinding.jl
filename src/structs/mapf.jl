@@ -95,7 +95,7 @@ function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
 end
 
 default_vertex_conflicts(v) = [v]
-default_edge_conflicts(u, v) = sort([(u, v), (v, u)])
+default_edge_conflicts(u, v) = [(v, u)]
 
 function MAPF(
     g::G,

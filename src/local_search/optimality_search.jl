@@ -16,7 +16,7 @@ function optimality_search!(
         next!(prog; showvalues=[(:steps_without_improvement, steps_without_improvement)])
         agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, agents, mapf)
-        cooperative_astar_from_trees!(
+        single_cooperative_astar_from_trees!(
             solution,
             mapf,
             agents,
@@ -26,7 +26,7 @@ function optimality_search!(
             conflict_price=Inf,
         )
         new_cost = flowtime(solution, mapf)
-        if is_individually_feasible(solution, mapf) && new_cost < cost  # keep
+        if is_feasible(solution, mapf) && new_cost < cost  # keep
             cost = new_cost
             steps_without_improvement = 0
         else  # revert
@@ -42,19 +42,18 @@ end
 function optimality_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;
+    coop_max_trials=10,
     window=10,
     neighborhood_size=10,
     max_steps_without_improvement=100,
     show_progress=false,
-    kwargs...,
 )
-    agents = randperm(nb_agents(mapf))
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
     solution = cooperative_astar_from_trees(
         mapf,
-        agents,
         edge_weights_vec,
         spt_by_arr;
+        max_trials=coop_max_trials,
         window=window,
         conflict_price=Inf,
         show_progress=show_progress,

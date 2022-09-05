@@ -24,7 +24,7 @@ function feasibility_search!(
         )
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
-        cooperative_astar_from_trees!(
+        single_cooperative_astar_from_trees!(
             solution,
             mapf,
             neighborhood_agents,
@@ -60,7 +60,6 @@ function feasibility_search(
     conflict_price_increase=1e-2,
     max_steps_without_improvement=100,
     show_progress=false,
-    kwargs...,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
     solution = independent_dijkstra_from_trees(mapf, spt_by_arr)
