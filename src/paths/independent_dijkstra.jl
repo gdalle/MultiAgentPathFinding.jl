@@ -29,7 +29,7 @@ function independent_dijkstra_from_trees(mapf::MAPF, spt_by_arr)
 end
 
 function independent_dijkstra(
-    mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec; show_progress=false, kwargs...
+    mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec; show_progress=false
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
     return independent_dijkstra_from_trees(mapf, spt_by_arr)
