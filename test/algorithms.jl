@@ -6,10 +6,10 @@ using Test
 
 Random.seed!(63)
 
-L = 30
+L = 20
 g = SimpleDiGraph(Graphs.grid([L, L]))
 
-A = 200
+A = 100
 departures = sample(1:(nv(g) ÷ 2), A; replace=false);
 arrivals = sample((nv(g) ÷ 2 + 1):nv(g), A; replace=false);
 
