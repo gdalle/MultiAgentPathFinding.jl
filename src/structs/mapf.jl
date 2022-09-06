@@ -39,15 +39,14 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int},VC,EC}
         edge_indices,
         edge_colptr,
         edge_rowval,
-        edge_weights_vec::Vector{W},
+        edge_weights_vec::AbstractVector{W},
         vertex_conflicts::VC,
         edge_conflicts::EC,
         departures,
         arrivals,
         departure_times,
-        stay_at_arrival;
+        stay_at_arrival,
     ) where {W,G,VC,EC}
-        # Check arguments
         @assert is_directed(g)
         A = length(departures)
         @assert A == length(arrivals)
@@ -66,6 +65,58 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int},VC,EC}
             stay_at_arrival,
         )
     end
+
+    function MAPF(
+        g::G,
+        vertex_conflicts::VC,
+        edge_conflicts::EC,
+        departures,
+        arrivals,
+        departure_times,
+        stay_at_arrival,
+    ) where {G,VC,EC}
+        @assert is_directed(g)
+        A = length(departures)
+        @assert A == length(arrivals)
+        @assert A == length(departure_times)
+        edge_indices, edge_colptr, edge_rowval, edge_weights_vec = build_edge_data(g)
+        W = eltype(edge_weights_vec)
+        return new{W,G,VC,EC}(
+            g,
+            edge_indices,
+            edge_colptr,
+            edge_rowval,
+            edge_weights_vec,
+            vertex_conflicts,
+            edge_conflicts,
+            departures,
+            arrivals,
+            departure_times,
+            stay_at_arrival,
+        )
+    end
+end
+
+function build_edge_data(g::AbstractGraph)
+    edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(g)))
+    edge_weights_mat = Graphs.weights(g)
+
+    edge_colptr = Vector{Int}(undef, nv(g) + 1)
+    edge_rowval = Vector{Int}(undef, ne(g))
+    edge_weights_vec = Vector{eltype(edge_weights_mat)}(undef, ne(g))
+
+    e = 1
+    for i in vertices(g)
+        edge_colptr[i] = e  # i is the column
+        for j in outneighbors(g, i)
+            edge_rowval[e] = j  # j is the row
+            edge_weights_vec[e] = edge_weights_mat[i, j]
+            e += 1
+        end
+    end
+    edge_colptr[nv(g) + 1] = ne(g) + 1
+
+    return edge_indices, edge_colptr, edge_rowval, edge_weights_vec
 end
 
 """
@@ -95,57 +146,24 @@ Base.getindex(::LazyVertexConflicts, v::Integer) = (v,)
 Base.getindex(::LazyEdgeConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((u, v),)
 Base.getindex(::LazySwappingConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((v, u),)
 
-## Default constructors
-
 function MAPF(
-    g::G,
+    g::G;
     departures,
-    arrivals;
+    arrivals,
     departure_times=fill(1, length(departures)),
     vertex_conflicts=LazyVertexConflicts(),
     edge_conflicts=LazySwappingConflicts(),
     stay_at_arrival=true,
 ) where {G}
-    edge_indices, edge_colptr, edge_rowval, edge_weights_vec = build_edge_data(g)
     return MAPF(
-        # Graph-related
         g,
-        # Edges-related
-        edge_indices,
-        edge_colptr,
-        edge_rowval,
-        edge_weights_vec,
-        # Constraints-related
         vertex_conflicts,
         edge_conflicts,
-        # Agents-related
         departures,
         arrivals,
         departure_times,
         stay_at_arrival,
     )
-end
-
-function build_edge_data(g::AbstractGraph)
-    edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(g)))
-    edge_weights_mat = Graphs.weights(g)
-
-    edge_colptr = Vector{Int}(undef, nv(g) + 1)
-    edge_rowval = Vector{Int}(undef, ne(g))
-    edge_weights_vec = Vector{eltype(edge_weights_mat)}(undef, ne(g))
-
-    e = 1
-    for i in vertices(g)
-        edge_colptr[i] = e  # i is the column
-        for j in outneighbors(g, i)
-            edge_rowval[e] = j  # j is the row
-            edge_weights_vec[e] = edge_weights_mat[i, j]
-            e += 1
-        end
-    end
-    edge_colptr[nv(g) + 1] = ne(g) + 1
-
-    return edge_indices, edge_colptr, edge_rowval, edge_weights_vec
 end
 
 """

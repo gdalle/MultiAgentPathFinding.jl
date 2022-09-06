@@ -13,7 +13,7 @@ A = 100
 departures = rand(1:nv(g), A);
 arrivals = rand(1:nv(g), A);
 
-mapf = MAPF(g, departures, arrivals; stay_at_arrival=false);
+mapf = @inferred MAPF(g; departures=departures, arrivals=arrivals, stay_at_arrival=false);
 mapf = MultiAgentPathFinding.add_departure_waiting_vertices(mapf);
 
 show_progress = false

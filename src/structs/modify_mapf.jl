@@ -16,8 +16,6 @@ function select_agents(mapf::MAPF, agents)
         view(mapf.arrivals, agents),
         view(mapf.departure_times, agents),
         mapf.stay_at_arrival;
-        # Checks
-        check_sorted=false,
     )
 end
 
@@ -40,8 +38,6 @@ function replace_agents(mapf::MAPF, new_departures, new_arrivals, new_departure_
         new_arrivals,
         new_departure_times,
         mapf.stay_at_arrival;
-        # Checks
-        check_sorted=false,
     )
 end
 
@@ -78,12 +74,12 @@ function add_departure_waiting_vertices(mapf::MAPF{W}; waiting_cost=one(W)) wher
     )
 
     return MAPF(
-        augmented_g,
-        new_departures,
-        mapf.arrivals;
+        augmented_g;
+        departures=new_departures,
+        arrivals=mapf.arrivals,
+        departure_times=mapf.departure_times,
         vertex_conflicts=augmented_vertex_conflicts,
         edge_conflicts=augmented_edge_conflicts,
-        departure_times=mapf.departure_times,
         stay_at_arrival=mapf.stay_at_arrival,
     )
 end
