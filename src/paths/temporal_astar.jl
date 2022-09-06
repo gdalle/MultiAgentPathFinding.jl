@@ -10,38 +10,9 @@ function build_path_astar(parents::Dict, arr, tarr;)
 end
 
 function temporal_astar(
-    g,
-    w::AbstractMatrix{W};
-    dep,
-    arr,
-    tdep,
-    tmax,
-    res=Reservation(),
-    heuristic=v -> zero(W),
-    conflict_price=Inf,
-) where {W}
-    if conflict_price == Inf
-        return temporal_astar_hard(
-            g, w; dep=dep, arr=arr, tdep=tdep, tmax=tmax, res=res, heuristic=heuristic
-        )
-    else
-        return temporal_astar_soft(
-            g,
-            w;
-            dep=dep,
-            arr=arr,
-            tdep=tdep,
-            tmax=tmax,
-            res=res,
-            heuristic=heuristic,
-            conflict_price=conflict_price,
-        )
-    end
-end
-
-function temporal_astar_hard(
     g::AbstractGraph{V}, w::AbstractMatrix{W}; dep, arr, tdep, tmax, res, heuristic
 ) where {V,W}
+    timed_path = TimedPath(tdep)
     # Init storage
     T = Int
     heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},W}[])
@@ -59,10 +30,9 @@ function temporal_astar_hard(
         if u == arr
             timed_path = build_path_astar(parents, arr, t)
             if t == tmax + 1
-                return remove_arrival_vertex(timed_path)
-            else
-                return timed_path
+                timed_path = remove_arrival_vertex(timed_path)
             end
+            break
         elseif t == tmax
             v = arr
             Δ_v = get(dists, (t + 1, v), nothing)
@@ -89,7 +59,7 @@ function temporal_astar_hard(
             end
         end
     end
-    return TimedPath(tdep)
+    return timed_path
 end
 
 function temporal_astar_soft(
@@ -103,6 +73,7 @@ function temporal_astar_soft(
     heuristic,
     conflict_price,
 ) where {V,W}
+    timed_path = TimedPath(tdep)
     # Init storage
     T = Int
     P = promote_type(W, typeof(conflict_price))
@@ -123,10 +94,9 @@ function temporal_astar_soft(
         if u == arr
             timed_path = build_path_astar(parents, arr, t)
             if t == tmax + 1
-                return remove_arrival_vertex(timed_path)
-            else
-                return timed_path
+                timed_path = remove_arrival_vertex(timed_path)
             end
+            break
         elseif t == tmax
             v = arr
             c_v = get(conflicts, (t + 1, v), nothing)
@@ -171,5 +141,5 @@ function temporal_astar_soft(
             end
         end
     end
-    return TimedPath(tdep)
+    return timed_path
 end

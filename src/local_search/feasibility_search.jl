@@ -3,25 +3,22 @@ function feasibility_search!(
     mapf::MAPF,
     edge_weights_vec,
     spt_by_arr;
+    feasibility_timeout,
     window,
     neighborhood_size,
     conflict_price,
     conflict_price_increase,
-    max_stagnation,
     show_progress,
 )
     is_individually_feasible(solution, mapf) || return solution
     conflicts_count = count_conflicts(solution, mapf)
-    stagnation = 0
     prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
-    while conflicts_count > 0 && stagnation < max_stagnation
-        next!(
-            prog;
-            showvalues=[(:conflicts_count, conflicts_count), (:stagnation, stagnation)],
-        )
+    total_time = 0.0
+    while true
+        τ1 = CPUtime_us()
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
-        single_cooperative_astar_from_trees!(
+        cooperative_astar_soft_from_trees!(
             solution,
             mapf,
             neighborhood_agents,
@@ -34,16 +31,21 @@ function feasibility_search!(
         if (
             is_individually_feasible(solution, mapf) &&
             new_conflicts_count < conflicts_count
-        )  # keep
+        )
             conflicts_count = new_conflicts_count
-            stagnation = 0
-        else  # revert
+        else
             for a in neighborhood_agents
                 solution[a] = backup[a]
             end
-            stagnation += 1
         end
-        conflict_price *= (one(conflict_price_increase) + conflict_price_increase)
+        τ2 = CPUtime_us()
+        total_time += (τ2 - τ1) / 1e6
+        if total_time > feasibility_timeout || conflicts_count == 0
+            break
+        else
+            next!(prog; showvalues=[(:conflicts_count, conflicts_count)])
+            conflict_price *= (one(conflict_price_increase) + conflict_price_increase)
+        end
     end
     return solution
 end
@@ -51,11 +53,11 @@ end
 function feasibility_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;
+    feasibility_timeout=2,
     window=10,
     neighborhood_size=10,
     conflict_price=1e-1,
     conflict_price_increase=1e-2,
-    max_stagnation=100,
     show_progress=false,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
@@ -65,11 +67,11 @@ function feasibility_search(
         mapf,
         edge_weights_vec,
         spt_by_arr;
+        feasibility_timeout=feasibility_timeout,
         window=window,
         neighborhood_size=neighborhood_size,
         conflict_price=conflict_price,
         conflict_price_increase=conflict_price_increase,
-        max_stagnation=max_stagnation,
         show_progress=show_progress,
     )
     return solution

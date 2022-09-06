@@ -3,37 +3,36 @@ function optimality_search!(
     mapf::MAPF,
     edge_weights_vec,
     spt_by_arr;
+    optimality_timeout,
     window,
     neighborhood_size,
-    max_stagnation,
     show_progress,
 )
     is_feasible(solution, mapf) || return solution
     cost = flowtime(solution, mapf)
-    stagnation = 0
     prog = ProgressUnknown("Optimality search steps: "; enabled=show_progress)
-    while stagnation < max_stagnation
-        next!(prog; showvalues=[(:stagnation, stagnation)])
-        agents = random_neighborhood(mapf, neighborhood_size)
-        backup = remove_agents!(solution, agents, mapf)
-        single_cooperative_astar_from_trees!(
-            solution,
-            mapf,
-            agents,
-            edge_weights_vec,
-            spt_by_arr;
-            window=window,
-            conflict_price=Inf,
+    total_time = 0.0
+    while true
+        τ1 = CPUtime_us()
+        neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
+        backup = remove_agents!(solution, neighborhood_agents, mapf)
+        cooperative_astar_from_trees!(
+            solution, mapf, neighborhood_agents, edge_weights_vec, spt_by_arr; window=window
         )
         new_cost = flowtime(solution, mapf)
-        if is_feasible(solution, mapf) && new_cost < cost  # keep
+        if is_feasible(solution, mapf) && new_cost < cost
             cost = new_cost
-            stagnation = 0
-        else  # revert
-            for a in agents
+        else
+            for a in neighborhood_agents
                 solution[a] = backup[a]
             end
-            stagnation += 1
+        end
+        τ2 = CPUtime_us()
+        total_time += (τ2 - τ1) / 1e6
+        if total_time > optimality_timeout
+            break
+        else
+            next!(prog; showvalues=[(:cost, cost)])
         end
     end
     return solution
@@ -42,20 +41,19 @@ end
 function optimality_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;
-    coop_max_trials=10,
+    coop_timeout=2,
+    optimality_timeout=2,
     window=10,
     neighborhood_size=10,
-    max_stagnation=100,
     show_progress=false,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
-    solution = cooperative_astar_from_trees(
+    solution = repeated_cooperative_astar_from_trees(
         mapf,
         edge_weights_vec,
         spt_by_arr;
-        max_trials=coop_max_trials,
+        coop_timeout=coop_timeout,
         window=window,
-        conflict_price=Inf,
         show_progress=show_progress,
     )
     optimality_search!(
@@ -63,9 +61,9 @@ function optimality_search(
         mapf,
         edge_weights_vec,
         spt_by_arr;
+        optimality_timeout=optimality_timeout,
         window=window,
         neighborhood_size=neighborhood_size,
-        max_stagnation=max_stagnation,
         show_progress=show_progress,
     )
     return solution

@@ -77,19 +77,17 @@ function update_reservation!(reservation::Reservation, timed_path::TimedPath, ma
     length(timed_path) > 0 || return nothing
     for t in departure_time(timed_path):arrival_time(timed_path)
         v = vertex_at_time(timed_path, t)
-        haskey(mapf.vertex_conflicts, v) || continue
         for vv in mapf.vertex_conflicts[v]
             push!(reservation.forbidden_vertices, (t, vv))
         end
     end
     for t in departure_time(timed_path):(arrival_time(timed_path) - 1)
         u, v = edge_at_time(timed_path, t)
-        haskey(mapf.edge_conflicts, (u, v)) || continue
         for (uu, vv) in mapf.edge_conflicts[(u, v)]
             push!(reservation.forbidden_edges, (t, uu, vv))
         end
     end
-    if mapf.stay_at_arrival && arrival_vertex(timed_path) == mapf.arrivals[a]
+    if mapf.stay_at_arrival
         reservation.arrivals_reached[arrival_vertex(timed_path)] = arrival_time(timed_path)
     end
     return nothing

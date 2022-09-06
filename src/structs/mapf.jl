@@ -1,5 +1,5 @@
 """
-    MAPF{W,G}
+    MAPF{W,G,VC,EC}
 
 Instance of a Multi-Agent PathFinding problem with custom conflict rules.
 
@@ -10,14 +10,14 @@ Instance of a Multi-Agent PathFinding problem with custom conflict rules.
 - `edge_colptr::Vector{Int}`
 - `edge_rowval::Vector{Int}`
 - `edge_weights_vec::Vector{W}`
-- `vertex_conflicts::Vector{Vector{Int}}`
-- `edge_conflicts::Dict{Tuple{Int,Int},Vector{Tuple{Int,Int}}}`
+- `vertex_conflicts::VC`
+- `edge_conflicts::EC`
 - `departures::Vector{Int}`
 - `arrivals::Vector{Int}`
 - `departure_times::Vector{Int}`
 - `arrival_times::Vector{Int}`
 """
-struct MAPF{W<:Real,G<:AbstractGraph{Int}}
+struct MAPF{W<:Real,G<:AbstractGraph{Int},VC,EC}
     # Graph-related
     g::G
     # Edges-related
@@ -26,8 +26,8 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
     edge_rowval::Vector{Int}
     edge_weights_vec::Vector{W}
     # Constraints-related
-    vertex_conflicts::Dict{Int,Vector{Int}}
-    edge_conflicts::Dict{Tuple{Int,Int},Vector{Tuple{Int,Int}}}
+    vertex_conflicts::VC
+    edge_conflicts::EC
     # Agents-related
     departures::Vector{Int}
     arrivals::Vector{Int}
@@ -40,28 +40,19 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int}}
         edge_colptr,
         edge_rowval,
         edge_weights_vec::Vector{W},
-        vertex_conflicts,
-        edge_conflicts,
+        vertex_conflicts::VC,
+        edge_conflicts::EC,
         departures,
         arrivals,
         departure_times,
         stay_at_arrival;
-        check_sorted=true,
-    ) where {W,G}
+    ) where {W,G,VC,EC}
         # Check arguments
         @assert is_directed(g)
         A = length(departures)
         @assert A == length(arrivals)
         @assert A == length(departure_times)
-        if check_sorted
-            for group in values(vertex_conflicts)
-                @assert issorted(group)
-            end
-            for group in values(edge_conflicts)
-                @assert issorted(group)
-            end
-        end
-        return new{W,G}(
+        return new{W,G,VC,EC}(
             g,
             edge_indices,
             edge_colptr,
@@ -94,18 +85,25 @@ function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
     )
 end
 
-default_vertex_conflicts(v) = [v]
-default_edge_conflicts(u, v) = [(v, u)]
+## Default conflicts
+
+struct LazyVertexConflicts end
+struct LazyEdgeConflicts end
+struct LazySwappingConflicts end
+
+Base.getindex(::LazyVertexConflicts, v::Integer) = (v,)
+Base.getindex(::LazyEdgeConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((u, v),)
+Base.getindex(::LazySwappingConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((v, u),)
+
+## Default constructors
 
 function MAPF(
     g::G,
     departures,
     arrivals;
     departure_times=fill(1, length(departures)),
-    vertex_conflicts=Dict(v => default_vertex_conflicts(v) for v in vertices(g)),
-    edge_conflicts=Dict(
-        (src(ed), dst(ed)) => default_edge_conflicts(src(ed), dst(ed)) for ed in edges(g)
-    ),
+    vertex_conflicts=LazyVertexConflicts(),
+    edge_conflicts=LazySwappingConflicts(),
     stay_at_arrival=true,
 ) where {G}
     edge_indices, edge_colptr, edge_rowval, edge_weights_vec = build_edge_data(g)

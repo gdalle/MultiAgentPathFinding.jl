@@ -26,11 +26,7 @@ end
 
 function vertex_at_time(timed_path::TimedPath, t)
     k = t - timed_path.tdep + 1
-    if k in 1:length(timed_path)
-        return timed_path.path[k]
-    else
-        return nothing
-    end
+    return timed_path.path[k]
 end
 
 function departure_vertex(timed_path::TimedPath)
@@ -43,11 +39,7 @@ end
 
 function edge_at_time(timed_path::TimedPath, t)
     k = t - timed_path.tdep + 1
-    if k in 1:(length(timed_path) - 1)
-        return timed_path.path[k], timed_path.path[k + 1]
-    else
-        return nothing
-    end
+    return timed_path.path[k], timed_path.path[k + 1]
 end
 
 function concat_paths(timed_path1::TimedPath, timed_path2::TimedPath)

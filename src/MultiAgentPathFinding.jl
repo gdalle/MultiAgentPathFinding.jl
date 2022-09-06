@@ -2,14 +2,13 @@ module MultiAgentPathFinding
 
 ## Dependencies
 
-using Base.Threads: @threads
+using CPUTime: CPUtime_us
 using DataStructures: BinaryHeap
 using Graphs: Graphs, AbstractGraph
 using Graphs: nv, ne, src, dst
 using Graphs: vertices, edges, inneighbors, outneighbors, has_vertex, has_edge
 using Graphs: is_directed
-using ProgressMeter: Progress, ProgressUnknown
-using ProgressMeter: @showprogress, next!
+using ProgressMeter: Progress, ProgressUnknown, next!
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedDiGraph
 using SparseArrays: SparseMatrixCSC, sparse
@@ -43,16 +42,14 @@ export select_agents, replace_agents
 export TimedPath
 export Solution
 export Reservation
-export compute_reservation, update_reservation!
 
 export path_weight, flowtime, makespan
 export find_conflict
 export is_feasible
 
-export forward_dijkstra, backward_dijkstra
 export independent_dijkstra
 export temporal_astar
-export cooperative_astar, cooperative_astar_repeated_trials
+export repeated_cooperative_astar
 
 export feasibility_search
 export optimality_search

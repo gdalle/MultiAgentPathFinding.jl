@@ -55,8 +55,13 @@ function add_departure_waiting_vertices(mapf::MAPF{W}; waiting_cost=one(W)) wher
     augmented_sources = src.(edges(mapf.g))
     augmented_destinations = dst.(edges(mapf.g))
     augmented_weights = Float64[edge_weights_mat[src(ed), dst(ed)] for ed in edges(mapf.g)]
-    augmented_vertex_conflicts = copy(mapf.vertex_conflicts)
-    augmented_edge_conflicts = copy(mapf.edge_conflicts)
+    augmented_vertex_conflicts = Dict(
+        v => collect(mapf.vertex_conflicts[v]) for v in vertices(mapf.g)
+    )
+    augmented_edge_conflicts = Dict(
+        (src(ed), dst(ed)) => collect(mapf.edge_conflicts[(src(ed), dst(ed))]) for
+        ed in edges(mapf.g)
+    )
 
     new_departures = (V + 1):(V + A)
     append!(augmented_sources, new_departures, new_departures)
