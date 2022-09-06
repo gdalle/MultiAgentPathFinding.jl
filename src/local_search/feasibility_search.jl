@@ -57,7 +57,7 @@ function feasibility_search(
     window=10,
     neighborhood_size=10,
     conflict_price=1e-1,
-    conflict_price_increase=1e-2,
+    conflict_price_increase=1e-1,
     show_progress=false,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)

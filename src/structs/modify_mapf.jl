@@ -3,19 +3,18 @@ function select_agents(mapf::MAPF, agents)
     return MAPF(
         # Graph-related
         mapf.g,
+        # Agents-related
+        view(mapf.departures, agents),
+        view(mapf.arrivals, agents),
+        view(mapf.departure_times, agents),
+        # Constraints-related
+        mapf.vertex_conflicts,
+        mapf.edge_conflicts,
         # Edges-related
         mapf.edge_indices,
         mapf.edge_colptr,
         mapf.edge_rowval,
         mapf.edge_weights_vec,
-        # Constraints-related
-        mapf.vertex_conflicts,
-        mapf.edge_conflicts,
-        # Agents-related
-        view(mapf.departures, agents),
-        view(mapf.arrivals, agents),
-        view(mapf.departure_times, agents),
-        mapf.stay_at_arrival;
     )
 end
 
@@ -25,19 +24,18 @@ function replace_agents(mapf::MAPF, new_departures, new_arrivals, new_departure_
     return MAPF(
         # Graph-related
         mapf.g,
+        # Agents-related
+        new_departures,
+        new_arrivals,
+        new_departure_times,
+        # Constraints-related
+        mapf.vertex_conflicts,
+        mapf.edge_conflicts,
         # Edges-related
         mapf.edge_indices,
         mapf.edge_colptr,
         mapf.edge_rowval,
         mapf.edge_weights_vec,
-        # Constraints-related
-        mapf.vertex_conflicts,
-        mapf.edge_conflicts,
-        # Agents-related
-        new_departures,
-        new_arrivals,
-        new_departure_times,
-        mapf.stay_at_arrival;
     )
 end
 
@@ -80,6 +78,5 @@ function add_departure_waiting_vertices(mapf::MAPF{W}; waiting_cost=one(W)) wher
         departure_times=mapf.departure_times,
         vertex_conflicts=augmented_vertex_conflicts,
         edge_conflicts=augmented_edge_conflicts,
-        stay_at_arrival=mapf.stay_at_arrival,
     )
 end

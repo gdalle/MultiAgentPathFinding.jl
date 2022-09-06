@@ -20,7 +20,7 @@ function optimality_search!(
             solution, mapf, neighborhood_agents, edge_weights_vec, spt_by_arr; window=window
         )
         new_cost = flowtime(solution, mapf)
-        if is_feasible(solution, mapf) && new_cost < cost
+        if is_individually_feasible(solution, mapf) && new_cost < cost
             cost = new_cost
         else
             for a in neighborhood_agents

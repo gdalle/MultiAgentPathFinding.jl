@@ -16,28 +16,31 @@ function cooperative_astar_from_trees!(
         spt = spt_by_arr[arr]
         tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)
         heuristic(v) = spt.dists[v]
-        timed_path = TimedPath(tdep)
-        nb_windows = 1 + (tmax - tdep) ÷ window
-        for _ in 1:nb_windows
-            emp = isempty(timed_path)
-            if !emp && arrival_vertex(timed_path) == arr
-                break
-            end
-            local_dep = emp ? dep : arrival_vertex(timed_path)
-            local_tdep = emp ? tdep : arrival_time(timed_path)
-            local_tmax = emp ? tdep + window : arrival_time(timed_path) + window
-            continuation_timed_path = temporal_astar(
-                mapf.g,
-                w;
-                dep=local_dep,
-                arr=arr,
-                tdep=local_tdep,
-                tmax=local_tmax,
-                res=res,
-                heuristic=heuristic,
-            )
-            timed_path = concat_paths(timed_path, continuation_timed_path)
-        end
+        # timed_path = TimedPath(tdep)
+        # nb_windows = 1 + (tmax - tdep) ÷ window
+        # for _ in 1:nb_windows
+        #     emp = isempty(timed_path)
+        #     if !emp && arrival_vertex(timed_path) == arr
+        #         break
+        #     end
+        #     local_dep = emp ? dep : arrival_vertex(timed_path)
+        #     local_tdep = emp ? tdep : arrival_time(timed_path)
+        #     local_tmax = emp ? tdep + window : arrival_time(timed_path) + window
+        #     continuation_timed_path = temporal_astar(
+        #         mapf.g,
+        #         w;
+        #         dep=local_dep,
+        #         arr=arr,
+        #         tdep=local_tdep,
+        #         tmax=local_tmax,
+        #         res=res,
+        #         heuristic=heuristic,
+        #     )
+        #     timed_path = concat_paths(timed_path, continuation_timed_path)
+        # end
+        timed_path = temporal_astar(
+            mapf.g, w; dep=dep, arr=arr, tdep=tdep, tmax=tmax, res=res, heuristic=heuristic
+        )
         solution[a] = timed_path
         update_reservation!(res, timed_path, mapf, a)
         next!(prog)
@@ -64,29 +67,40 @@ function cooperative_astar_soft_from_trees!(
         spt = spt_by_arr[arr]
         tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)
         heuristic(v) = spt.dists[v]
-        timed_path = TimedPath(tdep)
-        nb_windows = 1 + (tmax - tdep) ÷ window
-        for _ in 1:nb_windows
-            emp = isempty(timed_path)
-            if !emp && arrival_vertex(timed_path) == arr
-                break
-            end
-            local_dep = emp ? dep : arrival_vertex(timed_path)
-            local_tdep = emp ? tdep : arrival_time(timed_path)
-            local_tmax = emp ? tdep + window : arrival_time(timed_path) + window
-            continuation_timed_path = temporal_astar_soft(
-                mapf.g,
-                w;
-                dep=local_dep,
-                arr=arr,
-                tdep=local_tdep,
-                tmax=local_tmax,
-                res=res,
-                heuristic=heuristic,
-                conflict_price=conflict_price,
-            )
-            timed_path = concat_paths(timed_path, continuation_timed_path)
-        end
+        # timed_path = TimedPath(tdep)
+        # nb_windows = 1 + (tmax - tdep) ÷ window
+        # for _ in 1:nb_windows
+        #     emp = isempty(timed_path)
+        #     if !emp && arrival_vertex(timed_path) == arr
+        #         break
+        #     end
+        #     local_dep = emp ? dep : arrival_vertex(timed_path)
+        #     local_tdep = emp ? tdep : arrival_time(timed_path)
+        #     local_tmax = emp ? tdep + window : arrival_time(timed_path) + window
+        #     continuation_timed_path = temporal_astar_soft(
+        #         mapf.g,
+        #         w;
+        #         dep=local_dep,
+        #         arr=arr,
+        #         tdep=local_tdep,
+        #         tmax=local_tmax,
+        #         res=res,
+        #         heuristic=heuristic,
+        #         conflict_price=conflict_price,
+        #     )
+        #     timed_path = concat_paths(timed_path, continuation_timed_path)
+        # end
+        timed_path = temporal_astar_soft(
+            mapf.g,
+            w;
+            dep=dep,
+            arr=arr,
+            tdep=tdep,
+            tmax=tmax,
+            res=res,
+            heuristic=heuristic,
+            conflict_price=conflict_price,
+        )
         solution[a] = timed_path
         update_reservation!(res, timed_path, mapf, a)
         next!(prog)

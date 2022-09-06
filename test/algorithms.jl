@@ -6,17 +6,16 @@ using Test
 
 Random.seed!(63)
 
-L = 20
+L = 30
 g = SimpleDiGraph(Graphs.grid([L, L]))
 
-A = 100
-departures = rand(1:nv(g), A);
-arrivals = rand(1:nv(g), A);
+A = 200
+departures = sample(1:(nv(g) ÷ 2), A; replace=false);
+arrivals = sample((nv(g) ÷ 2 + 1):nv(g), A; replace=false);
 
-mapf = @inferred MAPF(g; departures=departures, arrivals=arrivals, stay_at_arrival=false);
-mapf = MultiAgentPathFinding.add_departure_waiting_vertices(mapf);
+mapf = @inferred MAPF(g; departures=departures, arrivals=arrivals);
 
-show_progress = false
+show_progress = true
 
 sol_indep = independent_dijkstra(mapf; show_progress=show_progress);
 sol_coop = repeated_cooperative_astar(mapf; show_progress=show_progress);
@@ -32,10 +31,9 @@ sol_ds = double_search(mapf; show_progress=show_progress);
 
 f_indep = flowtime(sol_indep, mapf)
 f_coop = flowtime(sol_coop, mapf)
-f_os = flowtime(sol_os, mapf)
 f_fs = flowtime(sol_fs, mapf)
+f_os = flowtime(sol_os, mapf)
 f_ds = flowtime(sol_ds, mapf)
 
 @test f_indep <= f_os <= f_coop
-@test f_indep <= f_fs
-@test f_indep <= f_ds
+@test f_indep <= f_ds <= f_fs
