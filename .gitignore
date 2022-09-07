@@ -4,6 +4,7 @@
 /Manifest.toml
 /docs/build/
 .CondaPkg
+/src/_experimental
 
 *.zip
 *.scen

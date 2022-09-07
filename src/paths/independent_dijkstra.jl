@@ -1,53 +1,51 @@
-function dijkstra_to_destinations(
-    mapf::MAPF, edge_weights_vec::AbstractVector=mapf.edge_weights_vec
-)
-    @assert all(>=(0), edge_weights_vec)
-    (; g, destinations) = mapf
+"""
+    dijkstra_by_arrival(mapf, edge_weights_vec)
+
+Run [`backward_dijkstra`](@ref) from each arrival vertex of a `MAPF` and return a dictionary of [`ShortestPathTree`](@ref)s.
+"""
+function dijkstra_by_arrival(
+    mapf::MAPF, edge_weights_vec::AbstractVector{W}; show_progress=false
+) where {W}
     w = build_weights_matrix(mapf, edge_weights_vec)
-    unique_destinations = unique(destinations)
-    UD = length(unique_destinations)
-    shortest_path_trees_vec = Vector{ShortestPathTree}(undef, UD)
-    @threads for k in 1:UD
-        shortest_path_trees_vec[k] = backward_dijkstra(g, unique_destinations[k], w)
+    unique_arrivals = unique(mapf.arrivals)
+    K = length(unique_arrivals)
+    spt_by_arr_vec = Vector{ShortestPathTree{Int,Union{Nothing,W}}}(undef, K)
+    prog = Progress(K; desc="Dijkstra by destination: ", enabled=show_progress)
+    for k in 1:K
+        next!(prog)
+        spt_by_arr_vec[k] = backward_dijkstra(mapf.g, unique_arrivals[k], w)
     end
-    shortest_path_trees = Dict{Int,ShortestPathTree}(
-        unique_destinations[k] => shortest_path_trees_vec[k] for k in 1:UD
+    spt_by_arr = Dict{Int,ShortestPathTree{Int,Union{Nothing,W}}}(
+        unique_arrivals[k] => spt_by_arr_vec[k] for k in 1:K
     )
-    return shortest_path_trees
+    return spt_by_arr
 end
 
-function independent_dijkstra(
-    mapf::MAPF,
-    edge_weights_vec::AbstractVector=mapf.edge_weights_vec,
-    shortest_path_trees::Dict=dijkstra_to_destinations(mapf, edge_weights_vec),
-)
-    (; sources, destinations, starting_times) = mapf
+"""
+    independent_dijkstra_from_trees(mapf, spt_by_arr)
+
+Compute independent shortest paths for each agent based on the output of [`dijkstra_by_arrival`](@ref) (i.e. a dictionary of [`ShortestPathTree`](@ref)s)
+"""
+function independent_dijkstra_from_trees(mapf::MAPF, spt_by_arr)
     A = nb_agents(mapf)
     solution = Vector{TimedPath}(undef, A)
     for a in 1:A
-        s, d, t0 = sources[a], destinations[a], starting_times[a]
-        solution[a] = build_dijkstra_path(shortest_path_trees[d], t0, s, d)
+        dep, arr = mapf.departures[a], mapf.arrivals[a]
+        tdep = mapf.departure_times[a]
+        timed_path = build_path_tree(spt_by_arr[arr], dep, arr, tdep)
+        solution[a] = timed_path
     end
     return solution
 end
 
-function agent_dijkstra(
-    a::Integer, mapf::MAPF, edge_weights_vec::AbstractVector=mapf.edge_weights_vec
+"""
+    independent_dijkstra(mapf[, edge_weight_vec])
+
+Compute independent shortest paths for each agent.
+"""
+function independent_dijkstra(
+    mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec; show_progress=false
 )
-    @assert all(>=(0), edge_weights_vec)
-    (; g, sources, destinations, starting_times) = mapf
-    w = build_weights_matrix(mapf, edge_weights_vec)
-    s, d, t0 = sources[a], destinations[a], starting_times[a]
-    shortest_path_tree = forward_dijkstra(g, s, w)
-    timed_path = build_dijkstra_path(shortest_path_tree, t0, s, d)
-    return timed_path
-end
-
-function independent_dijkstra(mapf::MAPF, edge_weights_mat::AbstractMatrix)
-    A = nb_agents(mapf)
-    solution = Vector{TimedPath}(undef, A)
-    @threads for a in 1:A
-        solution[a] = agent_dijkstra(a, mapf, edge_weights_mat[:, a])
-    end
-    return solution
+    spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
+    return independent_dijkstra_from_trees(mapf, spt_by_arr)
 end

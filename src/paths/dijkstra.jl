@@ -1,112 +1,65 @@
 """
-    ShortestPathTree{T,W}
+    forward_dijkstra(g, dep, w)
 
-Storage for the result of Dijkstra's algorithm.
-
-# Fields
-- `forward::Bool`
-- `parents::Vector{T}`
-- `dists::Vector{W}`
+Run Dijkstra's algorithm forward from a departure vertex, with specified edge weights.
+Return a `ShortestPathTree`.
 """
-struct ShortestPathTree{T<:Integer,W<:Real}
-    forward::Bool
-    parents::Vector{T}
-    dists::Vector{W}
-end
-
-"""
-    forward_dijkstra(g, s, w)
-"""
-function forward_dijkstra(
-    g::AbstractGraph{T},
-    s::Integer,
-    w::AbstractMatrix{W},
-) where {T<:Integer,W<:AbstractFloat}
+function forward_dijkstra(g::AbstractGraph{T}, dep, w::AbstractMatrix{W}) where {T,W}
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
-    dists = fill(typemax(W), nv(g))
     parents = zeros(T, nv(g))
+    dists = Vector{Union{Nothing,W}}(undef, nv(g))
     # Add source
-    dists[s] = zero(W)
-    push!(heap, s => zero(W))
+    dists[dep] = zero(W)
+    push!(heap, dep => zero(W))
     # Main loop
     while !isempty(heap)
-        u, dist_u = pop!(heap)
-        if dist_u <= dists[u]
-            dists[u] = dist_u
+        u, Δ_u = pop!(heap)
+        if Δ_u <= dists[u]
+            dists[u] = Δ_u
             for v in outneighbors(g, u)
-                dist_v = dist_u + w[u, v]
-                if dist_v < dists[v]
+                Δ_v = dists[v]
+                Δ_v_through_u = Δ_u + w[u, v]
+                if isnothing(Δ_v) || (Δ_v_through_u < Δ_v)
                     parents[v] = u
-                    dists[v] = dist_v
-                    push!(heap, v => dist_v)
+                    dists[v] = Δ_v_through_u
+                    push!(heap, v => Δ_v_through_u)
                 end
             end
         end
     end
-    return ShortestPathTree{T,W}(true, parents, dists)
+    return ShortestPathTree{T,Union{Nothing,W}}(true, parents, dists)
 end
 
 """
-    backward_dijkstra(g, d, w)
+    backward_dijkstra(g, arr, w)
+
+Run Dijkstra's algorithm backward from an arrival vertex, with specified edge weights.
+Return a `ShortestPathTree`.
 """
-function backward_dijkstra(
-    g::AbstractGraph{T},
-    d::Integer,
-    w::AbstractMatrix{W},
-) where {T<:Integer,W<:AbstractFloat}
+function backward_dijkstra(g::AbstractGraph{T}, arr, w::AbstractMatrix{W}) where {T,W}
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
-    dists = fill(typemax(W), nv(g))
     parents = zeros(T, nv(g))
+    dists = Vector{Union{Nothing,W}}(undef, nv(g))
     # Add source
-    dists[d] = zero(W)
-    push!(heap, d => zero(W))
+    dists[arr] = zero(W)
+    push!(heap, arr => zero(W))
     # Main loop
     while !isempty(heap)
-        v, dist_v = pop!(heap)
-        if dist_v <= dists[v]
-            dists[v] = dist_v
+        v, Δ_v = pop!(heap)
+        if Δ_v <= dists[v]
+            dists[v] = Δ_v
             for u in inneighbors(g, v)
-                dist_u = w[u, v] + dist_v
-                if dist_u < dists[u]
+                Δ_u = dists[u]
+                Δ_u_through_v = w[u, v] + Δ_v
+                if isnothing(Δ_u) || (Δ_u_through_v < Δ_u)
                     parents[u] = v
-                    dists[u] = dist_u
-                    push!(heap, u => dist_u)
+                    dists[u] = Δ_u_through_v
+                    push!(heap, u => Δ_u_through_v)
                 end
             end
         end
     end
-    return ShortestPathTree{T,W}(false, parents, dists)
-end
-
-"""
-    build_dijkstra_path(shortest_path_tree, t0, s, d)
-"""
-function build_dijkstra_path(spt::ShortestPathTree, t0::Integer, s::Integer, d::Integer)
-    parents = spt.parents
-    if spt.forward
-        v = d
-        path = [v]
-        while v != s
-            v = parents[v]
-            if v == zero(v)
-                return typeof(v)[]
-            else
-                pushfirst!(path, v)
-            end
-        end
-    else
-        v = s
-        path = [v]
-        while v != d
-            v = parents[v]
-            if v == zero(v)
-                return typeof(v)[]
-            else
-                push!(path, v)
-            end
-        end
-    end
-    return TimedPath(t0, path)
+    return ShortestPathTree{T,Union{Nothing,W}}(false, parents, dists)
 end

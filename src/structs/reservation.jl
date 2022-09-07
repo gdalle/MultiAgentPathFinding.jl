@@ -1,45 +1,67 @@
 """
     Reservation
 
-Storage for vertices and edges that are already occupied.
+Storage for vertices and edges that are known to be occupied.
 
 # Fields
-- `forbidden_vertices::Set{Tuple{Int,Int}}`: set of tuples `(t,v)`
-- `forbidden_edges::Set{Tuple{Int,Int}}`: set of tuples `(t,e)`
+
+- `forbidden_vertices::Set{Tuple{Int,Int}}`: set of tuples `(t, v)`
+- `forbidden_edges::Set{Tuple{Int,Int,Int}}`: set of tuples `(t, u, v)`
+- `max_time::Int`: maximum time of all forbidden vertices (mutable)
 """
-struct Reservation
-    forbidden_vertices::Set{Tuple{Int,Int}}
-    forbidden_edges::Set{Tuple{Int,Int}}
+mutable struct Reservation
+    const forbidden_vertices::Set{Tuple{Int,Int}}
+    const forbidden_edges::Set{Tuple{Int,Int,Int}}
+    max_time::Int
 end
 
-Reservation() = Reservation(Set{Tuple{Int,Int}}(), Set{Tuple{Int,Int}}())
+"""
+    Reservation()
+
+Create an empty `Reservation`.
+"""
+function Reservation()
+    empty_forbidden_vertices = Set{Tuple{Int,Int}}()
+    empty_forbidden_edges = Set{Tuple{Int,Int,Int}}()
+    max_time = 0
+    return Reservation(empty_forbidden_vertices, empty_forbidden_edges, max_time)
+end
+
+"""
+    max_time(reservation)
+
+Return the maximum time of all forbidden vertices in a `Reservation`.
+"""
+max_time(reservation::Reservation) = reservation.max_time
 
 """
     is_forbidden_vertex(reservation, t, v)
 
-Check whether vertex `v` is occupied at time `t`.
+Check whether vertex `v` is occupied at time `t` in a `Reservation`.
 """
-function is_forbidden_vertex(res::Reservation, t::Integer, v::Integer)
-    return (t, v) in res.forbidden_vertices
+function is_forbidden_vertex(reservation::Reservation, t, v)
+    return (t, v) in reservation.forbidden_vertices
 end
 
 """
-    is_forbidden_edge(reservation, t, e)
+    is_forbidden_edge(reservation, t, u, v)
 
-Check whether edge `e` is occupied at time `t`.
+Check whether edge `(u, v)` is occupied at time `t` in a `Reservation`.
 """
-is_forbidden_edge(res::Reservation, t::Integer, e::Integer) = (t, e) in res.forbidden_edges
+function is_forbidden_edge(reservation::Reservation, t, u, v)
+    return (t, u, v) in reservation.forbidden_edges
+end
 
 """
-    compute_reservation(solution, mapf; [agents])
+    compute_reservation(solution, mapf[; agents])
 
-Compute a [`Reservation`](@ref) based on the vertices and edges occupied by `solution` (or a subset of its `agents`).
+Compute a `Reservation` based on the vertices and edges occupied by `solution` (or a subset of its `agents`).
 """
-function compute_reservation(solution::Solution, mapf::MAPF; agents=1:nb_agents(mapf))
+function compute_reservation(solution::Solution, mapf::MAPF, agents=1:nb_agents(mapf))
     reservation = Reservation()
     for a in agents
         timed_path = solution[a]
-        update_reservation!(reservation, timed_path, mapf::MAPF)
+        update_reservation!(reservation, timed_path, mapf, a)
     end
     return reservation
 end
@@ -47,14 +69,24 @@ end
 """
     update_reservation!(reservation, timed_path, mapf)
 
-Add the vertices and edges occupied by `timed_path` to `reservation`.
+Add the vertices and edges occupied by a path to a `Reservation`.
 """
-function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF)
-    (; t0, path) = timed_path
-    for (k, u) in enumerate(path)
-        for v in mapf.vertex_conflicts[u]
-            push!(reservation.forbidden_vertices, (t0 + k - 1, v))
+function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF, a)
+    length(timed_path) > 0 || return nothing
+    for t in departure_time(timed_path):arrival_time(timed_path)
+        v = vertex_at_time(timed_path, t)
+        for vv in mapf.vertex_conflicts[v]
+            push!(reservation.forbidden_vertices, (t, vv))
         end
+    end
+    for t in departure_time(timed_path):(arrival_time(timed_path) - 1)
+        u, v = edge_at_time(timed_path, t)
+        for (uu, vv) in mapf.edge_conflicts[(u, v)]
+            push!(reservation.forbidden_edges, (t, uu, vv))
+        end
+    end
+    if arrival_time(timed_path) > reservation.max_time
+        reservation.max_time = arrival_time(timed_path)
     end
     return nothing
 end

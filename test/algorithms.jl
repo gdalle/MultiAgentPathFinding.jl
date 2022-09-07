@@ -1,42 +1,39 @@
 using Graphs
 using MultiAgentPathFinding
+using Random
+using StatsBase
 using Test
 
-# Grid graph where the first and last vertex are departure zones
-g = SimpleDiGraph(Graphs.grid([30, 30]))
-add_edge!(g, 1, 1)
-add_edge!(g, nv(g), nv(g))
-Graphs.weights(g)
+Random.seed!(63)
 
-A = 50
-sources = rand((1, nv(g)), A);
-destinations = rand(2:(nv(g) - 1), A);
-starting_times = rand(1:10, A);
-vertex_conflicts = vcat([Int[]], [[v] for v in 2:(nv(g) - 1)], [Int[]]);
+L = 20
+g = SimpleDiGraph(Graphs.grid([L, L]))
 
-mapf = MAPF(
-    g,
-    sources,
-    destinations;
-    starting_times=starting_times,
-    vertex_conflicts=vertex_conflicts,
-);
+A = 100
+departures = sample(1:(nv(g) ÷ 2), A; replace=false);
+arrivals = sample((nv(g) ÷ 2 + 1):nv(g), A; replace=false);
 
-solution_indep = independent_dijkstra(mapf);
-solution_coop = cooperative_astar(mapf, 1:nb_agents(mapf));
-solution_lns = large_neighborhood_search(mapf);
-solution_feasibility_search, steps = feasibility_search(mapf; show_progress=false);
+mapf = @inferred MAPF(g; departures=departures, arrivals=arrivals);
 
-@test !is_feasible(solution_indep, mapf)
-@test is_feasible(solution_coop, mapf)
-@test is_feasible(solution_lns, mapf)
-@test is_feasible(solution_feasibility_search, mapf)
+show_progress = true
 
-@test flowtime(solution_indep, mapf) <=
-    flowtime(solution_lns, mapf) <=
-    flowtime(solution_coop, mapf)
-@test flowtime(solution_indep, mapf) <= flowtime(solution_feasibility_search, mapf)
+sol_indep = independent_dijkstra(mapf; show_progress=show_progress);
+sol_coop = repeated_cooperative_astar(mapf; show_progress=show_progress);
+sol_os = optimality_search(mapf; show_progress=show_progress);
+sol_fs = feasibility_search(mapf; show_progress=show_progress);
+sol_ds = double_search(mapf; show_progress=show_progress);
 
-x = mapf_embedding(solution_indep, mapf);
-@test size(x, 2) == ne(g)
-@test size(x, 3) == nb_agents(mapf)
+@test !is_feasible(sol_indep, mapf; verbose=false)
+@test is_feasible(sol_coop, mapf, verbose=true)
+@test is_feasible(sol_os, mapf, verbose=true)
+@test is_feasible(sol_fs, mapf, verbose=true)
+@test is_feasible(sol_ds, mapf, verbose=true)
+
+f_indep = flowtime(sol_indep, mapf)
+f_coop = flowtime(sol_coop, mapf)
+f_fs = flowtime(sol_fs, mapf)
+f_os = flowtime(sol_os, mapf)
+f_ds = flowtime(sol_ds, mapf)
+
+@test f_indep <= f_os <= f_coop
+@test f_indep <= f_ds <= f_fs
