@@ -1,3 +1,8 @@
+"""
+    dijkstra_by_arrival(mapf, edge_weights_vec)
+
+Run [`backward_dijkstra`](@ref) from each arrival vertex of a `MAPF` and return a dictionary of [`ShortestPathTree`](@ref)s.
+"""
 function dijkstra_by_arrival(
     mapf::MAPF, edge_weights_vec::AbstractVector{W}; show_progress=false
 ) where {W}
@@ -16,6 +21,11 @@ function dijkstra_by_arrival(
     return spt_by_arr
 end
 
+"""
+    independent_dijkstra_from_trees(mapf, spt_by_arr)
+
+Compute independent shortest paths for each agent based on the output of [`dijkstra_by_arrival`](@ref) (i.e. a dictionary of [`ShortestPathTree`](@ref)s)
+"""
 function independent_dijkstra_from_trees(mapf::MAPF, spt_by_arr)
     A = nb_agents(mapf)
     solution = Vector{TimedPath}(undef, A)
@@ -28,6 +38,11 @@ function independent_dijkstra_from_trees(mapf::MAPF, spt_by_arr)
     return solution
 end
 
+"""
+    independent_dijkstra(mapf[, edge_weight_vec])
+
+Compute independent shortest paths for each agent.
+"""
 function independent_dijkstra(
     mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec; show_progress=false
 )

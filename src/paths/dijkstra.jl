@@ -1,5 +1,8 @@
 """
     forward_dijkstra(g, dep, w)
+
+Run Dijkstra's algorithm forward from a departure vertex, with specified edge weights.
+Return a `ShortestPathTree`.
 """
 function forward_dijkstra(g::AbstractGraph{T}, dep, w::AbstractMatrix{W}) where {T,W}
     # Init storage
@@ -30,6 +33,9 @@ end
 
 """
     backward_dijkstra(g, arr, w)
+
+Run Dijkstra's algorithm backward from an arrival vertex, with specified edge weights.
+Return a `ShortestPathTree`.
 """
 function backward_dijkstra(g::AbstractGraph{T}, arr, w::AbstractMatrix{W}) where {T,W}
     # Init storage

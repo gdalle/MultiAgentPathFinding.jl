@@ -1,14 +1,24 @@
 """
     Solution = Vector{TimedPath}
 
-Vector of [`TimedPath`](@ref)s, one for each agent of a [`MAPF`](@ref).
+Vector of `TimedPath`s, one for each agent of a `MAPF`.
 """
 const Solution = Vector{TimedPath}
 
+"""
+    empty_solution(mapf)
+
+Return a vector of empty `TimedPath`s.
+"""
 function empty_solution(mapf::MAPF)
     return [TimedPath(mapf.departure_times[a], Int[]) for a in 1:nb_agents(mapf)]
 end
 
+"""
+    all_non_empty(solution)
+
+Check that all paths in a `Solution` are non empty.
+"""
 function all_non_empty(solution::Solution)
     return all(length(timed_path) > 0 for timed_path in solution)
 end
@@ -16,7 +26,7 @@ end
 """
     remove_agents!(solution, agents, mapf)
 
-Remove a set of `agents` from a `solution` and return a back up of their paths.
+Remove a set of agents from a `Solution` and return a back up of their paths.
 """
 function remove_agents!(solution::Solution, agents, mapf::MAPF)
     backup = Dict(a => solution[a] for a in agents)
@@ -30,16 +40,25 @@ end
 
 """
     flowtime(solution, mapf[, edge_weights_vec])
+
+Sum the flowtime of all the `TimedPath`s in a `Solution`.
 """
 function flowtime(solution::Solution, mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec)
     return sum(flowtime(timed_path, mapf, edge_weights_vec) for timed_path in solution)
 end
 
-flowtime(::Nothing, ::MAPF{W}; kwargs...) where {W} = typemax(W)
+"""
+    makespan(solution)
 
+Compute the maximum arrival time of all the `TimedPath`s in a `Solution`.
+"""
 makespan(solution::Solution) = maximum(arrival_time(timed_path) for timed_path in solution)
-makespan(::Nothing) = Inf
 
+"""
+    is_individually_feasible(solution, mapf[; verbose])
+
+Check whether a `Solution` is feasible when agents are considered separately.
+"""
 function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
     for a in 1:nb_agents(mapf)
         timed_path = solution[a]
@@ -63,6 +82,11 @@ function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
     return true
 end
 
+"""
+    is_collectively_feasible(solution, mapf[; verbose])
+
+Check whether a `Solution` contains any conflicts between agents.
+"""
 function is_collectively_feasible(solution::Solution, mapf::MAPF; verbose=false)
     conflict = find_conflict(solution, mapf)
     if conflict !== nothing
@@ -73,6 +97,11 @@ function is_collectively_feasible(solution::Solution, mapf::MAPF; verbose=false)
     end
 end
 
+"""
+    is_feasible(solution, mapf[; verbose])
+
+Check whether a `Solution` is both individually and collectively feasible.
+"""
 function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
     return is_individually_feasible(solution, mapf; verbose=verbose) &&
            is_collectively_feasible(solution, mapf; verbose=verbose)

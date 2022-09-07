@@ -21,11 +21,16 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
+[[deps.CPUTime]]
+git-tree-sha1 = "2dcc50ea6a0a1ef6440d6eecd0fe3813e5671f45"
+uuid = "a9c8d775-2e2e-55fc-8582-045d282d599e"
+version = "1.0.0"
+
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "80ca332f6dcb2508adba68f22f551adb2d00a624"
+git-tree-sha1 = "8a494fe0c4ae21047f28eb48ac968f0b8a6fcaa7"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.3"
+version = "1.15.4"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -153,7 +158,7 @@ version = "1.0.2"
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MultiAgentPathFinding]]
-deps = ["DataStructures", "Graphs", "LinearAlgebra", "ProgressMeter", "Random", "SimpleWeightedGraphs", "SparseArrays", "Statistics", "StatsBase"]
+deps = ["CPUTime", "DataStructures", "Graphs", "LinearAlgebra", "ProgressMeter", "Random", "SimpleWeightedGraphs", "SparseArrays", "Statistics", "StatsBase"]
 path = ".."
 uuid = "1f5aa91a-953b-4f4c-bed6-d21f3af349fa"
 version = "0.2.0"

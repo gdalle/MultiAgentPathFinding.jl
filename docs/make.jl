@@ -14,7 +14,6 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://gdalle.github.io/MultiAgentPathFinding.jl",
         assets=String[],
-        edit_branch="main",
     ),
     pages=["Home" => "index.md", "API reference" => "api.md"],
 )

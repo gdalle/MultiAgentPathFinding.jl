@@ -1,3 +1,8 @@
+"""
+    build_path_astar(parents, arr, tarr)
+
+Build a `TimedPath` from a dictionary of temporal parents, going backward from `arr` which was reached at `tarr`.
+"""
 function build_path_astar(parents::Dict, arr, tarr;)
     path = Int[]
     (t, v) = (tarr, arr)
@@ -9,6 +14,21 @@ function build_path_astar(parents::Dict, arr, tarr;)
     return TimedPath(t, path)
 end
 
+"""
+    temporal_astar(g, w; dep, arr, tdep, tmax, res, heuristic)
+
+Apply temporal A* to a graph with specified edge weights.
+Subroutine of [`cooperative_astar_from_trees!`](@ref) and [`optimality_search!`](@ref).
+
+# Keyword arguments
+
+- `dep`: departure vertex
+- `arr`: arrival vertex
+- `tdep`: departure time
+- `tmax`: max arrival time, after which the search stops and returns a partial path
+- `res`: reservation indicating occupied vertices and edges at various times
+- `heuristic`: callable giving an underestimate of the remaining distance to `arr`
+"""
 function temporal_astar(
     g::AbstractGraph{V}, w::AbstractMatrix{W}; dep, arr, tdep, tmax, res, heuristic
 ) where {V,W}
@@ -62,6 +82,17 @@ function temporal_astar(
     return timed_path
 end
 
+"""
+    temporal_astar_soft(g, w; dep, arr, tdep, tmax, res, heuristic, conflict_price)
+
+Apply a bi-objective variant of temporal A* to a graph with specified edge weights. The objective is to minimize a combination of the number of conflicts and the path weight.
+Subroutine of [`feasibility_search!`](@ref).
+
+# Keyword arguments
+
+- `dep`, `arr`, `tdep`, `tmax`, `res`, `heuristic`: see [`temporal_astar`](@ref).
+- `conflict_price`: price given to the number of conflicts in the objective
+"""
 function temporal_astar_soft(
     g::AbstractGraph{V},
     w::AbstractMatrix{W};

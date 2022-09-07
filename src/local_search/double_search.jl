@@ -1,3 +1,12 @@
+"""
+    double_search(
+        mapf, edge_weights_vec;
+        feasibility_timeout, optimality_timeout, window,
+        neighborhood_size, conflict_price, conflict_price_increase
+    )
+
+Initialize a `Solution` with [`independent_dijkstra`](@ref), then apply [`feasibility_search!`] to make it feasible, followed by [`optimality_search!`](@ref) to reduce its flowtime.
+"""
 function double_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;

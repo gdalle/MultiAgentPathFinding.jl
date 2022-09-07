@@ -1,3 +1,8 @@
+"""
+    MultiAgentPathFinding
+
+A package for Multi-Agent Path Finding instances and algorithms.
+"""
 module MultiAgentPathFinding
 
 ## Dependencies

@@ -1,3 +1,16 @@
+"""
+    cooperative_astar_from_trees!(
+        solution, mapf, agents, edge_weights_vec, spt_by_arr; window
+    )
+
+Modify a `Solution` by applying [`temporal_astar`](@ref) to a subset of agents while avoiding conflicts thanks to a `Reservation`.
+
+# Arguments
+
+- `agents`: subset of agents taken in order
+- `spt_by_arr`: dictionary of [`ShortestPathTree`](@ref)s, one for each arrival vertex
+- `window`: size of the chunks into which the time horizon is divided (temporal A* is run once for each chunk, iteratively lengthening an agent's path)
+"""
 function cooperative_astar_from_trees!(
     solution::Solution,
     mapf::MAPF{G},
@@ -45,6 +58,18 @@ function cooperative_astar_from_trees!(
     return nothing
 end
 
+"""
+    cooperative_astar_from_trees_soft!(
+        solution, mapf, agents, edge_weights_vec, spt_by_arr; window
+    )
+
+Does the same things as [`cooperative_astar_from_trees!`](@ref) but with [`temporal_astar_soft`](@ref) as a basic subroutine.
+
+# Arguments
+
+- `agents`, `spt_by_arr`, `window`: see [`cooperative_astar_from_trees!`](@ref)
+- `conflict_price`: see [`temporal_astar_soft`](@ref)
+"""
 function cooperative_astar_soft_from_trees!(
     solution::Solution,
     mapf::MAPF,
@@ -94,6 +119,13 @@ function cooperative_astar_soft_from_trees!(
     return nothing
 end
 
+"""
+    repeated_cooperative_astar_from_trees(
+        mapf, edge_weights_vec, spt_by_arr; coop_timeout, window
+    )
+
+Apply [`cooperative_astar_from_trees!`](@ref) repeatedly until a feasible solution is found or the timeout given by `coop_timeout` is reached.
+"""
 function repeated_cooperative_astar_from_trees(
     mapf::MAPF, edge_weights_vec, spt_by_arr; coop_timeout, window, show_progress=false
 )
@@ -126,6 +158,11 @@ function repeated_cooperative_astar_from_trees(
     return empty_solution(mapf)
 end
 
+"""
+    repeated_cooperative_astar(mapf, edge_weights_vec; coop_timeout, window)
+
+Compute a dictionary of [`ShortestPathTree`](@ref)s with [`dijkstra_by_arrival`](@ref), and then apply [`repeated_cooperative_astar_from_trees`](@ref).
+"""
 function repeated_cooperative_astar(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;

@@ -1,3 +1,11 @@
+"""
+    optimality_search!(
+        solution, mapf, edge_weights_vec, spt_by_arr;
+        optimality_timeout, window, neighborhood_size
+    )
+
+Reduce the flowtime of a feasible `Solution` with the MAPF-LNS algorithm from Li et al. (2021).
+"""
 function optimality_search!(
     solution::Solution,
     mapf::MAPF,
@@ -38,6 +46,14 @@ function optimality_search!(
     return solution
 end
 
+"""
+    optimality_search(
+        mapf, edge_weights_vec, spt_by_arr;
+        optimality_timeout, window, neighborhood_size
+    )
+
+Initialize a `Solution` with [`repeated_cooperative_astar`](@ref), and then apply [`optimality_search!`](@ref) to reduce its flowtime.
+"""
 function optimality_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;

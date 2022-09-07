@@ -1,3 +1,18 @@
+"""
+    Conflict
+
+Store a conflict between two agents for debugging purposes.
+
+# Fields
+
+- `name::String`: type of conflict (`"Vertex"` or `"Edge"`)
+- `a1::Int`: first agent
+- `a2::Int`: second agent
+- `t1::Int`: time for the first agent
+- `t2::Int`: time for the second agent
+- `u1::Int`: vertex for the first agent
+- `u2::Int`: vertex for the second agent
+"""
 struct Conflict
     name::String
     a1::Int
@@ -10,6 +25,11 @@ end
 
 ## Find conflicts
 
+"""
+    find_conflict(solution, mapf[; tol=0])
+
+Find a conflict in a solution.
+"""
 function find_conflict(solution::Solution, mapf::MAPF; tol=0)
     for a1 in 1:nb_agents(mapf)
         for a2 in 1:(a1 - 1)
@@ -22,6 +42,11 @@ function find_conflict(solution::Solution, mapf::MAPF; tol=0)
     return nothing
 end
 
+"""
+    count_conflicts(solution, mapf[; tol=0])
+
+Count the number of conflicts in a solution.
+"""
 function count_conflicts(solution::Solution, mapf::MAPF; tol=0)
     c = 0
     for a1 in 1:nb_agents(mapf)
@@ -32,6 +57,11 @@ function count_conflicts(solution::Solution, mapf::MAPF; tol=0)
     return c
 end
 
+"""
+    find_conflict(a1, a2, solution, mapf[; tol=0])
+
+Find a conflict between agents `a1` and `a2` in a solution.
+"""
 function find_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     vc = find_vertex_conflict(a1, a2, solution, mapf; tol=tol)
     !isnothing(vc) && return vc
@@ -40,12 +70,24 @@ function find_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     return nothing
 end
 
+"""
+    count_conflicts(a1, a2, solution, mapf[; tol=0])
+
+Count the number of conflicts between agents `a1` and `a2` in a solution.
+"""
 function count_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     vcc = count_vertex_conflicts(a1, a2, solution, mapf; tol=tol)
     ecc = count_edge_conflicts(a1, a2, solution, mapf; tol=tol)
     return vcc + ecc
 end
 
+"""
+    find_vertex_conflict(a1, a2, solution, mapf[; tol=0])
+
+Find an occurrence where the paths of `a1` and `a2` in the solution visit incompatible vertices less than `tol` time steps apart.
+
+Return either a [`Conflict`](@ref) object or `nothing`.
+"""
 function find_vertex_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     timed_path1 = solution[a1]
     timed_path2 = solution[a2]
@@ -64,6 +106,11 @@ function find_vertex_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     return nothing
 end
 
+"""
+    count_vertex_conflicts(a1, a2, solution, mapf[; tol=0])
+
+Count the number of occurrences where the paths of `a1` and `a2` in the solution visit incompatible vertices less than `tol` time steps apart.
+"""
 function count_vertex_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     c = 0
     timed_path1 = solution[a1]
@@ -83,6 +130,13 @@ function count_vertex_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     return c
 end
 
+"""
+    find_edge_conflict(a1, a2, solution, mapf[; tol=0])
+
+Find an occurrence where the paths of `a1` and `a2` in the solution cross incompatible edges less than `tol` time steps apart.
+
+Return either a [`Conflict`](@ref) object or `nothing`.
+"""
 function find_edge_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     timed_path1 = solution[a1]
     timed_path2 = solution[a2]
@@ -101,6 +155,11 @@ function find_edge_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     return nothing
 end
 
+"""
+    count_edge_conflicts(a1, a2, solution, mapf[; tol=0])
+
+Count the number of occurrences where the paths of `a1` and `a2` in the solution cross incompatible edges less than `tol` time steps apart.
+"""
 function count_edge_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     c = 0
     timed_path1 = solution[a1]

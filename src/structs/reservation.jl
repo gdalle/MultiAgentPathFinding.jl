@@ -1,11 +1,13 @@
 """
     Reservation
 
-Storage for vertices and edges that are already occupied.
+Storage for vertices and edges that are known to be occupied.
 
 # Fields
-- `forbidden_vertices::Set{Tuple{Int,Int}}`: set of tuples `(t,v)`
-- `forbidden_edges::Set{Tuple{Int,Int}}`: set of tuples `(t,e)`
+
+- `forbidden_vertices::Set{Tuple{Int,Int}}`: set of tuples `(t, v)`
+- `forbidden_edges::Set{Tuple{Int,Int,Int}}`: set of tuples `(t, u, v)`
+- `max_time::Int`: maximum time of all forbidden vertices (mutable)
 """
 mutable struct Reservation
     const forbidden_vertices::Set{Tuple{Int,Int}}
@@ -13,6 +15,11 @@ mutable struct Reservation
     max_time::Int
 end
 
+"""
+    Reservation()
+
+Create an empty `Reservation`.
+"""
 function Reservation()
     empty_forbidden_vertices = Set{Tuple{Int,Int}}()
     empty_forbidden_edges = Set{Tuple{Int,Int,Int}}()
@@ -20,12 +27,17 @@ function Reservation()
     return Reservation(empty_forbidden_vertices, empty_forbidden_edges, max_time)
 end
 
+"""
+    max_time(reservation)
+
+Return the maximum time of all forbidden vertices in a `Reservation`.
+"""
 max_time(reservation::Reservation) = reservation.max_time
 
 """
     is_forbidden_vertex(reservation, t, v)
 
-Check whether vertex `v` is occupied at time `t`.
+Check whether vertex `v` is occupied at time `t` in a `Reservation`.
 """
 function is_forbidden_vertex(reservation::Reservation, t, v)
     return (t, v) in reservation.forbidden_vertices
@@ -34,16 +46,16 @@ end
 """
     is_forbidden_edge(reservation, t, u, v)
 
-Check whether edge `(u, v)` is occupied at time `t`.
+Check whether edge `(u, v)` is occupied at time `t` in a `Reservation`.
 """
 function is_forbidden_edge(reservation::Reservation, t, u, v)
     return (t, u, v) in reservation.forbidden_edges
 end
 
 """
-    compute_reservation(solution, mapf; [agents])
+    compute_reservation(solution, mapf[; agents])
 
-Compute a [`Reservation`](@ref) based on the vertices and edges occupied by `solution` (or a subset of its `agents`).
+Compute a `Reservation` based on the vertices and edges occupied by `solution` (or a subset of its `agents`).
 """
 function compute_reservation(solution::Solution, mapf::MAPF, agents=1:nb_agents(mapf))
     reservation = Reservation()
@@ -57,7 +69,7 @@ end
 """
     update_reservation!(reservation, timed_path, mapf)
 
-Add the vertices and edges occupied by `timed_path` to `reservation`.
+Add the vertices and edges occupied by a path to a `Reservation`.
 """
 function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF, a)
     length(timed_path) > 0 || return nothing

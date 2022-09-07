@@ -1,3 +1,8 @@
+"""
+    select_agents(mapf, agents)
+
+Select a subset of agents and return a new `MAPF`.
+"""
 function select_agents(mapf::MAPF, agents)
     @assert issubset(agents, eachindex(mapf.departures))
     return MAPF(
@@ -18,8 +23,18 @@ function select_agents(mapf::MAPF, agents)
     )
 end
 
+"""
+    select_agents(mapf, nb_agents)
+
+Select the first `nb_agents` and return a new `MAPF`.
+"""
 select_agents(mapf::MAPF, nb_agents::Integer) = select_agents(mapf, 1:nb_agents)
 
+"""
+    replace_agents(mapf, new_departures, new_arrivals, new_departure_times)
+
+Return a new `MAPF` with fresh agent data.
+"""
 function replace_agents(mapf::MAPF, new_departures, new_arrivals, new_departure_times)
     return MAPF(
         # Graph-related
@@ -39,6 +54,11 @@ function replace_agents(mapf::MAPF, new_departures, new_arrivals, new_departure_
     )
 end
 
+"""
+    add_departure_waiting_vertices(mapf[; waiting_cost=1])
+
+Add dummy vertices with self-loops before agent departure vertices, so that they may start their journey after their prescribed departure times.
+"""
 function add_departure_waiting_vertices(mapf::MAPF{W}; waiting_cost=one(W)) where {W}
     @assert waiting_cost > 0
 
