@@ -1,8 +1,7 @@
 """
     feasibility_search!(
         solution, mapf, edge_weights_vec, spt_by_arr;
-        feasibility_timeout, window,
-        neighborhood_size, conflict_price, conflict_price_increase
+        feasibility_timeout, neighborhood_size, conflict_price, conflict_price_increase
     )
 
 Reduce the number of conflicts in an infeasible `Solution` with a variant of the MAPF-LNS2 algorithm from Li et al. (2022).
@@ -13,7 +12,6 @@ function feasibility_search!(
     edge_weights_vec,
     spt_by_arr;
     feasibility_timeout,
-    window,
     neighborhood_size,
     conflict_price,
     conflict_price_increase,
@@ -33,7 +31,6 @@ function feasibility_search!(
             neighborhood_agents,
             edge_weights_vec,
             spt_by_arr;
-            window=window,
             conflict_price=conflict_price,
         )
         new_conflicts_count = count_conflicts(solution, mapf)
@@ -62,8 +59,7 @@ end
 """
     feasibility_search(
         mapf, edge_weights_vec;
-        feasibility_timeout, window,
-        neighborhood_size, conflict_price, conflict_price_increase
+        feasibility_timeout, neighborhood_size, conflict_price, conflict_price_increase
     )
 
 Initialize a `Solution` with [`independent_dijkstra`](@ref), and then apply [`feasibility_search!`](@ref) to reduce the number of conflicts.
@@ -72,9 +68,8 @@ function feasibility_search(
     mapf::MAPF,
     edge_weights_vec=mapf.edge_weights_vec;
     feasibility_timeout=2,
-    window=10,
     neighborhood_size=10,
-    conflict_price=1e-1,
+    conflict_price=1.0,
     conflict_price_increase=1e-1,
     show_progress=false,
 )
@@ -86,7 +81,6 @@ function feasibility_search(
         edge_weights_vec,
         spt_by_arr;
         feasibility_timeout=feasibility_timeout,
-        window=window,
         neighborhood_size=neighborhood_size,
         conflict_price=conflict_price,
         conflict_price_increase=conflict_price_increase,

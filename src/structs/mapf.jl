@@ -15,6 +15,7 @@ Instance of a Multi-Agent Path Finding problem with custom conflict rules.
 - `edge_colptr::Vector{Int}`: used for construction of sparse adjacency matrix
 - `edge_rowval::Vector{Int}`: used for construction of sparse adjacency matrix
 - `edge_weights_vec::Vector{W}`: edge weights flattened according to their rank in `edges(g)`
+- `flexible_departure::Bool`: whether departure can happen after the prescribed departure time
 """
 struct MAPF{W<:Real,G<:AbstractGraph{Int},VC,EC}
     # Graph-related
@@ -31,6 +32,8 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int},VC,EC}
     edge_colptr::Vector{Int}
     edge_rowval::Vector{Int}
     edge_weights_vec::Vector{W}
+    # Misc
+    flexible_departure::Bool
 
     function MAPF(
         g::G,
@@ -43,6 +46,7 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int},VC,EC}
         edge_colptr,
         edge_rowval,
         edge_weights_vec::AbstractVector{W},
+        flexible_departure,
     ) where {W,G,VC,EC}
         @assert is_directed(g)
         A = length(departures)
@@ -60,6 +64,7 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int},VC,EC}
             edge_colptr,
             edge_rowval,
             edge_weights_vec,
+            flexible_departure,
         )
     end
 end
@@ -150,6 +155,7 @@ function MAPF(
     departure_times=fill(1, length(departures)),
     vertex_conflicts=LazyVertexConflicts(),
     edge_conflicts=LazySwappingConflicts(),
+    flexible_departure=true,
 ) where {G}
     edge_indices, edge_colptr, edge_rowval, edge_weights_vec = build_edge_data(g)
     return MAPF(
@@ -163,6 +169,7 @@ function MAPF(
         edge_colptr,
         edge_rowval,
         edge_weights_vec,
+        flexible_departure,
     )
 end
 
