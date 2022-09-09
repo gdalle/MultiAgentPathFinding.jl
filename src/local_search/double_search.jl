@@ -14,8 +14,8 @@ function double_search(
     feasibility_timeout=2,
     optimality_timeout=2,
     neighborhood_size=10,
-    conflict_price=1e-1,
-    conflict_price_increase=1e-1,
+    conflict_price=1.0,
+    conflict_price_increase=0.1,
     show_progress=false,
 )
     spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
@@ -29,7 +29,7 @@ function double_search(
         show_progress=show_progress,
     )
     solution = independent_dijkstra_from_trees(mapf, spt_by_arr)
-    feasibility_search!(
+    feasibility_stats = feasibility_search!(
         solution,
         mapf,
         edge_weights_vec,
@@ -40,10 +40,11 @@ function double_search(
         conflict_price_increase=conflict_price_increase,
         show_progress=show_progress,
     )
-    if !is_feasible(solution, mapf)
+    feasibility_success = is_feasible(solution, mapf)
+    if !feasibility_success
         solution = backup_solution
     end
-    optimality_search!(
+    optimality_stats = optimality_search!(
         solution,
         mapf,
         edge_weights_vec,
@@ -52,5 +53,8 @@ function double_search(
         neighborhood_size=neighborhood_size,
         show_progress=show_progress,
     )
-    return solution
+    double_stats = merge(
+        feasibility_stats, (feasibility_success=feasibility_success,), optimality_stats
+    )
+    return solution, double_stats
 end

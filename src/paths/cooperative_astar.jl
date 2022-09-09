@@ -1,13 +1,12 @@
 """
-    cooperative_astar_from_trees!(
-        solution, mapf, agents, edge_weights_vec, spt_by_arr;
-    )
+    cooperative_astar_from_trees!(solution, mapf, agents, edge_weights_vec, spt_by_arr)
 
 Modify a `Solution` by applying [`temporal_astar`](@ref) to a subset of agents while avoiding conflicts thanks to a `Reservation`.
 
 # Arguments
 
 - `agents`: subset of agents taken in order
+- `edge_weights_vec`: edge weights stored as a vector
 - `spt_by_arr`: dictionary of [`ShortestPathTree`](@ref)s, one for each arrival vertex
 """
 function cooperative_astar_from_trees!(
@@ -47,15 +46,13 @@ function cooperative_astar_from_trees!(
 end
 
 """
-    cooperative_astar_from_trees_soft!(
-        solution, mapf, agents, edge_weights_vec, spt_by_arr; window
-    )
+    cooperative_astar_from_trees_soft!(solution, mapf, agents, edge_weights_vec, spt_by_arr)
 
 Does the same things as [`cooperative_astar_from_trees!`](@ref) but with [`temporal_astar_soft`](@ref) as a basic subroutine.
 
 # Arguments
 
-- `agents`, `spt_by_arr`: see [`cooperative_astar_from_trees!`](@ref)
+- `agents`, `edge_weights`, `spt_by_arr`: see [`cooperative_astar_from_trees!`](@ref)
 - `conflict_price`: see [`temporal_astar_soft`](@ref)
 """
 function cooperative_astar_soft_from_trees!(
@@ -96,6 +93,11 @@ function cooperative_astar_soft_from_trees!(
     return nothing
 end
 
+"""
+    cooperative_astar(solution, mapf, agents, edge_weights_vec, spt_by_arr)
+
+Create an empty `Solution`, a dictionary of [`ShortestPathTree`](@ref)s and apply [`cooperative_astar_from_trees!`](@ref).
+"""
 function cooperative_astar(
     mapf::MAPF,
     agents=1:nb_agents(mapf),

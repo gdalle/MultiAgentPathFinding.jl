@@ -61,7 +61,9 @@ function temporal_astar(
         end
     end
     # Main loop
+    nodes_explored = 0
     while !isempty(heap)
+        nodes_explored += 1
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         if u == arr
@@ -96,6 +98,7 @@ function temporal_astar(
             end
         end
     end
+    stats = (nodes_explored=nodes_explored,)
     return timed_path
 end
 
@@ -144,7 +147,9 @@ function temporal_astar_soft(
         end
     end
     # Main loop
+    nodes_explored = 0
     while !isempty(heap)
+        nodes_explored += 1
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         c_u = conflicts[t, u]
@@ -198,5 +203,6 @@ function temporal_astar_soft(
             end
         end
     end
+    stats = (nodes_explored=nodes_explored,)
     return timed_path
 end

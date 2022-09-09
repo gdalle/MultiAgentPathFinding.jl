@@ -16,10 +16,14 @@ function optimality_search!(
     show_progress,
 )
     is_feasible(solution, mapf) || return solution
-    cost = flowtime(solution, mapf)
+    initial_cost = flowtime(solution, mapf)
+    cost = initial_cost
     prog = ProgressUnknown("Optimality search steps: "; enabled=show_progress)
     total_time = 0.0
+    moves_tried = 0
+    moves_successful = 0
     while true
+        moves_tried += 1
         τ1 = CPUtime_us()
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
@@ -29,6 +33,7 @@ function optimality_search!(
         new_cost = flowtime(solution, mapf)
         if is_individually_feasible(solution, mapf) && new_cost < cost
             cost = new_cost
+            moves_successful += 1
         else
             for a in neighborhood_agents
                 solution[a] = backup[a]
@@ -42,7 +47,13 @@ function optimality_search!(
             next!(prog; showvalues=[(:cost, cost)])
         end
     end
-    return solution
+    stats = (
+        optimality_moves_tried=moves_tried,
+        optimality_moves_successful=moves_successful,
+        optimality_initial_cost=initial_cost,
+        optimality_final_cost=cost,
+    )
+    return stats
 end
 
 """
@@ -66,7 +77,7 @@ function optimality_search(
     cooperative_astar_from_trees!(
         solution, mapf, agents, edge_weights_vec, spt_by_arr; show_progress=show_progress
     )
-    optimality_search!(
+    stats = optimality_search!(
         solution,
         mapf,
         edge_weights_vec,
@@ -75,5 +86,5 @@ function optimality_search(
         neighborhood_size=neighborhood_size,
         show_progress=show_progress,
     )
-    return solution
+    return solution, stats
 end
