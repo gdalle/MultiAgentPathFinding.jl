@@ -15,43 +15,45 @@ function optimality_search!(
     neighborhood_size,
     show_progress,
 )
-    is_feasible(solution, mapf) || return solution
     initial_cost = flowtime(solution, mapf)
     cost = initial_cost
     prog = ProgressUnknown("Optimality search steps: "; enabled=show_progress)
     total_time = 0.0
     moves_tried = 0
     moves_successful = 0
-    while true
-        moves_tried += 1
-        τ1 = CPUtime_us()
-        neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
-        backup = remove_agents!(solution, neighborhood_agents, mapf)
-        cooperative_astar_from_trees!(
-            solution, mapf, neighborhood_agents, edge_weights_vec, spt_by_arr;
-        )
-        new_cost = flowtime(solution, mapf)
-        if is_individually_feasible(solution, mapf) && new_cost < cost
-            cost = new_cost
-            moves_successful += 1
-        else
-            for a in neighborhood_agents
-                solution[a] = backup[a]
+    if is_feasible(solution, mapf)
+        while true
+            moves_tried += 1
+            τ1 = CPUtime_us()
+            neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
+            backup = remove_agents!(solution, neighborhood_agents, mapf)
+            cooperative_astar_from_trees!(
+                solution, mapf, neighborhood_agents, edge_weights_vec, spt_by_arr;
+            )
+            new_cost = flowtime(solution, mapf)
+            if is_individually_feasible(solution, mapf) && new_cost < cost
+                cost = new_cost
+                moves_successful += 1
+            else
+                for a in neighborhood_agents
+                    solution[a] = backup[a]
+                end
             end
-        end
-        τ2 = CPUtime_us()
-        total_time += (τ2 - τ1) / 1e6
-        if total_time > optimality_timeout
-            break
-        else
-            next!(prog; showvalues=[(:cost, cost)])
+            τ2 = CPUtime_us()
+            total_time += (τ2 - τ1) / 1e6
+            if total_time > optimality_timeout
+                break
+            else
+                next!(prog; showvalues=[(:cost, cost)])
+            end
         end
     end
     stats = (
         optimality_moves_tried=moves_tried,
         optimality_moves_successful=moves_successful,
-        optimality_initial_cost=initial_cost,
-        optimality_final_cost=cost,
+        optimality_initial_flowtime=initial_cost,
+        optimality_feasible=is_feasible(solution, mapf),
+        optimality_flowtime=flowtime(solution, mapf),
     )
     return stats
 end

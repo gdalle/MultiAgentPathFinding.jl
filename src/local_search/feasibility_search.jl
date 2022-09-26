@@ -63,6 +63,8 @@ function feasibility_search!(
         feasibility_moves_successful=moves_successful,
         feasibility_initial_conflicts_count=initial_conflicts_count,
         feasibility_final_conflicts_count=conflicts_count,
+        feasibility_feasible=is_feasible(solution, mapf),
+        feasibility_flowtime=flowtime(solution, mapf),
     )
     return stats
 end
