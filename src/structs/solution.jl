@@ -65,7 +65,15 @@ function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
         if isempty(timed_path)
             verbose && @warn "Empty path for agent $a"
             return false  # empty path
-        elseif departure_time(timed_path) != mapf.departure_times[a]
+        elseif (
+            mapf.flexible_departure && departure_time(timed_path) < mapf.departure_times[a]
+        )
+            verbose && @warn "Early departure time for agent $a"
+            return false
+        elseif (
+            !mapf.flexible_departure &&
+            departure_time(timed_path) != mapf.departure_times[a]
+        )
             verbose && @warn "Wrong departure time for agent $a"
             return false  # wrong departure time
         elseif departure_vertex(timed_path) != mapf.departures[a]
@@ -106,5 +114,3 @@ function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
     return is_individually_feasible(solution, mapf; verbose=verbose) &&
            is_collectively_feasible(solution, mapf; verbose=verbose)
 end
-
-is_feasible(::Nothing, ::MAPF; kwargs...) = false

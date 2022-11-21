@@ -9,13 +9,12 @@ module MultiAgentPathFinding
 
 using CPUTime: CPUtime_us
 using DataStructures: BinaryHeap
-using Graphs: Graphs, AbstractGraph
+using Graphs: Graphs, AbstractGraph, Edge
 using Graphs: nv, ne, src, dst
 using Graphs: vertices, edges, inneighbors, outneighbors, has_vertex, has_edge
 using Graphs: is_directed
 using ProgressMeter: Progress, ProgressUnknown, next!
 using Random: randperm, shuffle
-using SimpleWeightedGraphs: SimpleWeightedDiGraph
 using SparseArrays: SparseMatrixCSC, sparse
 using Statistics: mean
 using StatsBase: sample
@@ -34,6 +33,7 @@ include("paths/dijkstra.jl")
 include("paths/temporal_astar.jl")
 include("paths/independent_dijkstra.jl")
 include("paths/cooperative_astar.jl")
+include("paths/repeated_cooperative_astar.jl")
 
 include("local_search/neighborhoods.jl")
 include("local_search/optimality_search.jl")
@@ -54,6 +54,7 @@ export is_feasible
 
 export independent_dijkstra
 export temporal_astar
+export cooperative_astar
 export repeated_cooperative_astar
 
 export feasibility_search

@@ -28,9 +28,18 @@ Subroutine of [`cooperative_astar_from_trees!`](@ref) and [`optimality_search!`]
 - `tmax`: max arrival time, after which the search stops and returns a partial path
 - `res`: reservation indicating occupied vertices and edges at various times
 - `heuristic`: callable giving an underestimate of the remaining distance to `arr`
+- `flexible_departure`: whether departure can occur after `tdep`
 """
 function temporal_astar(
-    g::AbstractGraph{V}, w::AbstractMatrix{W}; dep, arr, tdep, tmax, res, heuristic
+    g::AbstractGraph{V},
+    w::AbstractMatrix{W};
+    dep,
+    arr,
+    tdep,
+    tmax,
+    res,
+    heuristic,
+    flexible_departure,
 ) where {V,W}
     timed_path = TimedPath(tdep)
     # Init storage
@@ -43,8 +52,18 @@ function temporal_astar(
         dists[tdep, dep] = zero(W)
         push!(heap, (tdep, dep) => heuristic(dep))
     end
+    if flexible_departure
+        for t in (tdep + 1):tmax
+            if !is_forbidden_vertex(res, t, dep)
+                dists[t, dep] = (t - tdep) * one(W)  # TODO: parameterize
+                push!(heap, (t, dep) => heuristic(dep))
+            end
+        end
+    end
     # Main loop
+    nodes_explored = 0
     while !isempty(heap)
+        nodes_explored += 1
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         if u == arr
@@ -79,6 +98,7 @@ function temporal_astar(
             end
         end
     end
+    stats = (nodes_explored=nodes_explored,)
     return timed_path
 end
 
@@ -90,7 +110,7 @@ Subroutine of [`feasibility_search!`](@ref).
 
 # Keyword arguments
 
-- `dep`, `arr`, `tdep`, `tmax`, `res`, `heuristic`: see [`temporal_astar`](@ref).
+- `dep`, `arr`, `tdep`, `tmax`, `res`, `heuristic`, `flexible_departure`: see [`temporal_astar`](@ref).
 - `conflict_price`: price given to the number of conflicts in the objective
 """
 function temporal_astar_soft(
@@ -102,6 +122,7 @@ function temporal_astar_soft(
     tmax,
     res,
     heuristic,
+    flexible_departure,
     conflict_price,
 ) where {V,W}
     timed_path = TimedPath(tdep)
@@ -117,8 +138,18 @@ function temporal_astar_soft(
     dists[tdep, dep] = zero(W)
     conflicts[tdep, dep] = c_dep
     push!(heap, (tdep, dep) => conflict_price * c_dep + heuristic(dep))
+    if flexible_departure
+        for t in (tdep + 1):tmax
+            c_dep = is_forbidden_vertex(res, t, dep)
+            dists[t, dep] = (t - tdep) * one(W)  # TODO: parameterize
+            conflicts[t, dep] = c_dep
+            push!(heap, (t, dep) => conflict_price * c_dep + heuristic(dep))
+        end
+    end
     # Main loop
+    nodes_explored = 0
     while !isempty(heap)
+        nodes_explored += 1
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         c_u = conflicts[t, u]
@@ -172,5 +203,6 @@ function temporal_astar_soft(
             end
         end
     end
+    stats = (nodes_explored=nodes_explored,)
     return timed_path
 end
