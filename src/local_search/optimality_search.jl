@@ -70,11 +70,9 @@ function optimality_search(
     neighborhood_size=10,
     show_progress=false,
 )
-    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
+    spt_by_arr = dijkstra_by_arrival(mapf; show_progress)
     solution = empty_solution(mapf)
-    cooperative_astar_from_trees!(
-        solution, mapf, agents, spt_by_arr; show_progress=show_progress
-    )
+    cooperative_astar_from_trees!(solution, mapf, agents, spt_by_arr; show_progress)
     stats = optimality_search!(
         solution, mapf, spt_by_arr; optimality_timeout, neighborhood_size, show_progress
     )

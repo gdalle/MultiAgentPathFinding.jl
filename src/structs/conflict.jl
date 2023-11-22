@@ -34,7 +34,7 @@ Find a conflict in a solution.
 function find_conflict(solution::Solution, mapf::MAPF; tol=0)
     for a1 in 1:nb_agents(mapf)
         for a2 in 1:(a1 - 1)
-            conflict = find_conflict(a1, a2, solution, mapf; tol=tol)
+            conflict = find_conflict(a1, a2, solution, mapf; tol)
             if !isnothing(conflict)
                 return conflict
             end
@@ -52,7 +52,7 @@ function count_conflicts(solution::Solution, mapf::MAPF; tol=0)
     c = 0
     for a1 in 1:nb_agents(mapf)
         for a2 in 1:(a1 - 1)
-            c += count_conflicts(a1, a2, solution, mapf; tol=tol)
+            c += count_conflicts(a1, a2, solution, mapf; tol)
         end
     end
     return c
@@ -64,9 +64,9 @@ end
 Find a conflict between agents `a1` and `a2` in a solution.
 """
 function find_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
-    vc = find_vertex_conflict(a1, a2, solution, mapf; tol=tol)
+    vc = find_vertex_conflict(a1, a2, solution, mapf; tol)
     !isnothing(vc) && return vc
-    ec = find_edge_conflict(a1, a2, solution, mapf; tol=tol)
+    ec = find_edge_conflict(a1, a2, solution, mapf; tol)
     !isnothing(ec) && return ec
     return nothing
 end
@@ -77,8 +77,8 @@ end
 Count the number of conflicts between agents `a1` and `a2` in a solution.
 """
 function count_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
-    vcc = count_vertex_conflicts(a1, a2, solution, mapf; tol=tol)
-    ecc = count_edge_conflicts(a1, a2, solution, mapf; tol=tol)
+    vcc = count_vertex_conflicts(a1, a2, solution, mapf; tol)
+    ecc = count_edge_conflicts(a1, a2, solution, mapf; tol)
     return vcc + ecc
 end
 

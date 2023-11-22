@@ -7,7 +7,7 @@ Return a `ShortestPathTree` where distances can be `nothing`.
 function backward_dijkstra(g::AbstractGraph{T}, w::AbstractMatrix{W}; arr) where {T,W}
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
-    parents = zeros(T, nv(g))
+    children = zeros(T, nv(g))
     dists = Vector{Union{Nothing,W}}(undef, nv(g))
     # Add source
     dists[arr] = zero(W)
@@ -21,14 +21,14 @@ function backward_dijkstra(g::AbstractGraph{T}, w::AbstractMatrix{W}; arr) where
                 Δ_u = dists[u]
                 Δ_u_through_v = w[u, v] + Δ_v
                 if isnothing(Δ_u) || (Δ_u_through_v < Δ_u)
-                    parents[u] = v
+                    children[u] = v
                     dists[u] = Δ_u_through_v
                     push!(heap, u => Δ_u_through_v)
                 end
             end
         end
     end
-    return ShortestPathTree{T,Union{Nothing,W}}(false, parents, dists)
+    return ShortestPathTree{T,Union{Nothing,W}}(children, dists)
 end
 
 """
@@ -76,7 +76,7 @@ end
 Compute independent shortest paths for each agent.
 """
 function independent_dijkstra(mapf::MAPF; show_progress=false)
-    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
+    spt_by_arr = dijkstra_by_arrival(mapf; show_progress)
     solution = independent_dijkstra_from_trees(mapf, spt_by_arr)
     return solution
 end

@@ -53,52 +53,6 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int},M<:AbstractMatrix{W},VC,EC}
     end
 end
 
-"""
-    nb_agents(mapf)
-
-Count the number of agents.
-"""
-nb_agents(mapf::MAPF) = length(mapf.departures)
-
-function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
-    return print(
-        io,
-        """Multi-Agent Path Finding problem
-        Graph type: $G with $W weights
-        Graph size: $(nv(mapf.g)) vertices and $(ne(mapf.g)) edges
-        Nb of agents: $(nb_agents(mapf))""",
-    )
-end
-
-## Default conflicts
-
-"""
-    LazyVertexConflicts
-
-Lazy dict-like storage for the mapping `v -> [v]`.
-"""
-struct LazyVertexConflicts end
-
-Base.getindex(::LazyVertexConflicts, v::Integer) = (v,)
-
-"""
-    LazyEdgeConflicts
-
-Lazy dict-like storage for the mapping `(u, v) -> [(u, v)]`.
-"""
-struct LazyEdgeConflicts end
-
-Base.getindex(::LazyEdgeConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((u, v),)
-
-"""
-    LazySwappingConflicts
-
-Lazy dict-like storage for the mapping `(u, v) -> [(v, u)]`.
-"""
-struct LazySwappingConflicts end
-
-Base.getindex(::LazySwappingConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((v, u),)
-
 ## Default constructor
 
 """
@@ -130,6 +84,56 @@ function MAPF(
         edge_conflicts,
     )
 end
+
+## Display
+
+function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
+    return print(
+        io,
+        """Multi-Agent Path Finding problem
+        Graph type: $G with $W weights
+        Graph size: $(nv(mapf.g)) vertices and $(ne(mapf.g)) edges
+        Nb of agents: $(nb_agents(mapf))""",
+    )
+end
+
+## Access
+
+"""
+    nb_agents(mapf)
+
+Count the number of agents.
+"""
+nb_agents(mapf::MAPF) = length(mapf.departures)
+
+## Default conflicts
+
+"""
+    LazyVertexConflicts
+
+Lazy dict-like storage for the mapping `v -> [v]`.
+"""
+struct LazyVertexConflicts end
+
+Base.getindex(::LazyVertexConflicts, v::Integer) = (v,)
+
+"""
+    LazyEdgeConflicts
+
+Lazy dict-like storage for the mapping `(u, v) -> [(u, v)]`.
+"""
+struct LazyEdgeConflicts end
+
+Base.getindex(::LazyEdgeConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((u, v),)
+
+"""
+    LazySwappingConflicts
+
+Lazy dict-like storage for the mapping `(u, v) -> [(v, u)]`.
+"""
+struct LazySwappingConflicts end
+
+Base.getindex(::LazySwappingConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((v, u),)
 
 ## Modifiers
 

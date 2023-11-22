@@ -17,7 +17,7 @@ function cooperative_astar_from_trees!(
         dep, arr = mapf.departures[a], mapf.arrivals[a]
         tdep = mapf.departure_times[a]
         spt = spt_by_arr[arr]
-        tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)
+        tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)  # TODO: param
         heuristic = spt.dists
         timed_path = temporal_astar(
             mapf.g, mapf.edge_weights; dep, arr, tdep, tmax, res, heuristic
@@ -40,20 +40,15 @@ Does the same things as [`cooperative_astar_from_trees!`](@ref) but with [`tempo
 - `conflict_price`: see [`temporal_astar_soft`](@ref)
 """
 function cooperative_astar_soft_from_trees!(
-    solution::Solution,
-    mapf::MAPF{W},
-    agents,
-    spt_by_arr;
-    conflict_price,
-    show_progress=false,
-) where {W}
+    solution::Solution, mapf::MAPF, agents, spt_by_arr; conflict_price, show_progress=false
+)
     res = compute_reservation(solution, mapf)
     prog = Progress(length(agents); desc="Cooperative A*: ", enabled=show_progress)
     for a in agents
         dep, arr = mapf.departures[a], mapf.arrivals[a]
         tdep = mapf.departure_times[a]
         spt = spt_by_arr[arr]
-        tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)
+        tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)  # TODO: param
         heuristic = spt.dists
         timed_path = temporal_astar_soft(
             mapf.g, mapf.edge_weights; dep, arr, tdep, tmax, res, heuristic, conflict_price
@@ -71,11 +66,9 @@ end
 Create an empty `Solution`, a dictionary of [`ShortestPathTree`](@ref)s and apply [`cooperative_astar_from_trees!`](@ref).
 """
 function cooperative_astar(mapf::MAPF, agents=1:nb_agents(mapf), show_progress=false)
-    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
+    spt_by_arr = dijkstra_by_arrival(mapf; show_progress)
     solution = empty_solution(mapf)
-    cooperative_astar_from_trees!(
-        solution, mapf, agents, spt_by_arr; show_progress=show_progress
-    )
+    cooperative_astar_from_trees!(solution, mapf, agents, spt_by_arr; show_progress)
     return solution
 end
 
@@ -116,8 +109,8 @@ end
 Compute a dictionary of [`ShortestPathTree`](@ref)s with [`dijkstra_by_arrival`](@ref), and then apply [`repeated_cooperative_astar_from_trees`](@ref).
 """
 function repeated_cooperative_astar(mapf::MAPF; coop_timeout=2, show_progress=false)
-    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
+    spt_by_arr = dijkstra_by_arrival(mapf; show_progress)
     return repeated_cooperative_astar_from_trees(
-        mapf, spt_by_arr; coop_timeout=coop_timeout, show_progress=show_progress
+        mapf, spt_by_arr; coop_timeout, show_progress
     )
 end

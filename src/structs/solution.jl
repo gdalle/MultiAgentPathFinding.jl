@@ -103,6 +103,6 @@ end
 Check whether a `Solution` is both individually and collectively feasible.
 """
 function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
-    return is_individually_feasible(solution, mapf; verbose=verbose) &&
-           is_collectively_feasible(solution, mapf; verbose=verbose)
+    return is_individually_feasible(solution, mapf; verbose) &&
+           is_collectively_feasible(solution, mapf; verbose)
 end

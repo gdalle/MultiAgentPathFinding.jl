@@ -86,26 +86,6 @@ function edge_at_time(timed_path::TimedPath, t)
 end
 
 """
-    concat_path(timed_path1, timed_path2)
-
-Concatenate two compatible `TimedPath`s.
-"""
-function concat_paths(timed_path1::TimedPath, timed_path2::TimedPath)
-    if isempty(timed_path1)
-        return timed_path2
-    elseif isempty(timed_path2)
-        return timed_path1
-    else
-        @assert arrival_time(timed_path1) == departure_time(timed_path2)
-        @assert arrival_vertex(timed_path1) == departure_vertex(timed_path2)
-        tdep = departure_time(timed_path1)
-        path = vcat(timed_path1.path, timed_path2.path[2:end])
-        timed_path = TimedPath(tdep, path)
-        return timed_path
-    end
-end
-
-"""
     exists_in_graph(timed_path, g)
 
 Check that a `TimedPath` is feasible in the graph `g`, i.e. that all vertices and edges exist.
