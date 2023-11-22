@@ -1,16 +1,18 @@
 """
-    ShortestPathTree{T,W}
+$(TYPEDEF)
 
 Storage for the result of Dijkstra's algorithm.
 
 # Fields
-- `forward::Bool`: whether Dijkstra was run from the departure or the arrival
-- `parents::Vector{T}`: predecessor of each vertex in a shortest path
-- `dists::Vector{W}`: distance of each vertex to the arrival (if `forward = true`) or from the departure (if `forward = false`)
+
+$(TYPEDFIELDS)
 """
 struct ShortestPathTree{T,W}
+    "whether Dijkstra was run from the departure or the arrival"
     forward::Bool
+    "predecessor of each vertex in a shortest path"
     parents::Vector{T}
+    "distance of each vertex to the arrival (if `forward = true`) or from the departure (if `forward = false`)"
     dists::Vector{W}
 end
 

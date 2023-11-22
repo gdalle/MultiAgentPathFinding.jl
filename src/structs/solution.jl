@@ -39,12 +39,12 @@ end
 ## Cost
 
 """
-    flowtime(solution, mapf[, edge_weights_vec])
+    flowtime(solution, mapf)
 
 Sum the flowtime of all the `TimedPath`s in a `Solution`.
 """
-function flowtime(solution::Solution, mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec)
-    return sum(flowtime(timed_path, mapf, edge_weights_vec) for timed_path in solution)
+function flowtime(solution::Solution, mapf::MAPF)
+    return sum(path_weight(timed_path, mapf) for timed_path in solution)
 end
 
 """
@@ -65,15 +65,7 @@ function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
         if isempty(timed_path)
             verbose && @warn "Empty path for agent $a"
             return false  # empty path
-        elseif (
-            mapf.flexible_departure && departure_time(timed_path) < mapf.departure_times[a]
-        )
-            verbose && @warn "Early departure time for agent $a"
-            return false
-        elseif (
-            !mapf.flexible_departure &&
-            departure_time(timed_path) != mapf.departure_times[a]
-        )
+        elseif departure_time(timed_path) != mapf.departure_times[a]
             verbose && @warn "Wrong departure time for agent $a"
             return false  # wrong departure time
         elseif departure_vertex(timed_path) != mapf.departures[a]

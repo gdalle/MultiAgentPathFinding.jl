@@ -9,31 +9,39 @@ module MultiAgentPathFinding
 
 using CPUTime: CPUtime_us
 using DataStructures: BinaryHeap
-using Graphs: Graphs, AbstractGraph, Edge
-using Graphs: nv, ne, src, dst
-using Graphs: vertices, edges, inneighbors, outneighbors, has_vertex, has_edge
-using Graphs: is_directed
+using DocStringExtensions
+using Graphs:
+    Graphs,
+    AbstractGraph,
+    Edge,
+    nv,
+    ne,
+    src,
+    dst,
+    vertices,
+    edges,
+    inneighbors,
+    outneighbors,
+    has_vertex,
+    has_edge,
+    is_directed,
+    weights
 using ProgressMeter: Progress, ProgressUnknown, next!
 using Random: randperm, shuffle
-using SparseArrays: SparseMatrixCSC, sparse
-using Statistics: mean
 using StatsBase: sample
 
 ## Includes
 
 include("structs/mapf.jl")
-include("structs/modify_mapf.jl")
 include("structs/path.jl")
 include("structs/solution.jl")
 include("structs/reservation.jl")
 include("structs/conflict.jl")
 include("structs/tree.jl")
 
-include("paths/dijkstra.jl")
 include("paths/temporal_astar.jl")
 include("paths/independent_dijkstra.jl")
 include("paths/cooperative_astar.jl")
-include("paths/repeated_cooperative_astar.jl")
 
 include("local_search/neighborhoods.jl")
 include("local_search/optimality_search.jl")
@@ -42,11 +50,8 @@ include("local_search/double_search.jl")
 
 ## Exports
 
-export MAPF, nb_agents, build_weights_matrix
-export select_agents, replace_agents
+export MAPF, nb_agents, select_agents
 export TimedPath
-export Solution
-export Reservation
 
 export path_weight, flowtime, makespan
 export find_conflict

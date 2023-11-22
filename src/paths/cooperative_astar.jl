@@ -1,42 +1,26 @@
 """
-    cooperative_astar_from_trees!(solution, mapf, agents, edge_weights_vec, spt_by_arr)
+    cooperative_astar_from_trees!(solution, mapf, agents, spt_by_arr)
 
 Modify a `Solution` by applying [`temporal_astar`](@ref) to a subset of agents while avoiding conflicts thanks to a `Reservation`.
 
 # Arguments
 
 - `agents`: subset of agents taken in order
-- `edge_weights_vec`: edge weights stored as a vector
 - `spt_by_arr`: dictionary of [`ShortestPathTree`](@ref)s, one for each arrival vertex
 """
 function cooperative_astar_from_trees!(
-    solution::Solution,
-    mapf::MAPF{G},
-    agents,
-    edge_weights_vec::AbstractVector{W},
-    spt_by_arr;
-    show_progress=false,
-) where {G,W}
-    w = build_weights_matrix(mapf, edge_weights_vec)
+    solution::Solution, mapf::MAPF, agents, spt_by_arr; show_progress=false
+)
     res = compute_reservation(solution, mapf)
     prog = Progress(length(agents); desc="Cooperative A*: ", enabled=show_progress)
     for a in agents
         dep, arr = mapf.departures[a], mapf.arrivals[a]
         tdep = mapf.departure_times[a]
-        flexible_departure = mapf.flexible_departure
         spt = spt_by_arr[arr]
         tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)
-        heuristic(v) = spt.dists[v]
+        heuristic = spt.dists
         timed_path = temporal_astar(
-            mapf.g,
-            w;
-            dep=dep,
-            arr=arr,
-            tdep=tdep,
-            tmax=tmax,
-            res=res,
-            heuristic=heuristic,
-            flexible_departure=flexible_departure,
+            mapf.g, mapf.edge_weights; dep, arr, tdep, tmax, res, heuristic
         )
         solution[a] = timed_path
         update_reservation!(res, timed_path, mapf, a)
@@ -46,25 +30,23 @@ function cooperative_astar_from_trees!(
 end
 
 """
-    cooperative_astar_from_trees_soft!(solution, mapf, agents, edge_weights_vec, spt_by_arr)
+    cooperative_astar_from_trees_soft!(solution, mapf, agents, spt_by_arr)
 
 Does the same things as [`cooperative_astar_from_trees!`](@ref) but with [`temporal_astar_soft`](@ref) as a basic subroutine.
 
 # Arguments
 
-- `agents`, `edge_weights`, `spt_by_arr`: see [`cooperative_astar_from_trees!`](@ref)
+- `agents`, `spt_by_arr`: see [`cooperative_astar_from_trees!`](@ref)
 - `conflict_price`: see [`temporal_astar_soft`](@ref)
 """
 function cooperative_astar_soft_from_trees!(
     solution::Solution,
-    mapf::MAPF,
+    mapf::MAPF{W},
     agents,
-    edge_weights_vec::AbstractVector{W},
     spt_by_arr;
     conflict_price,
     show_progress=false,
 ) where {W}
-    w = build_weights_matrix(mapf, edge_weights_vec)
     res = compute_reservation(solution, mapf)
     prog = Progress(length(agents); desc="Cooperative A*: ", enabled=show_progress)
     for a in agents
@@ -72,19 +54,9 @@ function cooperative_astar_soft_from_trees!(
         tdep = mapf.departure_times[a]
         spt = spt_by_arr[arr]
         tmax = max(max_time(res), tdep) + path_length_tree(spt, dep, arr)
-        flexible_departure = mapf.flexible_departure
-        heuristic(v) = spt.dists[v]
+        heuristic = spt.dists
         timed_path = temporal_astar_soft(
-            mapf.g,
-            w;
-            dep=dep,
-            arr=arr,
-            tdep=tdep,
-            tmax=tmax,
-            res=res,
-            heuristic=heuristic,
-            conflict_price=conflict_price,
-            flexible_departure=flexible_departure,
+            mapf.g, mapf.edge_weights; dep, arr, tdep, tmax, res, heuristic, conflict_price
         )
         solution[a] = timed_path
         update_reservation!(res, timed_path, mapf, a)
@@ -94,20 +66,58 @@ function cooperative_astar_soft_from_trees!(
 end
 
 """
-    cooperative_astar(solution, mapf, agents, edge_weights_vec, spt_by_arr)
+    cooperative_astar(solution, mapf, agents, spt_by_arr)
 
 Create an empty `Solution`, a dictionary of [`ShortestPathTree`](@ref)s and apply [`cooperative_astar_from_trees!`](@ref).
 """
-function cooperative_astar(
-    mapf::MAPF,
-    agents=1:nb_agents(mapf),
-    edge_weights_vec=mapf.edge_weights_vec;
-    show_progress=false,
-)
-    spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
+function cooperative_astar(mapf::MAPF, agents=1:nb_agents(mapf), show_progress=false)
+    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
     solution = empty_solution(mapf)
     cooperative_astar_from_trees!(
-        solution, mapf, agents, edge_weights_vec, spt_by_arr; show_progress=show_progress
+        solution, mapf, agents, spt_by_arr; show_progress=show_progress
     )
     return solution
+end
+
+"""
+    repeated_cooperative_astar_from_trees(mapf, spt_by_arr; coop_timeout)
+
+Apply [`cooperative_astar_from_trees!`](@ref) repeatedly until a feasible solution is found or the timeout given by `coop_timeout` is reached.
+"""
+function repeated_cooperative_astar_from_trees(
+    mapf::MAPF, spt_by_arr; coop_timeout, show_progress=false
+)
+    prog = ProgressUnknown(; desc="Cooperative A* runs", enabled=show_progress)
+    total_time = 0.0
+    while true
+        τ1 = CPUtime_us()
+        solution = empty_solution(mapf)
+        agents = randperm(nb_agents(mapf))
+        cooperative_astar_from_trees!(
+            solution, mapf, agents, spt_by_arr; show_progress=false
+        )
+        if is_feasible(solution, mapf)
+            return solution
+        end
+        τ2 = CPUtime_us()
+        total_time += (τ2 - τ1) / 1e6
+        if total_time > coop_timeout
+            break
+        else
+            next!(prog)
+        end
+    end
+    return empty_solution(mapf)
+end
+
+"""
+    repeated_cooperative_astar(mapf; coop_timeout)
+
+Compute a dictionary of [`ShortestPathTree`](@ref)s with [`dijkstra_by_arrival`](@ref), and then apply [`repeated_cooperative_astar_from_trees`](@ref).
+"""
+function repeated_cooperative_astar(mapf::MAPF; coop_timeout=2, show_progress=false)
+    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
+    return repeated_cooperative_astar_from_trees(
+        mapf, spt_by_arr; coop_timeout=coop_timeout, show_progress=show_progress
+    )
 end

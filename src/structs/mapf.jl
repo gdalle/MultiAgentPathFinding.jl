@@ -1,99 +1,56 @@
 """
-    MAPF{W,G,VC,EC}
+$(TYPEDEF)
 
 Instance of a Multi-Agent Path Finding problem with custom conflict rules.
 
+Agents appear at their departure vertex when the departure time comes, and they disappear as soon as they have reached the arrival vertex.
+
 # Fields
 
-- `g::G`: underlying graph
-- `departures::Vector{Int}`: agent departure vertices
-- `arrivals::Vector{Int}`: agent arrival vertices
-- `departure_times::Vector{Int}`: agent departure times
-- `vertex_conflicts::VC`: dict-like object linking vertices to their incompatibility set
-- `edge_conflicts::EC`: dict-like object linking edges to their incompatibility set
-- `edge_indices::Dict{Tuple{Int,Int},Int}`: dict linking edges to their rank in `edges(g)`
-- `edge_colptr::Vector{Int}`: used for construction of sparse adjacency matrix
-- `edge_rowval::Vector{Int}`: used for construction of sparse adjacency matrix
-- `edge_weights_vec::Vector{W}`: edge weights flattened according to their rank in `edges(g)`
-- `flexible_departure::Bool`: whether departure can happen after the prescribed departure time
+$(TYPEDFIELDS)
 """
-struct MAPF{W<:Real,G<:AbstractGraph{Int},VC,EC}
+struct MAPF{W<:Real,G<:AbstractGraph{Int},M<:AbstractMatrix{W},VC,EC}
     # Graph-related
+    "underlying graph"
     g::G
+    "matrix of edge weights"
+    edge_weights::M
     # Agents-related
+    "agent departure vertices"
     departures::Vector{Int}
+    "agent arrival vertices"
     arrivals::Vector{Int}
+    "agent departure times"
     departure_times::Vector{Int}
     # Constraints-related
+    "dict-like object linking vertices to their incompatibility set"
     vertex_conflicts::VC
+    "dict-like object linking edges (as tuples) to their incompatibility set"
     edge_conflicts::EC
-    # Edges-related
-    edge_indices::Dict{Tuple{Int,Int},Int}
-    edge_colptr::Vector{Int}
-    edge_rowval::Vector{Int}
-    edge_weights_vec::Vector{W}
-    # Misc
-    flexible_departure::Bool
 
     function MAPF(
         g::G,
+        edge_weights::M,
         departures,
         arrivals,
         departure_times,
         vertex_conflicts::VC,
         edge_conflicts::EC,
-        edge_indices,
-        edge_colptr,
-        edge_rowval,
-        edge_weights_vec::AbstractVector{W},
-        flexible_departure,
-    ) where {W,G,VC,EC}
-        @assert is_directed(g)
+    ) where {G,M,VC,EC}
         A = length(departures)
         @assert A == length(arrivals)
         @assert A == length(departure_times)
         # TODO: add more checks
-        return new{W,G,VC,EC}(
+        return new{eltype(M),G,M,VC,EC}(
             g,
+            edge_weights,
             departures,
             arrivals,
             departure_times,
             vertex_conflicts,
             edge_conflicts,
-            edge_indices,
-            edge_colptr,
-            edge_rowval,
-            edge_weights_vec,
-            flexible_departure,
         )
     end
-end
-
-"""
-    build_edge_data(g::AbstractGraph)
-
-Precompute edge indices dictionary and useful data for construction of sparse adjacency matrix (see [`build_weights_matrix`](@ref)).
-"""
-function build_edge_data(g::AbstractGraph)
-    edge_indices = Dict((src(ed), dst(ed)) => e for (e, ed) in enumerate(edges(g)))
-    edge_weights_mat = Graphs.weights(g)
-
-    edge_colptr = Vector{Int}(undef, nv(g) + 1)
-    edge_rowval = Vector{Int}(undef, ne(g))
-    edge_weights_vec = Vector{eltype(edge_weights_mat)}(undef, ne(g))
-
-    e = 1
-    for i in vertices(g)
-        edge_colptr[i] = e  # i is the column
-        for j in outneighbors(g, i)
-            edge_rowval[e] = j  # j is the row
-            edge_weights_vec[e] = edge_weights_mat[i, j]
-            e += 1
-        end
-    end
-    edge_colptr[nv(g) + 1] = ne(g) + 1
-
-    return edge_indices, edge_colptr, edge_rowval, edge_weights_vec
 end
 
 """
@@ -106,7 +63,10 @@ nb_agents(mapf::MAPF) = length(mapf.departures)
 function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
     return print(
         io,
-        "Multi-Agent Path Finding problem\nGraph type: $G with $W weights\nGraph size: $(nv(mapf.g)) vertices and $(ne(mapf.g)) edges\nNb of agents: $(nb_agents(mapf))",
+        """Multi-Agent Path Finding problem
+        Graph type: $G with $W weights
+        Graph size: $(nv(mapf.g)) vertices and $(ne(mapf.g)) edges
+        Nb of agents: $(nb_agents(mapf))""",
     )
 end
 
@@ -142,48 +102,61 @@ Base.getindex(::LazySwappingConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = 
 ## Default constructor
 
 """
-    MAPF(g; departures, arrivals[, departure_times, vertex_conflicts, edge_conflicts])
+    MAPF(
+        g[, edge_weights];
+        departures, arrivals[, departure_times, vertex_conflicts, edge_conflicts]
+    )
 
 User-friendly constructor for a Multi-Agent Path Finding problem.
 
 Departure times default to 1 for every agent, vertex conflicts default to [`LazyVertexConflicts`](@ref) and edge conflicts to [`LazySwappingConflicts`](@ref).
 """
 function MAPF(
-    g::G;
+    g,
+    edge_weights=weights(g);
     departures,
     arrivals,
     departure_times=fill(1, length(departures)),
     vertex_conflicts=LazyVertexConflicts(),
     edge_conflicts=LazySwappingConflicts(),
-    flexible_departure=true,
-) where {G}
-    edge_indices, edge_colptr, edge_rowval, edge_weights_vec = build_edge_data(g)
+)
     return MAPF(
         g,
+        edge_weights,
         departures,
         arrivals,
         departure_times,
         vertex_conflicts,
         edge_conflicts,
-        edge_indices,
-        edge_colptr,
-        edge_rowval,
-        edge_weights_vec,
-        flexible_departure,
+    )
+end
+
+## Modifiers
+
+"""
+    select_agents(mapf, agents)
+
+Select a subset of agents and return a new `MAPF`.
+"""
+function select_agents(mapf::MAPF, agents)
+    @assert issubset(agents, eachindex(mapf.departures))
+    return MAPF(
+        # Graph-related
+        mapf.g,
+        mapf.edge_weights,
+        # Agents-related
+        view(mapf.departures, agents),
+        view(mapf.arrivals, agents),
+        view(mapf.departure_times, agents),
+        # Constraints-related
+        mapf.vertex_conflicts,
+        mapf.edge_conflicts,
     )
 end
 
 """
-    build_weights_matrix(mapf[, edge_weights_vec])
+    select_agents(mapf, A)
 
-Turn a vector `edge_weights_vec` into a sparse adjacency matrix for the graph `mapf.g`.
-
-This function doesn't allocate because the necessary index information is already available in a [`MAPF`](@ref) object.
+Select the first `A` agents and return a new `MAPF`.
 """
-function build_weights_matrix(mapf::MAPF, edge_weights_vec=mapf.edge_weights_vec)
-    return transpose(
-        SparseMatrixCSC(
-            nv(mapf.g), nv(mapf.g), mapf.edge_colptr, mapf.edge_rowval, edge_weights_vec
-        ),
-    )
-end
+select_agents(mapf::MAPF, A::Integer) = select_agents(mapf, 1:A)
