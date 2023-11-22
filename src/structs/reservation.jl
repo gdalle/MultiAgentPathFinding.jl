@@ -1,17 +1,18 @@
 """
-    Reservation
+$(TYPEDEF)
 
 Storage for vertices and edges that are known to be occupied.
 
 # Fields
 
-- `forbidden_vertices::Set{Tuple{Int,Int}}`: set of tuples `(t, v)`
-- `forbidden_edges::Set{Tuple{Int,Int,Int}}`: set of tuples `(t, u, v)`
-- `max_time::Int`: maximum time of all forbidden vertices (mutable)
+$(TYPEDFIELDS)
 """
 mutable struct Reservation
+    "set of tuples `(t, v)`"
     const forbidden_vertices::Set{Tuple{Int,Int}}
+    "set of tuples `(t, u, v)`"
     const forbidden_edges::Set{Tuple{Int,Int,Int}}
+    "maximum time of all forbidden vertices (mutable)"
     max_time::Int
 end
 

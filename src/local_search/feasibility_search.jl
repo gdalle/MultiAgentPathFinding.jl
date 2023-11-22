@@ -1,6 +1,6 @@
 """
     feasibility_search!(
-        solution, mapf, edge_weights_vec, spt_by_arr;
+        solution, mapf, spt_by_arr;
         feasibility_timeout, neighborhood_size, conflict_price, conflict_price_increase
     )
 
@@ -9,7 +9,6 @@ Reduce the number of conflicts in an infeasible `Solution` with a variant of the
 function feasibility_search!(
     solution::Solution,
     mapf::MAPF,
-    edge_weights_vec,
     spt_by_arr;
     feasibility_timeout,
     neighborhood_size,
@@ -20,7 +19,7 @@ function feasibility_search!(
     is_individually_feasible(solution, mapf) || return solution
     initial_conflicts_count = count_conflicts(solution, mapf)
     conflicts_count = initial_conflicts_count
-    prog = ProgressUnknown("Feasibility search steps: "; enabled=show_progress)
+    prog = ProgressUnknown(; desc="Feasibility search steps: ", enabled=show_progress)
     total_time = 0.0
     moves_tried = 0
     moves_successful = 0
@@ -30,12 +29,7 @@ function feasibility_search!(
         neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
         backup = remove_agents!(solution, neighborhood_agents, mapf)
         cooperative_astar_soft_from_trees!(
-            solution,
-            mapf,
-            neighborhood_agents,
-            edge_weights_vec,
-            spt_by_arr;
-            conflict_price=conflict_price,
+            solution, mapf, neighborhood_agents, spt_by_arr; conflict_price
         )
         new_conflicts_count = count_conflicts(solution, mapf)
         if (
@@ -71,33 +65,31 @@ end
 
 """
     feasibility_search(
-        mapf, edge_weights_vec;
+        mapf;
         feasibility_timeout, neighborhood_size, conflict_price, conflict_price_increase
     )
 
 Initialize a `Solution` with [`independent_dijkstra`](@ref), and then apply [`feasibility_search!`](@ref) to reduce the number of conflicts.
 """
 function feasibility_search(
-    mapf::MAPF,
-    edge_weights_vec=mapf.edge_weights_vec;
+    mapf::MAPF;
     feasibility_timeout=2,
     neighborhood_size=10,
     conflict_price=1.0,
     conflict_price_increase=0.1,
     show_progress=false,
 )
-    spt_by_arr = dijkstra_by_arrival(mapf, edge_weights_vec; show_progress=show_progress)
+    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
     solution = independent_dijkstra_from_trees(mapf, spt_by_arr)
     stats = feasibility_search!(
         solution,
         mapf,
-        edge_weights_vec,
         spt_by_arr;
-        feasibility_timeout=feasibility_timeout,
-        neighborhood_size=neighborhood_size,
-        conflict_price=conflict_price,
-        conflict_price_increase=conflict_price_increase,
-        show_progress=show_progress,
+        feasibility_timeout,
+        neighborhood_size,
+        conflict_price,
+        conflict_price_increase,
+        show_progress,
     )
     return solution, stats
 end

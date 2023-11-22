@@ -5,13 +5,19 @@ DocMeta.setdocmeta!(
     MultiAgentPathFinding, :DocTestSetup, :(using MultiAgentPathFinding); recursive=true
 )
 
+cp(
+    joinpath(dirname(@__DIR__), "README.md"),
+    joinpath(@__DIR__, "src", "index.md");
+    force=true,
+)
+
 makedocs(;
     modules=[MultiAgentPathFinding],
-    authors="Guillaume Dalle <22795598+gdalle@users.noreply.github.com> and contributors",
-    repo="https://github.com/gdalle/MultiAgentPathFinding.jl/blob/{commit}{path}#{line}",
+    authors="Guillaume Dalle and contributors",
     sitename="MultiAgentPathFinding.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
+        repolink="https://github.com/gdalle/MultiAgentPathFinding.jl",
         canonical="https://gdalle.github.io/MultiAgentPathFinding.jl",
         assets=String[],
     ),
