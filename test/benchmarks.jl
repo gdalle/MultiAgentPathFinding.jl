@@ -1,4 +1,3 @@
-
 using MultiAgentPathFinding
 using Graphs
 using Test
@@ -8,7 +7,7 @@ scenario_name = "Berlin_1_256-even-1.scen"
 
 map_matrix = read_benchmark_map(map_name)
 # cell_color.(map_matrix)
-g, coord_to_vertex = parse_benchmark_map(map_matrix)
+@time g, coord_to_vertex = parse_benchmark_map(map_matrix)
 
 scenario = read_benchmark_scenario(scenario_name, map_name)
 

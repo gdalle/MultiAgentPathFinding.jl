@@ -22,6 +22,8 @@ For the development version, run
 pkg> add https://github.com/gdalle/MultiAgentPathFinding.jl
 ```
 
+For now the documentation is a bit lacking, but take a look at the files in [`test`](https://github.com/gdalle/MultiAgentPathFinding.jl/tree/main/test) for usage examples.
+
 ## Background
 
 `MultiAgentPathFinding.jl` contains some heuristic algorithms (cooperative A* and local search) described in the PhD thesis

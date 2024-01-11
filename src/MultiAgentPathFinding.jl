@@ -29,7 +29,6 @@ using Graphs:
     is_directed,
     add_edge!,
     weights
-using MetaGraphsNext: MetaGraph
 using ProgressMeter: Progress, ProgressUnknown, next!
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedGraph

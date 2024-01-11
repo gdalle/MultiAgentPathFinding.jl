@@ -35,15 +35,17 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
     h, w = size(map_matrix)
     passable = passable_cell.(map_matrix)
 
-    g = SimpleWeightedGraph(sum(passable))
     coord_to_vertex = Dict{Tuple{Int,Int},Int}()
-
     v = 1
     for j in 1:w, i in 1:h
         passable[i, j] || continue
         coord_to_vertex[i, j] = v
         v += 1
     end
+
+    sources = Int[]
+    destinations = Int[]
+    weights = Float64[]
 
     for j in 1:w, i in 1:h
         passable[i, j] || continue
@@ -61,11 +63,14 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
                 d = coord_to_vertex[i + Δi, j + Δj]
                 diag = Δi != 0 && Δj != 0
                 w = diag ? sqrt(2.0) : 1.0
-                add_edge!(g, s, d, w)
+                push!(sources, s)
+                push!(destinations, d)
+                push!(weights, w)
             end
         end
     end
 
+    g = SimpleWeightedGraph(sources, destinations, weights)
     return g, coord_to_vertex
 end
 

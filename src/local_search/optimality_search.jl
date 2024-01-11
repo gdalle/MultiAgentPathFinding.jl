@@ -45,12 +45,12 @@ function optimality_search!(
             end
         end
     end
-    stats = (
-        optimality_moves_tried=moves_tried,
-        optimality_moves_successful=moves_successful,
-        optimality_initial_flowtime=initial_cost,
-        optimality_feasible=is_feasible(solution, mapf),
-        optimality_flowtime=flowtime(solution, mapf),
+    stats = Dict(
+        :optimality_moves_tried => moves_tried,
+        :optimality_moves_successful => moves_successful,
+        :optimality_initial_flowtime => initial_cost,
+        :optimality_feasible => is_feasible(solution, mapf),
+        :optimality_flowtime => flowtime(solution, mapf),
     )
     return stats
 end
