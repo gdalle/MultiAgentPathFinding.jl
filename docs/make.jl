@@ -16,10 +16,7 @@ makedocs(;
     authors="Guillaume Dalle and contributors",
     sitename="MultiAgentPathFinding.jl",
     format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        repolink="https://github.com/gdalle/MultiAgentPathFinding.jl",
-        canonical="https://gdalle.github.io/MultiAgentPathFinding.jl",
-        assets=String[],
+        canonical="https://gdalle.github.io/MultiAgentPathFinding.jl", assets=String[]
     ),
     pages=["Home" => "index.md", "API reference" => "api.md"],
 )

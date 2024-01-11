@@ -65,7 +65,7 @@ end
 
 Create an empty `Solution`, a dictionary of [`ShortestPathTree`](@ref)s and apply [`cooperative_astar_from_trees!`](@ref).
 """
-function cooperative_astar(mapf::MAPF, agents=1:nb_agents(mapf), show_progress=false)
+function cooperative_astar(mapf::MAPF, agents=1:nb_agents(mapf); show_progress=false)
     spt_by_arr = dijkstra_by_arrival(mapf; show_progress)
     solution = empty_solution(mapf)
     cooperative_astar_from_trees!(solution, mapf, agents, spt_by_arr; show_progress)
