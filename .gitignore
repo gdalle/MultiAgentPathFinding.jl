@@ -2,11 +2,6 @@
 *.jl.cov
 *.jl.mem
 /Manifest.toml
+/docs/Manifest.toml
 /docs/build/
 /docs/src/index.md
-.CondaPkg
-/src/_experimental
-
-*.zip
-*.scen
-*.map

@@ -15,7 +15,7 @@ arrivals = (nv(g) + 1) .- (1:A);
 
 mapf = MAPF(g; departures, arrivals);
 
-show_progress = true
+show_progress = false
 
 sol_indep = independent_dijkstra(mapf; show_progress);
 sol_coop = repeated_cooperative_astar(mapf; show_progress);

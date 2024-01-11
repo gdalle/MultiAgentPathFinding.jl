@@ -17,7 +17,7 @@ end
 """
     all_non_empty(solution)
 
-Check that all paths in a `Solution` are non empty.
+Check that all paths in a solution are non empty.
 """
 function all_non_empty(solution::Solution)
     return all(length(timed_path) > 0 for timed_path in solution)
@@ -26,7 +26,7 @@ end
 """
     remove_agents!(solution, agents, mapf)
 
-Remove a set of agents from a `Solution` and return a back up of their paths.
+Remove a set of agents from a solution and return a back up of their paths.
 """
 function remove_agents!(solution::Solution, agents, mapf::MAPF)
     backup = Dict(a => solution[a] for a in agents)
@@ -41,7 +41,7 @@ end
 """
     flowtime(solution, mapf)
 
-Sum the flowtime of all the `TimedPath`s in a `Solution`.
+Sum the weight of all the paths in a solution.
 """
 function flowtime(solution::Solution, mapf::MAPF)
     return sum(path_weight(timed_path, mapf) for timed_path in solution)
@@ -50,14 +50,14 @@ end
 """
     makespan(solution)
 
-Compute the maximum arrival time of all the `TimedPath`s in a `Solution`.
+Compute the maximum arrival time of all the paths in a solution.
 """
 makespan(solution::Solution) = maximum(arrival_time(timed_path) for timed_path in solution)
 
 """
     is_individually_feasible(solution, mapf[; verbose])
 
-Check whether a `Solution` is feasible when agents are considered separately.
+Check whether a solution is feasible when agents are considered separately.
 """
 function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
     for a in 1:nb_agents(mapf)
@@ -85,7 +85,7 @@ end
 """
     is_collectively_feasible(solution, mapf[; verbose])
 
-Check whether a `Solution` contains any conflicts between agents.
+Check whether a solution contains any conflicts between agents.
 """
 function is_collectively_feasible(solution::Solution, mapf::MAPF; verbose=false)
     conflict = find_conflict(solution, mapf)
@@ -100,7 +100,7 @@ end
 """
     is_feasible(solution, mapf[; verbose])
 
-Check whether a `Solution` is both individually and collectively feasible.
+Check whether a solution is both individually and collectively feasible (correct paths and no conflicts).
 """
 function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
     return is_individually_feasible(solution, mapf; verbose) &&

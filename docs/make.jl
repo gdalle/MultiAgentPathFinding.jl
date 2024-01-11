@@ -13,14 +13,9 @@ cp(
 
 makedocs(;
     modules=[MultiAgentPathFinding],
-    authors="Guillaume Dalle and contributors",
+    authors="Guillaume Dalle",
     sitename="MultiAgentPathFinding.jl",
-    format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        repolink="https://github.com/gdalle/MultiAgentPathFinding.jl",
-        canonical="https://gdalle.github.io/MultiAgentPathFinding.jl",
-        assets=String[],
-    ),
+    format=Documenter.HTML(; canonical="https://gdalle.github.io/MultiAgentPathFinding.jl"),
     pages=["Home" => "index.md", "API reference" => "api.md"],
 )
 

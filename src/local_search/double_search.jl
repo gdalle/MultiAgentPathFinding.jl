@@ -1,11 +1,9 @@
 """
-    double_search(
-        mapf, agents;
-        feasibility_timeout, optimality_timeout, window,
-        neighborhood_size, conflict_price, conflict_price_increase
-    )
+$(SIGNATURES)
 
-Initialize a `Solution` with [`independent_dijkstra`](@ref), then apply [`feasibility_search!`] to make it feasible, followed by [`optimality_search!`](@ref) to reduce its flowtime.
+Combine `feasibility_search` and `optimality_search`, see <https://pastel.hal.science/tel-04053322>.
+
+Returns a tuple containing a `Solution` and a dictionary of statistics.
 """
 function double_search(
     mapf::MAPF,
@@ -44,7 +42,7 @@ function double_search(
     )
     # Rename stats
     double_stats = merge(feasibility_stats, optimality_stats)
-    renamed_double_stats = NamedTuple((
+    renamed_double_stats = Dict((
         Symbol("double_" * string(key)) => val for (key, val) in pairs(double_stats)
     ))
     return solution, renamed_double_stats

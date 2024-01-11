@@ -8,7 +8,7 @@ Store a conflict between two agents for debugging purposes.
 $(TYPEDFIELDS)
 """
 struct Conflict
-    "type of conflict (`:vertex` or `:vdge`)"
+    "type of conflict (`:vertex` or `:edge`)"
     name::Symbol
     "first agent"
     a1::Int
@@ -87,7 +87,7 @@ end
 
 Find an occurrence where the paths of `a1` and `a2` in the solution visit incompatible vertices less than `tol` time steps apart.
 
-Return either a [`Conflict`](@ref) object or `nothing`.
+Returns either a `Conflict` object or `nothing`.
 """
 function find_vertex_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     timed_path1 = solution[a1]
@@ -136,7 +136,7 @@ end
 
 Find an occurrence where the paths of `a1` and `a2` in the solution cross incompatible edges less than `tol` time steps apart.
 
-Return either a [`Conflict`](@ref) object or `nothing`.
+Returns either a `Conflict` object or `nothing`.
 """
 function find_edge_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
     timed_path1 = solution[a1]
