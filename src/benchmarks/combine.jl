@@ -1,7 +1,7 @@
 """
     read_benchmark_mapf(map_name::AbstractString, scenario_name::AbstractString;)
 
-Create a [`MAPF`](@ref) instance by reading a map (`"something.map"`) and scenario (`"something.scen"`) from files.
+Create a `MAPF` instance by reading a map (`"something.map"`) and scenario (`"something.scen"`) from files.
 
 See possible names at <https://movingai.com/benchmarks/mapf/index.html> (data will be downloaded automatically).
 """
