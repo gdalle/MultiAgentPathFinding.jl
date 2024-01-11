@@ -1,3 +1,14 @@
+"""
+    list_scenario_names()
+
+List available scenarios from the benchmark set.
+"""
+function list_scenario_names()
+    return union(
+        readdir(joinpath(datadep"mapf-scen-random", "scen-random")),
+        readdir(joinpath(datadep"mapf-scen-even", "scen-even")),
+    )
+end
 
 """
     MAPFBenchmarkProblem

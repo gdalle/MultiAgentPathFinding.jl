@@ -50,6 +50,8 @@ double_search
 
 ```@docs
 read_benchmark
+list_map_names
+list_scenario_names
 ```
 
 ## Internals

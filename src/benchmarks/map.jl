@@ -1,4 +1,13 @@
 """
+    list_map_names()
+
+List available maps from the benchmark set.
+"""
+function list_map_names()
+    return readdir(datadep"mapf-map")
+end
+
+"""
     read_benchmark_map(map_name::AbstractString)
 
 Read a map matrix from a text file.
