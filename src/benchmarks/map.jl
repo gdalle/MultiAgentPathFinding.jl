@@ -75,13 +75,13 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
 end
 
 """
-    cell_color(c::Char)
+    benchmark_cell_color(c::Char)
 
 Give a color object corresponding to the type of cell.
 
 To visualize a map in VSCode, just run `cell_color.(map_matrix)` in the REPL.
 """
-function cell_color(c::Char)
+function benchmark_cell_color(c::Char)
     if c == '.'  # empty => white
         return colorant"white"
     elseif c == 'G'  # empty => white

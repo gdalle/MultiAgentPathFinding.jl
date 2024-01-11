@@ -63,7 +63,7 @@ end
 
 User-friendly constructor for a Multi-Agent Path Finding problem.
 
-Departure times default to 1 for every agent, vertex conflicts default to [`LazyVertexConflicts`](@ref) and edge conflicts to [`LazySwappingConflicts`](@ref).
+Departure times default to 1 for every agent, vertex conflicts default to `LazyVertexConflicts` and edge conflicts to `LazySwappingConflicts`.
 """
 function MAPF(
     g,
@@ -157,10 +157,3 @@ function select_agents(mapf::MAPF, agents)
         mapf.edge_conflicts,
     )
 end
-
-"""
-    select_agents(mapf, A)
-
-Select the first `A` agents and return a new `MAPF`.
-"""
-select_agents(mapf::MAPF, A::Integer) = select_agents(mapf, 1:A)

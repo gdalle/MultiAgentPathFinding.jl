@@ -2,6 +2,10 @@
     MultiAgentPathFinding
 
 A package for Multi-Agent Path Finding instances and algorithms.
+
+# Exports
+
+$(EXPORTS)
 """
 module MultiAgentPathFinding
 
@@ -58,14 +62,11 @@ include("benchmarks/combine.jl")
 
 ## Exports
 
-export MAPF, nb_agents, select_agents
-export TimedPath
-export path_weight, flowtime, makespan, find_conflict, is_feasible
-export independent_dijkstra, temporal_astar, cooperative_astar, repeated_cooperative_astar
+export MAPF, Conflict, Solution, TimedPath
+export nb_agents, select_agents
+export flowtime, find_conflict, is_feasible
+export independent_dijkstra, cooperative_astar, repeated_cooperative_astar
 export feasibility_search, optimality_search, double_search
-
-export read_benchmark_map, parse_benchmark_map, cell_color
-export read_benchmark_scenario, parse_benchmark_scenario
 export read_benchmark
 
 function __init__()

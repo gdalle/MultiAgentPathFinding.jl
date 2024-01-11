@@ -1,11 +1,3 @@
-"""
-    feasibility_search!(
-        solution, mapf, spt_by_arr;
-        feasibility_timeout, neighborhood_size, conflict_price, conflict_price_increase
-    )
-
-Reduce the number of conflicts in an infeasible `Solution` with a variant of the MAPF-LNS2 algorithm from Li et al. (2022).
-"""
 function feasibility_search!(
     solution::Solution,
     mapf::MAPF,
@@ -65,12 +57,11 @@ function feasibility_search!(
 end
 
 """
-    feasibility_search(
-        mapf;
-        feasibility_timeout, neighborhood_size, conflict_price, conflict_price_increase
-    )
+$(SIGNATURES)
 
-Initialize a `Solution` with [`independent_dijkstra`](@ref), and then apply [`feasibility_search!`](@ref) to reduce the number of conflicts.
+Run `independent_dijkstra` and then reduce the number of conflicts with a variant of the MAPF-LNS2 algorithm from Li et al. (2022), see <https://ojs.aaai.org/index.php/AAAI/article/view/21266>.
+
+Returns a tuple containing a `Solution` and a dictionary of statistics.
 """
 function feasibility_search(
     mapf::MAPF;

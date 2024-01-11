@@ -74,6 +74,11 @@ function read_benchmark_scenario(scenario_name::AbstractString, map_name::Abstra
     return scenario
 end
 
+"""
+    parse_benchmark_scenario(scenario::Vector{MAPFBenchmarkProblem}, coord_to_vertex::Dict)
+
+Turn a scenario into vectors of departure and arrival vertices.
+"""
 function parse_benchmark_scenario(
     scenario::Vector{MAPFBenchmarkProblem}, coord_to_vertex::Dict
 )

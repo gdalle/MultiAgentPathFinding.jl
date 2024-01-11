@@ -18,7 +18,6 @@ end
     temporal_astar(g, w; dep, arr, tdep, tmax, res, heuristic)
 
 Apply temporal A* to a graph with specified edge weights.
-Subroutine of [`cooperative_astar_from_trees!`](@ref) and [`optimality_search!`](@ref).
 
 # Keyword arguments
 
@@ -81,7 +80,7 @@ function temporal_astar(
             end
         end
     end
-    stats = (nodes_explored=nodes_explored,)
+    stats = Dict(:nodes_explored => nodes_explored)
     return timed_path
 end
 
@@ -89,11 +88,10 @@ end
     temporal_astar_soft(g, w; dep, arr, tdep, tmax, res, heuristic, conflict_price)
 
 Apply a bi-objective variant of temporal A* to a graph with specified edge weights. The objective is to minimize a combination of the number of conflicts and the path weight.
-Subroutine of [`feasibility_search!`](@ref).
 
 # Keyword arguments
 
-- `dep`, `arr`, `tdep`, `tmax`, `res`, `heuristic`: see [`temporal_astar`](@ref).
+- `dep`, `arr`, `tdep`, `tmax`, `res`, `heuristic`: see `temporal_astar`.
 - `conflict_price`: price given to the number of conflicts in the objective
 """
 function temporal_astar_soft(
@@ -177,6 +175,6 @@ function temporal_astar_soft(
             end
         end
     end
-    stats = (nodes_explored=nodes_explored,)
+    stats = Dict(:nodes_explored => nodes_explored)
     return timed_path
 end

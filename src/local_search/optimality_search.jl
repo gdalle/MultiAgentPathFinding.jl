@@ -1,11 +1,3 @@
-"""
-    optimality_search!(
-        solution, mapf, spt_by_arr;
-        optimality_timeout, neighborhood_size
-    )
-
-Reduce the flowtime of a feasible `Solution` with the MAPF-LNS algorithm from Li et al. (2021).
-"""
 function optimality_search!(
     solution::Solution,
     mapf::MAPF,
@@ -56,12 +48,11 @@ function optimality_search!(
 end
 
 """
-    optimality_search(
-        mapf, agents, spt_by_arr;
-        optimality_timeout, neighborhood_size
-    )
+$(SIGNATURES)
 
-Initialize a `Solution` with [`cooperative_astar`](@ref), and then apply [`optimality_search!`](@ref) to reduce its flowtime.
+Run `cooperative_astar` and then reduce the solution flowtime with the MAPF-LNS algorithm from Li et al. (2021), see <https://www.ijcai.org/proceedings/2021/568>.
+
+Returns a tuple containing a `Solution` and a dictionary of statistics.
 """
 function optimality_search(
     mapf::MAPF,
