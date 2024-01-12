@@ -10,11 +10,21 @@ function list_scenario_names()
     )
 end
 
+"""
+    map_from_scenario(scenario_name)
+
+Return the map associated with a benchmark scenario.
+"""
 function map_from_scenario(scenario_name::AbstractString)
     name = split(scenario_name, '-')[1]
     return "$name.map"
 end
 
+"""
+    scenarios_from_map(map_name)
+
+List the scenarios associated with a benchmark map.
+"""
 function scenarios_from_map(map_name::AbstractString)
     name = split(map_name, '.')[1]
     return filter(list_scenario_names()) do scenario_name
@@ -113,10 +123,8 @@ function parse_benchmark_scenario(
         problem = scenario[a]
         is, js = problem.start_i, problem.start_j
         id, jd = problem.goal_i, problem.goal_j
-        s = coord_to_vertex[is, js]
-        d = coord_to_vertex[id, jd]
-        departures[a] = s
-        arrivals[a] = d
+        departures[a] = coord_to_vertex[is, js]
+        arrivals[a] = coord_to_vertex[id, jd]
     end
     @assert length(unique(departures)) == length(departures)
     @assert length(unique(arrivals)) == length(arrivals)
@@ -130,7 +138,6 @@ function check_benchmark_scenario(
     for a in 1:length(scenario)
         dists = dijkstra_shortest_paths(g, departures[a]).dists
         if !isapprox(dists[arrivals[a]], scenario[a].optimal_length)
-            @warn dists[arrivals[a]] scenario[a].optimal_length
             return false
         end
         break  # TODO: check all agents

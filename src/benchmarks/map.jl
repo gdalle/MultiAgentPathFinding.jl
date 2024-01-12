@@ -70,7 +70,7 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
                 d = coord_to_vertex[i + Δi, j + Δj]
                 diag = Δi != 0 && Δj != 0
                 weight = diag ? sqrt(2.0) : 1.0
-                if s <= w
+                if s <= d
                     push!(sources, s)
                     push!(destinations, d)
                     push!(weights, weight)
@@ -80,7 +80,7 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
     end
 
     g = SimpleWeightedGraph(sources, destinations, weights)
-    
+
     return g, coord_to_vertex
 end
 
