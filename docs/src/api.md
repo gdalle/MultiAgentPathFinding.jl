@@ -25,6 +25,7 @@ select_agents
 ## Feasibility and cost
 
 ```@docs
+path_weight
 flowtime
 is_feasible
 find_conflict

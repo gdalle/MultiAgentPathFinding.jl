@@ -59,10 +59,8 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
     for j in 1:w, i in 1:h
         passable[i, j] || continue
         for Δi in (-1, 0, 1), Δj in (-1, 0, 1)
-            no_loop = (Δi, Δj) != (0, 0)
-            still_inside = (1 <= i + Δi <= h) && (1 <= j + Δj <= h)
+            still_inside = (1 <= i + Δi <= h) && (1 <= j + Δj <= w)
             if (
-                no_loop &&
                 still_inside &&
                 passable[i + Δi, j + Δj] &&
                 passable[i + Δi, j] &&
@@ -71,15 +69,18 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
                 s = coord_to_vertex[i, j]
                 d = coord_to_vertex[i + Δi, j + Δj]
                 diag = Δi != 0 && Δj != 0
-                w = diag ? sqrt(2.0) : 1.0
-                push!(sources, s)
-                push!(destinations, d)
-                push!(weights, w)
+                weight = diag ? sqrt(2.0) : 1.0
+                if s <= w
+                    push!(sources, s)
+                    push!(destinations, d)
+                    push!(weights, weight)
+                end
             end
         end
     end
 
     g = SimpleWeightedGraph(sources, destinations, weights)
+    
     return g, coord_to_vertex
 end
 
