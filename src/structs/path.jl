@@ -107,7 +107,7 @@ end
 """
     path_weight(timed_path, mapf[; tmin, tmax])
 
-Compute the weight of a timed path through a `MAPF` graph by summing edge weights between times `tmin` and `tmax` (which default to the departure and arrival time).
+Compute the weight of a timed path by summing edge weights between times `tmin` and `tmax` (which default to the departure and arrival time).
 """
 function path_weight(
     timed_path::TimedPath,

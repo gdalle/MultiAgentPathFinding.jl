@@ -32,7 +32,8 @@ using Graphs:
     has_edge,
     is_directed,
     add_edge!,
-    weights
+    weights,
+    dijkstra_shortest_paths
 using ProgressMeter: Progress, ProgressUnknown, next!
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedGraph
@@ -64,7 +65,7 @@ include("benchmarks/combine.jl")
 
 export MAPF, Conflict, Solution, TimedPath
 export nb_agents, select_agents
-export flowtime, find_conflict, is_feasible
+export flowtime, path_weight, find_conflict, is_feasible
 export independent_dijkstra, cooperative_astar, repeated_cooperative_astar
 export feasibility_search, optimality_search, double_search
 export read_benchmark, list_map_names, list_scenario_names
