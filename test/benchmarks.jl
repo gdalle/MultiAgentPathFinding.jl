@@ -15,7 +15,7 @@ using Test
 map_name = "Berlin_1_256.map"
 scenario_name = "Berlin_1_256-even-1.scen"
 
-map_matrix = read_benchmark_map(map_name);
+map_matrix = read_benchmark_map(map_name)
 # benchmark_cell_color.(map_matrix)
 g, coord_to_vertex = parse_benchmark_map(map_matrix)
 scenario = read_benchmark_scenario(scenario_name, map_name);
