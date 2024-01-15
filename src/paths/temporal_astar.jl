@@ -54,7 +54,7 @@ function temporal_astar(
     while !isempty(heap)
         nodes_explored += 1
         if nodes_explored > max_nodes
-            throw(OutOfMemoryError("Temporal A* does not seem to converge"))
+            error("Temporal A* does not seem to converge")
         end
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
@@ -120,7 +120,7 @@ function temporal_astar_soft(
     while !isempty(heap)
         nodes_explored += 1
         if nodes_explored > max_nodes
-            throw(OutOfMemoryError("Temporal A* does not seem to converge"))
+            error("Temporal A* does not seem to converge")
         end
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
