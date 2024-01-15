@@ -1,9 +1,9 @@
 """
-    build_path_astar(parents, arr, tarr)
+$(TYPEDSIGNATURES)
 
 Build a `TimedPath` from a dictionary of temporal parents, going backward from `arr` which was reached at `tarr`.
 """
-function build_path_astar(parents::Dict, arr, tarr;)
+function build_path_astar(parents::Dict, arr::Integer, tarr::Integer)
     path = Int[]
     (t, v) = (tarr, arr)
     pushfirst!(path, v)
@@ -15,7 +15,7 @@ function build_path_astar(parents::Dict, arr, tarr;)
 end
 
 """
-    temporal_astar(g, w; dep, arr, tdep, tmax, res, heuristic)
+$(TYPEDSIGNATURES)
 
 Apply temporal A* to a graph with specified edge weights.
 
@@ -24,12 +24,17 @@ Apply temporal A* to a graph with specified edge weights.
 - `dep`: departure vertex
 - `arr`: arrival vertex
 - `tdep`: departure time
-- `tmax`: max arrival time, after which the search stops and returns a partial path
 - `res`: reservation indicating occupied vertices and edges at various times
 - `heuristic`: indexable giving an underestimate of the remaining distance to `arr`
 """
 function temporal_astar(
-    g::AbstractGraph{V}, w::AbstractMatrix{W}; dep, arr, tdep, tmax, res, heuristic
+    g::AbstractGraph{V},
+    w::AbstractMatrix{W};
+    dep::Integer,
+    arr::Integer,
+    tdep::Integer,
+    res::Reservation,
+    heuristic::AbstractVector,
 ) where {V,W}
     timed_path = TimedPath(tdep)
     # Init storage
@@ -50,21 +55,8 @@ function temporal_astar(
         Δ_u = dists[t, u]
         if u == arr
             timed_path = build_path_astar(parents, arr, t)
-            if t == tmax + 1
-                timed_path = remove_arrival_vertex(timed_path)
-            end
             break
-        elseif t == tmax
-            v = arr
-            Δ_v = get(dists, (t + 1, v), nothing)
-            Δ_v_through_u = Δ_u + heuristic[u]
-            if isnothing(Δ_v) || (Δ_v_through_u < Δ_v)
-                parents[t + 1, v] = (t, u)
-                dists[t + 1, v] = Δ_v_through_u
-                h_v = Δ_v_through_u + heuristic[v]
-                push!(heap, (t + 1, v) => h_v)
-            end
-        elseif t < tmax
+        else
             for v in outneighbors(g, u)
                 isnothing(heuristic[v]) && continue
                 is_forbidden_vertex(res, t + 1, v) && continue
@@ -81,29 +73,28 @@ function temporal_astar(
         end
     end
     stats = Dict(:nodes_explored => nodes_explored)
-    return timed_path
+    return timed_path, stats
 end
 
 """
-    temporal_astar_soft(g, w; dep, arr, tdep, tmax, res, heuristic, conflict_price)
+$(TYPEDSIGNATURES)
 
 Apply a bi-objective variant of temporal A* to a graph with specified edge weights. The objective is to minimize a combination of the number of conflicts and the path weight.
 
 # Keyword arguments
 
-- `dep`, `arr`, `tdep`, `tmax`, `res`, `heuristic`: see `temporal_astar`.
+- `dep`, `arr`, `tdep`, `res`, `heuristic`: see `temporal_astar`.
 - `conflict_price`: price given to the number of conflicts in the objective
 """
 function temporal_astar_soft(
     g::AbstractGraph{V},
     w::AbstractMatrix{W};
-    dep,
-    arr,
-    tdep,
-    tmax,
-    res,
-    heuristic,
-    conflict_price,
+    dep::Integer,
+    arr::Integer,
+    tdep::Integer,
+    res::Reservation,
+    heuristic::AbstractVector,
+    conflict_price::Real,
 ) where {V,W}
     timed_path = TimedPath(tdep)
     # Init storage
@@ -127,31 +118,8 @@ function temporal_astar_soft(
         c_u = conflicts[t, u]
         if u == arr
             timed_path = build_path_astar(parents, arr, t)
-            if t == tmax + 1
-                timed_path = remove_arrival_vertex(timed_path)
-            end
             break
-        elseif t == tmax
-            v = arr
-            c_v = get(conflicts, (t + 1, v), nothing)
-            Δ_v = get(dists, (t + 1, v), nothing)
-            c_v_after_u = is_forbidden_vertex(res, t + 1, v)
-            c_uv = is_forbidden_edge(res, t, u, v)
-            c_v_through_u = c_u + c_uv + c_v_after_u
-            Δ_v_through_u = Δ_u + heuristic[u]
-            cost_v_through_u = conflict_price * c_v_through_u + Δ_v_through_u
-            if (
-                isnothing(c_v) ||
-                isnothing(Δ_v) ||
-                cost_v_through_u < conflict_price * c_v + Δ_v
-            )
-                parents[t + 1, v] = (t, u)
-                dists[t + 1, v] = Δ_v_through_u
-                conflicts[t + 1, v] = c_v_through_u
-                priority_v = cost_v_through_u + heuristic[v]
-                push!(heap, (t + 1, v) => priority_v)
-            end
-        elseif t < tmax
+        else
             for v in outneighbors(g, u)
                 isnothing(heuristic[v]) && continue
                 c_v = get(conflicts, (t + 1, v), nothing)
@@ -176,5 +144,5 @@ function temporal_astar_soft(
         end
     end
     stats = Dict(:nodes_explored => nodes_explored)
-    return timed_path
+    return timed_path, stats
 end

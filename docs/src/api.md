@@ -25,7 +25,7 @@ select_agents
 ## Feasibility and cost
 
 ```@docs
-path_weight
+path_cost
 total_path_cost
 is_feasible
 find_conflict
@@ -41,7 +41,6 @@ cooperative_astar
 ## Local search
 
 ```@docs
-repeated_cooperative_astar
 feasibility_search
 optimality_search
 double_search

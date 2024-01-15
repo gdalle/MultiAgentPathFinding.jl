@@ -48,7 +48,7 @@ function optimality_search!(
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Run `cooperative_astar` and then reduce the total path cost with the MAPF-LNS algorithm from Li et al. (2021), see <https://www.ijcai.org/proceedings/2021/568>.
 

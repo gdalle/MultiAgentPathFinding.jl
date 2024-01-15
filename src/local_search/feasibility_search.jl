@@ -57,7 +57,7 @@ function feasibility_search!(
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Run `independent_dijkstra` and then reduce the number of conflicts with a variant of the MAPF-LNS2 algorithm from Li et al. (2022), see <https://ojs.aaai.org/index.php/AAAI/article/view/21266>.
 

@@ -56,21 +56,18 @@ end
 ## Default constructor
 
 """
-    MAPF(
-        g[, edge_weights];
-        departures, arrivals[, departure_times, vertex_conflicts, edge_conflicts]
-    )
+$(TYPEDSIGNATURES)
 
 User-friendly constructor for a Multi-Agent Path Finding problem.
 
 Departure times default to 1 for every agent, vertex conflicts default to `LazyVertexConflicts` and edge conflicts to `LazySwappingConflicts`.
 """
 function MAPF(
-    g,
+    g::AbstractGraph,
     edge_weights=weights(g);
-    departures,
-    arrivals,
-    departure_times=fill(1, length(departures)),
+    departures::AbstractVector{<:Integer},
+    arrivals::AbstractVector{<:Integer},
+    departure_times=fill(1, length(departures))::AbstractVector{<:Integer},
     vertex_conflicts=LazyVertexConflicts(),
     edge_conflicts=LazySwappingConflicts(),
 )
@@ -100,7 +97,7 @@ end
 ## Access
 
 """
-    nb_agents(mapf)
+$(TYPEDSIGNATURES)
 
 Count the number of agents.
 """
@@ -109,7 +106,7 @@ nb_agents(mapf::MAPF) = length(mapf.departures)
 ## Default conflicts
 
 """
-    LazyVertexConflicts
+$(TYPEDEF)
 
 Lazy dict-like storage for the mapping `v -> [v]`.
 """
@@ -118,7 +115,7 @@ struct LazyVertexConflicts end
 Base.getindex(::LazyVertexConflicts, v::Integer) = (v,)
 
 """
-    LazyEdgeConflicts
+$(TYPEDEF)
 
 Lazy dict-like storage for the mapping `(u, v) -> [(u, v)]`.
 """
@@ -127,7 +124,7 @@ struct LazyEdgeConflicts end
 Base.getindex(::LazyEdgeConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = ((u, v),)
 
 """
-    LazySwappingConflicts
+$(TYPEDEF)
 
 Lazy dict-like storage for the mapping `(u, v) -> [(v, u)]`.
 """
@@ -138,11 +135,11 @@ Base.getindex(::LazySwappingConflicts, (u, v)::Tuple{T,T}) where {T<:Integer} = 
 ## Modifiers
 
 """
-    select_agents(mapf, agents)
+$(TYPEDSIGNATURES)
 
 Select a subset of agents and return a new `MAPF`.
 """
-function select_agents(mapf::MAPF, agents)
+function select_agents(mapf::MAPF, agents::AbstractVector{<:Integer})
     @assert issubset(agents, eachindex(mapf.departures))
     return MAPF(
         # Graph-related

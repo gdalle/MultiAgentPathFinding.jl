@@ -1,5 +1,5 @@
 """
-    list_map_names()
+$(TYPEDSIGNATURES)
 
 List available maps from the benchmark set.
 """
@@ -8,7 +8,7 @@ function list_map_names()
 end
 
 """
-    read_benchmark_map(map_name::AbstractString)
+$(TYPEDSIGNATURES)
 
 Read a map matrix from a text file.
 
@@ -36,7 +36,7 @@ end
 passable_cell(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 
 """
-    parse_benchmark_map(map_matrix::Matrix{Char})
+$(TYPEDSIGNATURES)
 
 Create a sparse grid graph from a map specified as a matrix of characters.
 """
@@ -85,7 +85,7 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
 end
 
 """
-    benchmark_cell_color(c::Char)
+$(TYPEDSIGNATURES)
 
 Give a color object corresponding to the type of cell.
 

@@ -18,7 +18,7 @@ mapf = MAPF(g; departures, arrivals);
 show_progress = false
 
 sol_indep = independent_dijkstra(mapf; show_progress);
-sol_coop = repeated_cooperative_astar(mapf; show_progress);
+sol_coop = cooperative_astar(mapf; show_progress);
 sol_os, stats_os = optimality_search(mapf; show_progress);
 sol_fs, stats_fs = feasibility_search(mapf; show_progress);
 sol_ds, stats_ds = double_search(mapf; show_progress);
