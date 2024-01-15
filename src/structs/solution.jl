@@ -39,11 +39,11 @@ end
 ## Cost
 
 """
-    flowtime(solution, mapf)
+    total_path_cost(solution, mapf)
 
 Sum the weight of all the paths in a solution.
 """
-function flowtime(solution::Solution, mapf::MAPF)
+function total_path_cost(solution::Solution, mapf::MAPF)
     return sum(path_weight(timed_path, mapf) for timed_path in solution)
 end
 

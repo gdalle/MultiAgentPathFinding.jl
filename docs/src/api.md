@@ -26,7 +26,7 @@ select_agents
 
 ```@docs
 path_weight
-flowtime
+total_path_cost
 is_feasible
 find_conflict
 ```

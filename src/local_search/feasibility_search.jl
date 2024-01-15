@@ -51,7 +51,7 @@ function feasibility_search!(
         :feasibility_initial_conflicts_count => initial_conflicts_count,
         :feasibility_final_conflicts_count => conflicts_count,
         :feasibility_feasible => is_feasible(solution, mapf),
-        :feasibility_flowtime => flowtime(solution, mapf),
+        :feasibility_total_path_cost => total_path_cost(solution, mapf),
     )
     return stats
 end

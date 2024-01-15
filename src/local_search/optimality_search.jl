@@ -6,7 +6,7 @@ function optimality_search!(
     neighborhood_size,
     show_progress,
 )
-    initial_cost = flowtime(solution, mapf)
+    initial_cost = total_path_cost(solution, mapf)
     cost = initial_cost
     prog = ProgressUnknown(; desc="Optimality search steps: ", enabled=show_progress)
     total_time = 0.0
@@ -19,7 +19,7 @@ function optimality_search!(
             neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
             backup = remove_agents!(solution, neighborhood_agents, mapf)
             cooperative_astar_from_trees!(solution, mapf, neighborhood_agents, spt_by_arr;)
-            new_cost = flowtime(solution, mapf)
+            new_cost = total_path_cost(solution, mapf)
             if is_individually_feasible(solution, mapf) && new_cost < cost
                 cost = new_cost
                 moves_successful += 1
@@ -40,9 +40,9 @@ function optimality_search!(
     stats = Dict(
         :optimality_moves_tried => moves_tried,
         :optimality_moves_successful => moves_successful,
-        :optimality_initial_flowtime => initial_cost,
+        :optimality_initial_total_path_cost => initial_cost,
         :optimality_feasible => is_feasible(solution, mapf),
-        :optimality_flowtime => flowtime(solution, mapf),
+        :optimality_total_path_cost => total_path_cost(solution, mapf),
     )
     return stats
 end
@@ -50,7 +50,7 @@ end
 """
 $(SIGNATURES)
 
-Run `cooperative_astar` and then reduce the solution flowtime with the MAPF-LNS algorithm from Li et al. (2021), see <https://www.ijcai.org/proceedings/2021/568>.
+Run `cooperative_astar` and then reduce the total path cost with the MAPF-LNS algorithm from Li et al. (2021), see <https://www.ijcai.org/proceedings/2021/568>.
 
 Returns a tuple containing a `Solution` and a dictionary of statistics.
 """
