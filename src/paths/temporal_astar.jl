@@ -26,6 +26,7 @@ Apply temporal A* to a graph with specified edge weights.
 - `tdep`: departure time
 - `res`: reservation indicating occupied vertices and edges at various times
 - `heuristic`: indexable giving an underestimate of the remaining distance to `arr`
+- `max_nodes`: maximum number of nodes in the search tree, defaults to `nv(g)^3`
 """
 function temporal_astar(
     g::AbstractGraph{V},
@@ -35,6 +36,7 @@ function temporal_astar(
     tdep::Integer,
     res::Reservation,
     heuristic::AbstractVector,
+    max_nodes::Integer=nv(g)^3,
 ) where {V,W}
     timed_path = TimedPath(tdep)
     # Init storage
@@ -51,6 +53,9 @@ function temporal_astar(
     nodes_explored = 0
     while !isempty(heap)
         nodes_explored += 1
+        if nodes_explored > max_nodes
+            error("Temporal A* does not seem to converge")
+        end
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         if u == arr
@@ -83,7 +88,7 @@ Apply a bi-objective variant of temporal A* to a graph with specified edge weigh
 
 # Keyword arguments
 
-- `dep`, `arr`, `tdep`, `res`, `heuristic`: see `temporal_astar`.
+- `dep`, `arr`, `tdep`, `res`, `heuristic`, `max_nodes`: see `temporal_astar`.
 - `conflict_price`: price given to the number of conflicts in the objective
 """
 function temporal_astar_soft(
@@ -95,6 +100,7 @@ function temporal_astar_soft(
     res::Reservation,
     heuristic::AbstractVector,
     conflict_price::Real,
+    max_nodes::Integer=nv(g)^3,
 ) where {V,W}
     timed_path = TimedPath(tdep)
     # Init storage
@@ -113,6 +119,9 @@ function temporal_astar_soft(
     nodes_explored = 0
     while !isempty(heap)
         nodes_explored += 1
+        if nodes_explored > max_nodes
+            error("Temporal A* does not seem to converge")
+        end
         (t, u), priority_u = pop!(heap)
         Δ_u = dists[t, u]
         c_u = conflicts[t, u]
