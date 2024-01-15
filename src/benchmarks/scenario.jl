@@ -1,5 +1,5 @@
 """
-    list_scenario_names()
+$(TYPEDSIGNATURES)
 
 List available scenarios from the benchmark set.
 """
@@ -11,17 +11,17 @@ function list_scenario_names()
 end
 
 """
-    map_from_scenario(scenario_name)
+$(TYPEDSIGNATURES)
 
 Return the map associated with a benchmark scenario.
 """
 function map_from_scenario(scenario_name::AbstractString)
-    name = split(scenario_name, '-')[1]
+    name = join(split(split(scenario_name, '.')[1], '-')[begin:(end - 2)], '-')
     return "$name.map"
 end
 
 """
-    scenarios_from_map(map_name)
+$(TYPEDSIGNATURES)
 
 List the scenarios associated with a benchmark map.
 """
@@ -33,7 +33,7 @@ function scenarios_from_map(map_name::AbstractString)
 end
 
 """
-    MAPFBenchmarkProblem
+$(TYPEDEF)
 
 Encode one agent of a MAPF scenario.
 
@@ -55,7 +55,7 @@ $(TYPEDFIELDS)
 end
 
 """
-    read_benchmark_scenario(scenario_name::AbstractString, map_name::AbstractString)
+$(TYPEDSIGNATURES)
 
 Read a scenario from a text file, and check that it corresponds to a given map.
 
@@ -109,7 +109,7 @@ function read_benchmark_scenario(scenario_name::AbstractString, map_name::Abstra
 end
 
 """
-    parse_benchmark_scenario(scenario::Vector{MAPFBenchmarkProblem}, coord_to_vertex::Dict)
+$(TYPEDSIGNATURES)
 
 Turn a scenario into vectors of departure and arrival vertices.
 """
@@ -129,18 +129,4 @@ function parse_benchmark_scenario(
     @assert length(unique(departures)) == length(departures)
     @assert length(unique(arrivals)) == length(arrivals)
     return departures, arrivals
-end
-
-function check_benchmark_scenario(
-    scenario::Vector{MAPFBenchmarkProblem}, g::AbstractGraph, coord_to_vertex::Dict
-)
-    departures, arrivals = parse_benchmark_scenario(scenario, coord_to_vertex)
-    for a in 1:length(scenario)
-        dists = dijkstra_shortest_paths(g, departures[a]).dists
-        if !isapprox(dists[arrivals[a]], scenario[a].optimal_length)
-            return false
-        end
-        break  # TODO: check all agents
-    end
-    return true
 end

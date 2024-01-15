@@ -51,13 +51,13 @@ function feasibility_search!(
         :feasibility_initial_conflicts_count => initial_conflicts_count,
         :feasibility_final_conflicts_count => conflicts_count,
         :feasibility_feasible => is_feasible(solution, mapf),
-        :feasibility_flowtime => flowtime(solution, mapf),
+        :feasibility_total_path_cost => total_path_cost(solution, mapf),
     )
     return stats
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Run `independent_dijkstra` and then reduce the number of conflicts with a variant of the MAPF-LNS2 algorithm from Li et al. (2022), see <https://ojs.aaai.org/index.php/AAAI/article/view/21266>.
 

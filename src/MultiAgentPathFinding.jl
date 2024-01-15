@@ -11,6 +11,7 @@ module MultiAgentPathFinding
 
 ## Dependencies
 
+using Base.Threads: @threads
 using Colors: @colorant_str
 using CPUTime: CPUtime_us
 using DataDeps: DataDep, @datadep_str, unpack, register
@@ -34,7 +35,7 @@ using Graphs:
     add_edge!,
     weights,
     dijkstra_shortest_paths
-using ProgressMeter: Progress, ProgressUnknown, next!
+using ProgressMeter: Progress, ProgressUnknown, next!, @showprogress
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedGraph
 using StatsBase: sample
@@ -65,8 +66,8 @@ include("benchmarks/combine.jl")
 
 export MAPF, Conflict, Solution, TimedPath
 export nb_agents, select_agents
-export flowtime, path_weight, find_conflict, is_feasible
-export independent_dijkstra, cooperative_astar, repeated_cooperative_astar
+export total_path_cost, path_cost, find_conflict, is_feasible
+export independent_dijkstra, cooperative_astar
 export feasibility_search, optimality_search, double_search
 export read_benchmark, list_map_names, list_scenario_names
 

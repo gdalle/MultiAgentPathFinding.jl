@@ -6,7 +6,7 @@ Vector of `TimedPath`s, one for each agent of a `MAPF`.
 const Solution = Vector{TimedPath}
 
 """
-    empty_solution(mapf)
+$(TYPEDSIGNATURES)
 
 Return a vector of empty `TimedPath`s.
 """
@@ -15,7 +15,7 @@ function empty_solution(mapf::MAPF)
 end
 
 """
-    all_non_empty(solution)
+$(TYPEDSIGNATURES)
 
 Check that all paths in a solution are non empty.
 """
@@ -24,11 +24,11 @@ function all_non_empty(solution::Solution)
 end
 
 """
-    remove_agents!(solution, agents, mapf)
+$(TYPEDSIGNATURES)
 
 Remove a set of agents from a solution and return a back up of their paths.
 """
-function remove_agents!(solution::Solution, agents, mapf::MAPF)
+function remove_agents!(solution::Solution, agents::AbstractVector{<:Integer}, mapf::MAPF)
     backup = Dict(a => solution[a] for a in agents)
     for a in agents
         solution[a] = TimedPath(mapf.departures[a], Int[])
@@ -39,23 +39,23 @@ end
 ## Cost
 
 """
-    flowtime(solution, mapf)
+$(TYPEDSIGNATURES)
 
 Sum the weight of all the paths in a solution.
 """
-function flowtime(solution::Solution, mapf::MAPF)
-    return sum(path_weight(timed_path, mapf) for timed_path in solution)
+function total_path_cost(solution::Solution, mapf::MAPF)
+    return sum(path_cost(timed_path, mapf) for timed_path in solution)
 end
 
 """
-    makespan(solution)
+$(TYPEDSIGNATURES)
 
 Compute the maximum arrival time of all the paths in a solution.
 """
 makespan(solution::Solution) = maximum(arrival_time(timed_path) for timed_path in solution)
 
 """
-    is_individually_feasible(solution, mapf[; verbose])
+$(TYPEDSIGNATURES)
 
 Check whether a solution is feasible when agents are considered separately.
 """
@@ -83,7 +83,7 @@ function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
 end
 
 """
-    is_collectively_feasible(solution, mapf[; verbose])
+$(TYPEDSIGNATURES)
 
 Check whether a solution contains any conflicts between agents.
 """
@@ -98,7 +98,7 @@ function is_collectively_feasible(solution::Solution, mapf::MAPF; verbose=false)
 end
 
 """
-    is_feasible(solution, mapf[; verbose])
+$(TYPEDSIGNATURES)
 
 Check whether a solution is both individually and collectively feasible (correct paths and no conflicts).
 """

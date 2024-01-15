@@ -18,7 +18,7 @@ mapf = MAPF(g; departures, arrivals);
 show_progress = false
 
 sol_indep = independent_dijkstra(mapf; show_progress);
-sol_coop = repeated_cooperative_astar(mapf; show_progress);
+sol_coop = cooperative_astar(mapf; show_progress);
 sol_os, stats_os = optimality_search(mapf; show_progress);
 sol_fs, stats_fs = feasibility_search(mapf; show_progress);
 sol_ds, stats_ds = double_search(mapf; show_progress);
@@ -29,11 +29,11 @@ sol_ds, stats_ds = double_search(mapf; show_progress);
 @test is_feasible(sol_fs, mapf, verbose=true)
 @test is_feasible(sol_ds, mapf, verbose=true)
 
-f_indep = flowtime(sol_indep, mapf)
-f_coop = flowtime(sol_coop, mapf)
-f_fs = flowtime(sol_fs, mapf)
-f_os = flowtime(sol_os, mapf)
-f_ds = flowtime(sol_ds, mapf)
+f_indep = total_path_cost(sol_indep, mapf)
+f_coop = total_path_cost(sol_coop, mapf)
+f_fs = total_path_cost(sol_fs, mapf)
+f_os = total_path_cost(sol_os, mapf)
+f_ds = total_path_cost(sol_ds, mapf)
 
 stats_os
 stats_fs

@@ -1,5 +1,5 @@
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Combine `feasibility_search` and `optimality_search`, see <https://pastel.hal.science/tel-04053322>.
 

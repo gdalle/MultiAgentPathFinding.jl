@@ -27,11 +27,11 @@ end
 ## Find conflicts
 
 """
-    find_conflict(solution, mapf[; tol=0])
+$(TYPEDSIGNATURES)
 
 Find a conflict in a solution.
 """
-function find_conflict(solution::Solution, mapf::MAPF; tol=0)
+function find_conflict(solution::Solution, mapf::MAPF; tol::Integer=0)
     for a1 in 1:nb_agents(mapf)
         for a2 in 1:(a1 - 1)
             conflict = find_conflict(a1, a2, solution, mapf; tol)
@@ -44,11 +44,11 @@ function find_conflict(solution::Solution, mapf::MAPF; tol=0)
 end
 
 """
-    count_conflicts(solution, mapf[; tol=0])
+$(TYPEDSIGNATURES)
 
 Count the number of conflicts in a solution.
 """
-function count_conflicts(solution::Solution, mapf::MAPF; tol=0)
+function count_conflicts(solution::Solution, mapf::MAPF; tol::Integer=0)
     c = 0
     for a1 in 1:nb_agents(mapf)
         for a2 in 1:(a1 - 1)
@@ -59,11 +59,13 @@ function count_conflicts(solution::Solution, mapf::MAPF; tol=0)
 end
 
 """
-    find_conflict(a1, a2, solution, mapf[; tol=0])
+$(TYPEDSIGNATURES)
 
 Find a conflict between agents `a1` and `a2` in a solution.
 """
-function find_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
+function find_conflict(
+    a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol::Integer=0
+)
     vc = find_vertex_conflict(a1, a2, solution, mapf; tol)
     !isnothing(vc) && return vc
     ec = find_edge_conflict(a1, a2, solution, mapf; tol)
@@ -72,24 +74,28 @@ function find_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
 end
 
 """
-    count_conflicts(a1, a2, solution, mapf[; tol=0])
+$(TYPEDSIGNATURES)
 
 Count the number of conflicts between agents `a1` and `a2` in a solution.
 """
-function count_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
+function count_conflicts(
+    a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol::Integer=0
+)
     vcc = count_vertex_conflicts(a1, a2, solution, mapf; tol)
     ecc = count_edge_conflicts(a1, a2, solution, mapf; tol)
     return vcc + ecc
 end
 
 """
-    find_vertex_conflict(a1, a2, solution, mapf[; tol=0])
+$(TYPEDSIGNATURES)
 
 Find an occurrence where the paths of `a1` and `a2` in the solution visit incompatible vertices less than `tol` time steps apart.
 
 Returns either a `Conflict` object or `nothing`.
 """
-function find_vertex_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
+function find_vertex_conflict(
+    a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol::Integer=0
+)
     timed_path1 = solution[a1]
     timed_path2 = solution[a2]
     for t1 in departure_time(timed_path1):arrival_time(timed_path1)
@@ -108,11 +114,13 @@ function find_vertex_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
 end
 
 """
-    count_vertex_conflicts(a1, a2, solution, mapf[; tol=0])
+$(TYPEDSIGNATURES)
 
 Count the number of occurrences where the paths of `a1` and `a2` in the solution visit incompatible vertices less than `tol` time steps apart.
 """
-function count_vertex_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
+function count_vertex_conflicts(
+    a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol::Integer=0
+)
     c = 0
     timed_path1 = solution[a1]
     timed_path2 = solution[a2]
@@ -132,13 +140,15 @@ function count_vertex_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
 end
 
 """
-    find_edge_conflict(a1, a2, solution, mapf[; tol=0])
+$(TYPEDSIGNATURES)
 
 Find an occurrence where the paths of `a1` and `a2` in the solution cross incompatible edges less than `tol` time steps apart.
 
 Returns either a `Conflict` object or `nothing`.
 """
-function find_edge_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
+function find_edge_conflict(
+    a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol::Integer=0
+)
     timed_path1 = solution[a1]
     timed_path2 = solution[a2]
     for t1 in departure_time(timed_path1):(arrival_time(timed_path1) - 1)
@@ -157,11 +167,13 @@ function find_edge_conflict(a1, a2, solution::Solution, mapf::MAPF; tol=0)
 end
 
 """
-    count_edge_conflicts(a1, a2, solution, mapf[; tol=0])
+$(TYPEDSIGNATURES)
 
 Count the number of occurrences where the paths of `a1` and `a2` in the solution cross incompatible edges less than `tol` time steps apart.
 """
-function count_edge_conflicts(a1, a2, solution::Solution, mapf::MAPF; tol=0)
+function count_edge_conflicts(
+    a1::Integer, a2::Integer, solution::Solution, mapf::MAPF; tol::Integer=0
+)
     c = 0
     timed_path1 = solution[a1]
     timed_path2 = solution[a2]

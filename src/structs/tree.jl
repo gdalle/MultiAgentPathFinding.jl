@@ -15,11 +15,13 @@ struct ShortestPathTree{T,W}
 end
 
 """
-    build_path_tree(spt, dep, arr, tdep)
+$(TYPEDSIGNATURES)
 
 Build a `TimedPath` from a `ShortestPathTree`, going from `dep` to `arr` and starting at time `tdep`.
 """
-function build_path_tree(spt::ShortestPathTree{T}, dep, arr, tdep) where {T}
+function build_path_tree(
+    spt::ShortestPathTree{T}, dep::Integer, arr::Integer, tdep::Integer
+) where {T}
     v = dep
     path = T[v]
     while v != arr
@@ -30,11 +32,11 @@ function build_path_tree(spt::ShortestPathTree{T}, dep, arr, tdep) where {T}
 end
 
 """
-    path_length_tree(spt, dep, arr)
+$(TYPEDSIGNATURES)
 
 Count the edges in a shortest path from `dep` to `arr` based on a `ShortestPathTree`.
 """
-function path_length_tree(spt::ShortestPathTree, dep, arr)
+function path_length_tree(spt::ShortestPathTree, dep::Integer, arr::Integer)
     l = 0
     v = dep
     while v != arr

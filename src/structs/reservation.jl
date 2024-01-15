@@ -17,7 +17,7 @@ mutable struct Reservation
 end
 
 """
-    Reservation()
+$(TYPEDSIGNATURES)
 
 Create an empty reservation.
 """
@@ -29,50 +29,52 @@ function Reservation()
 end
 
 """
-    max_time(reservation)
+$(TYPEDSIGNATURES)
 
 Return the maximum time of all forbidden vertices in a reservation.
 """
 max_time(reservation::Reservation) = reservation.max_time
 
 """
-    is_forbidden_vertex(reservation, t, v)
+$(TYPEDSIGNATURES)
 
 Check whether vertex `v` is occupied at time `t` in a reservation.
 """
-function is_forbidden_vertex(reservation::Reservation, t, v)
+function is_forbidden_vertex(reservation::Reservation, t::Integer, v::Integer)
     return (t, v) in reservation.forbidden_vertices
 end
 
 """
-    is_forbidden_edge(reservation, t, u, v)
+$(TYPEDSIGNATURES)
 
 Check whether edge `(u, v)` is occupied at time `t` in a reservation.
 """
-function is_forbidden_edge(reservation::Reservation, t, u, v)
+function is_forbidden_edge(reservation::Reservation, t::Integer, u::Integer, v::Integer)
     return (t, u, v) in reservation.forbidden_edges
 end
 
 """
-    compute_reservation(solution, mapf[; agents])
+$(TYPEDSIGNATURES)
 
 Compute a `Reservation` based on the vertices and edges occupied by a solution (or a subset of its `agents`).
 """
-function compute_reservation(solution::Solution, mapf::MAPF, agents=1:nb_agents(mapf))
+function compute_reservation(
+    solution::Solution, mapf::MAPF, agents::AbstractVector{<:Integer}=1:nb_agents(mapf)
+)
     reservation = Reservation()
     for a in agents
         timed_path = solution[a]
-        update_reservation!(reservation, timed_path, mapf, a)
+        update_reservation!(reservation, timed_path, mapf)
     end
     return reservation
 end
 
 """
-    update_reservation!(reservation, timed_path, mapf)
+$(TYPEDSIGNATURES)
 
 Add the vertices and edges occupied by a timed path to a reservation.
 """
-function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF, a)
+function update_reservation!(reservation::Reservation, timed_path::TimedPath, mapf::MAPF)
     length(timed_path) > 0 || return nothing
     for t in departure_time(timed_path):arrival_time(timed_path)
         v = vertex_at_time(timed_path, t)
