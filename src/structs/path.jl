@@ -17,31 +17,31 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Return an empty timed path.
+Return an empty `TimedPath`.
 """
 TimedPath(tdep::Integer) = TimedPath(tdep, Int[])
 
 Base.length(timed_path::TimedPath) = length(timed_path.path)
-Base.isempty(timed_path::TimedPath) = length(timed_path) == 0
+Base.isempty(timed_path::TimedPath) = isempty(timed_path.path)
 
 """
 $(TYPEDSIGNATURES)
 
-Return the departure time of a timed path.
+Return the departure time of `timed_path`.
 """
 departure_time(timed_path::TimedPath) = timed_path.tdep
 
 """
 $(TYPEDSIGNATURES)
 
-Return the departure time of a timed path plus its number of edges.
+Return the departure time of `timed_path` plus its number of edges.
 """
 arrival_time(timed_path::TimedPath) = timed_path.tdep + length(timed_path) - 1
 
 """
 $(TYPEDSIGNATURES)
 
-Return the vertex visited by a timed path at a given time, throws an error if it does not exist.
+Return the vertex visited by `timed_path` at a given time `t`, throws an error if it does not exist.
 """
 function vertex_at_time(timed_path::TimedPath, t::Integer)
     k = t - timed_path.tdep + 1
@@ -51,7 +51,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Return the first vertex of a timed path.
+Return the first vertex of `timed_path`.
 """
 function departure_vertex(timed_path::TimedPath)
     return vertex_at_time(timed_path, departure_time(timed_path))
@@ -60,7 +60,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Return the last vertex of a timed path.
+Return the last vertex of `timed_path`.
 """
 function arrival_vertex(timed_path::TimedPath)
     return vertex_at_time(timed_path, arrival_time(timed_path))
@@ -69,7 +69,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Return the edge crossed by a timed path at a given time, throws an error if it does not exist.
+Return the edge crossed by `timed_path` at a given time `t`, throws an error if it does not exist.
 """
 function edge_at_time(timed_path::TimedPath, t::Integer)
     k = t - timed_path.tdep + 1
@@ -79,7 +79,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Check that a timed path is feasible in the graph `g`, i.e. that all vertices and edges exist.
+Check that `timed_path` is feasible in the graph `g`, i.e. that all vertices and edges exist.
 """
 function exists_in_graph(timed_path::TimedPath, g::AbstractGraph)
     for t in departure_time(timed_path):arrival_time(timed_path)
@@ -98,18 +98,14 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Compute the weight of a timed path by summing edge weights between times `tmin` and `tmax` (which default to the departure and arrival time).
+Sum the costs of all the edges in `timed_path`.
+Costs are computed within `mapf` for agent `a`.
 """
-function path_cost(
-    timed_path::TimedPath,
-    mapf::MAPF{W};
-    tmin::Integer=departure_time(timed_path),
-    tmax::Integer=arrival_time(timed_path),
-) where {W}
+function path_cost(timed_path::TimedPath, a::Integer, mapf::MAPF{W}) where {W}
     c = zero(W)
-    for t in tmin:(tmax - 1)
+    for t in departure_time(timed_path):(arrival_time(timed_path) - 1)
         u, v = edge_at_time(timed_path, t)
-        c += mapf.edge_weights[u, v]
+        c += edge_cost(mapf.edge_costs, u, v, a, t)
     end
     return c
 end

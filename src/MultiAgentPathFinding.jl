@@ -46,8 +46,7 @@ include("structs/mapf.jl")
 include("structs/path.jl")
 include("structs/solution.jl")
 include("structs/reservation.jl")
-include("structs/conflict.jl")
-include("structs/tree.jl")
+include("structs/feasibility.jl")
 
 include("paths/temporal_astar.jl")
 include("paths/independent_dijkstra.jl")
@@ -64,9 +63,9 @@ include("benchmarks/combine.jl")
 
 ## Exports
 
-export MAPF, Conflict, Solution, TimedPath
+export MAPF, TimedPath, Solution, Reservation, VertexConflict, EdgeConflict
 export nb_agents, select_agents
-export total_path_cost, path_cost, find_conflict, is_feasible
+export solution_cost, path_cost, find_conflict, is_feasible
 export independent_dijkstra, cooperative_astar
 export feasibility_search, optimality_search, double_search
 export read_benchmark, list_map_names, list_scenario_names

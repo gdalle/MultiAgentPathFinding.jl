@@ -1,13 +1,45 @@
 """
+$(TYPEDEF)
+
+Storage for the result of Dijkstra's algorithm run backwards.
+
+# Fields
+
+$(TYPEDFIELDS)
+"""
+struct ShortestPathTree{T,W}
+    "successor of each vertex in a shortest path"
+    children::Vector{T}
+    "distance of each vertex to the arrival "
+    dists::Vector{W}
+end
+
+"""
 $(TYPEDSIGNATURES)
 
-Run Dijkstra's algorithm backward from an arrival vertex, with specified edge weights.
-
-Returns a `ShortestPathTree` where distances can be `nothing`.
+Build a [`TimedPath`](@ref) from a [`ShortestPathTree`](@ref), going from `dep` to `arr` and starting at time `tdep`.
 """
-function backward_dijkstra(
-    g::AbstractGraph{T}, w::AbstractMatrix{W}; arr::Integer
-) where {T,W}
+function build_path_from_tree(
+    spt::ShortestPathTree{T}, dep::Integer, arr::Integer, tdep::Integer
+) where {T}
+    v = dep
+    path = T[v]
+    while v != arr
+        v = spt.children[v]
+        push!(path, v)
+    end
+    return TimedPath(tdep, path)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Run Dijkstra's algorithm backward on graph `g` from arrival vertex `arr`, with specified `edge_costs`.
+
+Returns a [`ShortestPathTree`](@ref) where distances can be `nothing`.
+"""
+function backward_dijkstra(g::AbstractGraph{T}, edge_costs; arr::Integer) where {T}
+    W = eltype(edge_costs)
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{T,W}[])
     children = zeros(T, nv(g))
@@ -22,7 +54,7 @@ function backward_dijkstra(
             dists[v] = Δ_v
             for u in inneighbors(g, v)
                 Δ_u = dists[u]
-                Δ_u_through_v = w[u, v] + Δ_v
+                Δ_u_through_v = edge_cost(edge_costs, u, v) + Δ_v
                 if isnothing(Δ_u) || (Δ_u_through_v < Δ_u)
                     children[u] = v
                     dists[u] = Δ_u_through_v
@@ -37,9 +69,9 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Run `backward_dijkstra` from each arrival vertex of a `MAPF`.
+Run [`backward_dijkstra`](@ref) from each arrival vertex of `mapf`.
 
-Returns a dictionary of `ShortestPathTree`s.
+Returns a dictionary of [`ShortestPathTree`](@ref), one by arrival vertex.
 """
 function dijkstra_by_arrival(mapf::MAPF{W}; show_progress=false) where {W}
     unique_arrivals = unique(mapf.arrivals)
@@ -49,7 +81,7 @@ function dijkstra_by_arrival(mapf::MAPF{W}; show_progress=false) where {W}
     @threads for k in 1:K
         next!(prog)
         spt_by_arr_vec[k] = backward_dijkstra(
-            mapf.g, mapf.edge_weights; arr=unique_arrivals[k]
+            mapf.g, mapf.edge_costs; arr=unique_arrivals[k]
         )
     end
     spt_by_arr = Dict{Int,ShortestPathTree{Int,Union{Nothing,W}}}(
@@ -61,28 +93,30 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Compute independent shortest paths for each agent based on the output of `dijkstra_by_arrival` (i.e. a dictionary of `ShortestPathTree`s)
+Compute independent shortest paths for each agent of `mapf` based on the output `spt_by_arr` of [`dijkstra_by_arrival`](@ref).
+
+Returns a [`Solution`](@ref).
 """
 function independent_dijkstra_from_trees(
     mapf::MAPF, spt_by_arr::Dict{<:Integer,<:ShortestPathTree}
 )
     A = nb_agents(mapf)
-    solution = Vector{TimedPath}(undef, A)
+    timed_paths = Dict{Int,TimedPath}()
     for a in 1:A
         dep, arr = mapf.departures[a], mapf.arrivals[a]
         tdep = mapf.departure_times[a]
-        timed_path = build_path_tree(spt_by_arr[arr], dep, arr, tdep)
-        solution[a] = timed_path
+        timed_path = build_path_from_tree(spt_by_arr[arr], dep, arr, tdep)
+        timed_paths[a] = timed_path
     end
-    return solution
+    return Solution(timed_paths)
 end
 
 """
 $(TYPEDSIGNATURES)
 
-Compute independent shortest paths for each agent.
+Compute independent shortest paths for each agent of `mapf`.
     
-Returns a `Solution`.
+Returns a [`Solution`](@ref).
 """
 function independent_dijkstra(mapf::MAPF; show_progress=false)
     spt_by_arr = dijkstra_by_arrival(mapf; show_progress)

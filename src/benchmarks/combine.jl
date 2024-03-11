@@ -15,8 +15,9 @@ function read_benchmark(
     mapf = MAPF(g; departures=departures, arrivals=arrivals)
     if check
         sol_indep = independent_dijkstra(mapf; show_progress=true)
-        for a in 1:length(sol_indep)
-            @assert path_cost(sol_indep[a], mapf) ≈ scenario[a].optimal_length
+        for a in keys(sol_indep.timed_paths)
+            @assert path_cost(sol_indep.timed_paths[a], a, mapf) ≈
+                scenario[a].optimal_length
         end
     end
     return mapf

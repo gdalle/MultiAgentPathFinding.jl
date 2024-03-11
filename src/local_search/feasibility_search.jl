@@ -1,7 +1,7 @@
 function feasibility_search!(
     solution::Solution,
     mapf::MAPF,
-    spt_by_arr;
+    spt_by_arr::Dict{<:Integer,<:ShortestPathTree};
     feasibility_timeout,
     neighborhood_size,
     conflict_price,
@@ -19,7 +19,7 @@ function feasibility_search!(
             moves_tried += 1
             τ1 = CPUtime_us()
             neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
-            backup = remove_agents!(solution, neighborhood_agents, mapf)
+            backup_solution = remove_agents!(solution, neighborhood_agents)
             cooperative_astar_soft_from_trees!(
                 solution, mapf, neighborhood_agents, spt_by_arr; conflict_price
             )
@@ -31,9 +31,7 @@ function feasibility_search!(
                 conflicts_count = new_conflicts_count
                 moves_successful += 1
             else
-                for a in neighborhood_agents
-                    solution[a] = backup[a]
-                end
+                reinsert_agents!(solution, backup_solution)
             end
             τ2 = CPUtime_us()
             total_time += (τ2 - τ1) / 1e6
@@ -51,7 +49,7 @@ function feasibility_search!(
         :feasibility_initial_conflicts_count => initial_conflicts_count,
         :feasibility_final_conflicts_count => conflicts_count,
         :feasibility_feasible => is_feasible(solution, mapf),
-        :feasibility_total_path_cost => total_path_cost(solution, mapf),
+        :feasibility_solution_cost => solution_cost(solution, mapf),
     )
     return stats
 end
@@ -59,7 +57,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Run `independent_dijkstra` and then reduce the number of conflicts with a variant of the MAPF-LNS2 algorithm from Li et al. (2022), see <https://ojs.aaai.org/index.php/AAAI/article/view/21266>.
+Run [`independent_dijkstra`](@ref) and then reduce the number of conflicts with a variant of the MAPF-LNS2 algorithm from Li et al. (2022), see <https://ojs.aaai.org/index.php/AAAI/article/view/21266>.
 
 Returns a tuple containing a `Solution` and a dictionary of statistics.
 """

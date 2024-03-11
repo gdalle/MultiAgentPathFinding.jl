@@ -1,12 +1,12 @@
 function optimality_search!(
     solution::Solution,
     mapf::MAPF,
-    spt_by_arr;
+    spt_by_arr::Dict{<:Integer,<:ShortestPathTree};
     optimality_timeout,
     neighborhood_size,
     show_progress,
 )
-    initial_cost = total_path_cost(solution, mapf)
+    initial_cost = solution_cost(solution, mapf)
     cost = initial_cost
     prog = ProgressUnknown(; desc="Optimality search steps: ", enabled=show_progress)
     total_time = 0.0
@@ -17,16 +17,14 @@ function optimality_search!(
             moves_tried += 1
             τ1 = CPUtime_us()
             neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
-            backup = remove_agents!(solution, neighborhood_agents, mapf)
-            cooperative_astar_from_trees!(solution, mapf, neighborhood_agents, spt_by_arr;)
-            new_cost = total_path_cost(solution, mapf)
+            backup_solution = remove_agents!(solution, neighborhood_agents)
+            cooperative_astar_from_trees!(solution, mapf, neighborhood_agents, spt_by_arr)
+            new_cost = solution_cost(solution, mapf)
             if is_individually_feasible(solution, mapf) && new_cost < cost
                 cost = new_cost
                 moves_successful += 1
             else
-                for a in neighborhood_agents
-                    solution[a] = backup[a]
-                end
+                reinsert_agents!(solution, backup_solution)
             end
             τ2 = CPUtime_us()
             total_time += (τ2 - τ1) / 1e6
@@ -40,9 +38,9 @@ function optimality_search!(
     stats = Dict(
         :optimality_moves_tried => moves_tried,
         :optimality_moves_successful => moves_successful,
-        :optimality_initial_total_path_cost => initial_cost,
+        :optimality_initial_solution_cost => initial_cost,
         :optimality_feasible => is_feasible(solution, mapf),
-        :optimality_total_path_cost => total_path_cost(solution, mapf),
+        :optimality_solution_cost => solution_cost(solution, mapf),
     )
     return stats
 end
@@ -50,7 +48,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Run `cooperative_astar` and then reduce the total path cost with the MAPF-LNS algorithm from Li et al. (2021), see <https://www.ijcai.org/proceedings/2021/568>.
+Run [`cooperative_astar`](@ref) on `mapf` and then reduce the total path cost with the MAPF-LNS algorithm from Li et al. (2021), see <https://www.ijcai.org/proceedings/2021/568>.
 
 Returns a tuple containing a `Solution` and a dictionary of statistics.
 """
@@ -62,7 +60,7 @@ function optimality_search(
     show_progress=false,
 )
     spt_by_arr = dijkstra_by_arrival(mapf; show_progress)
-    solution = empty_solution(mapf)
+    solution = Solution()
     cooperative_astar_from_trees!(solution, mapf, agents, spt_by_arr; show_progress)
     stats = optimality_search!(
         solution, mapf, spt_by_arr; optimality_timeout, neighborhood_size, show_progress

@@ -1,7 +1,7 @@
 """
 $(TYPEDSIGNATURES)
 
-Build a `TimedPath` from a dictionary of temporal parents, going backward from `arr` which was reached at `tarr`.
+Build a [`TimedPath`](@ref) from a dictionary of temporal `parents`, going backward from `arr` which was reached at `tarr`.
 """
 function build_path_astar(parents::Dict, arr::Integer, tarr::Integer)
     path = Int[]
@@ -17,27 +17,30 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Apply temporal A* to a graph with specified edge weights.
+Apply temporal A* to graph `g`, with specified edge costs.
 
 # Keyword arguments
 
+- `a`: agent
 - `dep`: departure vertex
 - `arr`: arrival vertex
 - `tdep`: departure time
-- `res`: reservation indicating occupied vertices and edges at various times
+- `reservation`: reservation indicating occupied vertices and edges at various times
 - `heuristic`: indexable giving an underestimate of the remaining distance to `arr`
 - `max_nodes`: maximum number of nodes in the search tree, defaults to `nv(g)^3`
 """
 function temporal_astar(
     g::AbstractGraph{V},
-    w::AbstractMatrix{W};
+    edge_costs;
+    a::Integer,
     dep::Integer,
     arr::Integer,
     tdep::Integer,
-    res::Reservation,
-    heuristic::AbstractVector,
+    reservation::Reservation,
+    heuristic,
     max_nodes::Integer=nv(g)^3,
-) where {V,W}
+) where {V}
+    W = eltype(edge_costs)
     timed_path = TimedPath(tdep)
     # Init storage
     T = Int
@@ -45,7 +48,7 @@ function temporal_astar(
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     dists = Dict{Tuple{T,V},W}()
     # Add source
-    if !is_forbidden_vertex(res, tdep, dep)
+    if !is_occupied_vertex(reservation, tdep, dep)
         dists[tdep, dep] = zero(W)
         push!(heap, (tdep, dep) => heuristic[dep])
     end
@@ -64,10 +67,10 @@ function temporal_astar(
         else
             for v in outneighbors(g, u)
                 isnothing(heuristic[v]) && continue
-                is_forbidden_vertex(res, t + 1, v) && continue
-                is_forbidden_edge(res, t, u, v) && continue
+                is_occupied_vertex(reservation, t + 1, v) && continue
+                is_occupied_edge(reservation, t, u, v) && continue
                 Δ_v = get(dists, (t + 1, v), nothing)
-                Δ_v_through_u = Δ_u + w[u, v]
+                Δ_v_through_u = Δ_u + edge_cost(edge_costs, u, v, a, t)
                 if isnothing(Δ_v) || (Δ_v_through_u < Δ_v)
                     parents[t + 1, v] = (t, u)
                     dists[t + 1, v] = Δ_v_through_u
@@ -84,24 +87,28 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Apply a bi-objective variant of temporal A* to a graph with specified edge weights. The objective is to minimize a combination of the number of conflicts and the path weight.
+Apply a bi-objective variant of temporal A* to graph `g` with specified `edge_costs`.
+
+The objective is to minimize a weighted combination of (1) the number of conflicts and (2) the path cost.
 
 # Keyword arguments
 
-- `dep`, `arr`, `tdep`, `res`, `heuristic`, `max_nodes`: see `temporal_astar`.
+- `a`, `dep`, `arr`, `tdep`, `reservation`, `heuristic`, `max_nodes`: see `temporal_astar`.
 - `conflict_price`: price given to the number of conflicts in the objective
 """
 function temporal_astar_soft(
     g::AbstractGraph{V},
-    w::AbstractMatrix{W};
+    edge_costs;
+    a::Integer,
     dep::Integer,
     arr::Integer,
     tdep::Integer,
-    res::Reservation,
+    reservation::Reservation,
     heuristic::AbstractVector,
     conflict_price::Real,
     max_nodes::Integer=nv(g)^3,
-) where {V,W}
+) where {V}
+    W = eltype(edge_costs)
     timed_path = TimedPath(tdep)
     # Init storage
     T = Int
@@ -111,7 +118,7 @@ function temporal_astar_soft(
     conflicts = Dict{Tuple{T,V},Int}()
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     # Add source
-    c_dep = is_forbidden_vertex(res, tdep, dep)
+    c_dep = is_occupied_vertex(reservation, tdep, dep)
     dists[tdep, dep] = zero(W)
     conflicts[tdep, dep] = c_dep
     push!(heap, (tdep, dep) => conflict_price * c_dep + heuristic[dep])
@@ -133,10 +140,10 @@ function temporal_astar_soft(
                 isnothing(heuristic[v]) && continue
                 c_v = get(conflicts, (t + 1, v), nothing)
                 Δ_v = get(dists, (t + 1, v), nothing)
-                c_v_after_u = is_forbidden_vertex(res, t + 1, v)
-                c_uv = is_forbidden_edge(res, t, u, v)
+                c_v_after_u = is_occupied_vertex(reservation, t + 1, v)
+                c_uv = is_occupied_edge(reservation, t, u, v)
                 c_v_through_u = c_u + c_uv + c_v_after_u
-                Δ_v_through_u = Δ_u + w[u, v]
+                Δ_v_through_u = Δ_u + edge_cost(edge_costs, u, v, a, t)
                 cost_v_through_u = conflict_price * c_v_through_u + Δ_v_through_u
                 if (
                     isnothing(c_v) ||

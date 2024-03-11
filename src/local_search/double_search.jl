@@ -1,7 +1,7 @@
 """
 $(TYPEDSIGNATURES)
 
-Combine `feasibility_search` and `optimality_search`, see <https://pastel.hal.science/tel-04053322>.
+Combine [`feasibility_search`](@ref) and [`optimality_search`](@ref), see <https://pastel.hal.science/tel-04053322>.
 
 Returns a tuple containing a `Solution` and a dictionary of statistics.
 """
@@ -17,7 +17,7 @@ function double_search(
 )
     spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
     # Backup
-    backup_solution = empty_solution(mapf)
+    backup_solution = Solution()
     cooperative_astar_from_trees!(
         backup_solution, mapf, agents, spt_by_arr; show_progress=show_progress
     )
