@@ -1,3 +1,7 @@
+```@meta
+CollapsedDocStrings = true
+```
+
 # API reference
 
 Only exported names are part of the API.
@@ -12,7 +16,7 @@ MultiAgentPathFinding
 MAPF
 TimedPath
 Solution
-Conflict
+Reservation
 ```
 
 ## Access
@@ -26,9 +30,11 @@ select_agents
 
 ```@docs
 path_cost
-total_path_cost
+solution_cost
 is_feasible
 find_conflict
+VertexConflict
+EdgeConflict
 ```
 
 ## Basic algorithms

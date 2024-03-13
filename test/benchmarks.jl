@@ -34,7 +34,7 @@ list2 = sort([
 ])
 @test list1 == list2
 
-for map_name in list_map_names()
+@showprogress "Reading benchmarks" for map_name in list_map_names()
     for scenario_name in scenarios_from_map(map_name)
         read_benchmark(map_name, scenario_name)
     end
