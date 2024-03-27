@@ -5,6 +5,7 @@ function optimality_search!(
     optimality_timeout,
     neighborhood_size,
     show_progress,
+    threaded=false,
 )
     initial_cost = solution_cost(solution, mapf)
     cost = initial_cost
@@ -18,7 +19,9 @@ function optimality_search!(
             τ1 = CPUtime_us()
             neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
             backup_solution = remove_agents!(solution, neighborhood_agents)
-            cooperative_astar_from_trees!(solution, mapf, neighborhood_agents, spt_by_arr)
+            cooperative_astar!(
+                HardConflicts(), solution, mapf, neighborhood_agents, spt_by_arr
+            )
             new_cost = solution_cost(solution, mapf)
             if is_individually_feasible(solution, mapf) && new_cost < cost
                 cost = new_cost
@@ -58,12 +61,18 @@ function optimality_search(
     optimality_timeout=2,
     neighborhood_size=10,
     show_progress=false,
+    threaded=false,
+    spt_by_arr=dijkstra_by_arrival(mapf; show_progress, threaded),
 )
-    spt_by_arr = dijkstra_by_arrival(mapf; show_progress)
-    solution = Solution()
-    cooperative_astar_from_trees!(solution, mapf, agents, spt_by_arr; show_progress)
+    solution = cooperative_astar(mapf, agents; spt_by_arr, show_progress, threaded)
     stats = optimality_search!(
-        solution, mapf, spt_by_arr; optimality_timeout, neighborhood_size, show_progress
+        solution,
+        mapf,
+        spt_by_arr;
+        optimality_timeout,
+        neighborhood_size,
+        show_progress,
+        threaded,
     )
     return solution, stats
 end

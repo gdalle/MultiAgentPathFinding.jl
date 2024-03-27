@@ -11,12 +11,12 @@ $(TYPEDFIELDS)
 
 Agents appear at their departure vertex when the departure time comes, and they disappear as soon as they have reached the arrival vertex.
 """
-struct MAPF{W<:Real,G<:AbstractGraph{Int},M,VC,EC}
+struct MAPF{G<:AbstractGraph{Int},M,VC,EC}
 
     # Graph-related
     "underlying graph"
     g::G
-    "edge costs, typically stored as a matrix with eltype `W`"
+    "edge costs, typically stored as a matrix"
     edge_costs::M
 
     # Agents-related
@@ -44,7 +44,7 @@ struct MAPF{W<:Real,G<:AbstractGraph{Int},M,VC,EC}
     ) where {G,M,VC,EC}
         @assert length(departures) == length(arrivals) == length(departure_times)
         # TODO: add more checks
-        return new{eltype(M),G,M,VC,EC}(
+        return new{G,M,VC,EC}(
             g,
             edge_costs,
             departures,
@@ -99,11 +99,11 @@ end
 
 ## Display
 
-function Base.show(io::IO, mapf::MAPF{W,G}) where {W,G}
+function Base.show(io::IO, mapf::MAPF{G}) where {G}
     return print(
         io,
         """Multi-Agent Path Finding problem
-        Graph type: $G with $W costs
+        Graph type: $G
         Graph size: $(nv(mapf.g)) vertices and $(ne(mapf.g)) edges
         Nb of agents: $(nb_agents(mapf))""",
     )

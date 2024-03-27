@@ -19,6 +19,11 @@ $(TYPEDFIELDS)
     a2::Int
 end
 
+function Base.show(io::IO, vc::VertexConflict)
+    (; t, v, a1, a2) = vc
+    return print(io, "Conflict at time $t on vertex $v between agents $a1 and $a2")
+end
+
 """
 $(TYPEDEF)
 
@@ -39,6 +44,11 @@ $(TYPEDFIELDS)
     a1::Int
     "second agent"
     a2::Int
+end
+
+function Base.show(io::IO, ec::EdgeConflict)
+    (; t, u, v, a1, a2) = ec
+    return print(io, "Conflict at time $t on edge $((u, v)) between agents $a1 and $a2")
 end
 
 """

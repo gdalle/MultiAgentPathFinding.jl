@@ -7,6 +7,7 @@ function feasibility_search!(
     conflict_price,
     conflict_price_increase,
     show_progress,
+    threaded=false,
 )
     initial_conflicts_count = count_conflicts(solution, mapf)
     conflicts_count = initial_conflicts_count
@@ -20,8 +21,13 @@ function feasibility_search!(
             τ1 = CPUtime_us()
             neighborhood_agents = random_neighborhood(mapf, neighborhood_size)
             backup_solution = remove_agents!(solution, neighborhood_agents)
-            cooperative_astar_soft_from_trees!(
-                solution, mapf, neighborhood_agents, spt_by_arr; conflict_price
+            cooperative_astar!(
+                SoftConflicts(),
+                solution,
+                mapf,
+                neighborhood_agents,
+                spt_by_arr;
+                conflict_price,
             )
             new_conflicts_count = count_conflicts(solution, mapf)
             if (
@@ -39,7 +45,7 @@ function feasibility_search!(
                 break
             else
                 next!(prog; showvalues=[(:conflicts_count, conflicts_count)])
-                conflict_price *= (one(conflict_price_increase) + conflict_price_increase)
+                conflict_price *= (1 + conflict_price_increase)
             end
         end
     end
@@ -68,9 +74,10 @@ function feasibility_search(
     conflict_price=1.0,
     conflict_price_increase=0.1,
     show_progress=false,
+    threaded=false,
+    spt_by_arr=dijkstra_by_arrival(mapf; show_progress, threaded),
 )
-    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
-    solution = independent_dijkstra_from_trees(mapf, spt_by_arr)
+    solution = independent_dijkstra(mapf; spt_by_arr, show_progress, threaded)
     stats = feasibility_search!(
         solution,
         mapf,
@@ -80,6 +87,7 @@ function feasibility_search(
         conflict_price,
         conflict_price_increase,
         show_progress,
+        threaded,
     )
     return solution, stats
 end

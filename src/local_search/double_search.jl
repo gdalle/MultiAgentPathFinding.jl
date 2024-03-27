@@ -14,31 +14,32 @@ function double_search(
     conflict_price=1.0,
     conflict_price_increase=0.1,
     show_progress=false,
+    threaded=true,
+    spt_by_arr=dijkstra_by_arrival(mapf; show_progress, threaded),
 )
-    spt_by_arr = dijkstra_by_arrival(mapf; show_progress=show_progress)
-    # Backup
-    backup_solution = Solution()
-    cooperative_astar_from_trees!(
-        backup_solution, mapf, agents, spt_by_arr; show_progress=show_progress
-    )
     # Feasibility search
-    solution = independent_dijkstra_from_trees(mapf, spt_by_arr)
-    feasibility_stats = feasibility_search!(
-        solution,
-        mapf,
-        spt_by_arr;
+    solution, feasibility_stats = feasibility_search(
+        mapf;
+        spt_by_arr,
         feasibility_timeout,
         neighborhood_size,
         conflict_price,
         conflict_price_increase,
         show_progress,
+        threaded,
     )
     if !is_feasible(solution, mapf)
-        solution = backup_solution
+        solution = cooperative_astar(mapf, agents; spt_by_arr, show_progress, threaded)
     end
     # Optimality search
     optimality_stats = optimality_search!(
-        solution, mapf, spt_by_arr; optimality_timeout, neighborhood_size, show_progress
+        solution,
+        mapf,
+        spt_by_arr;
+        optimality_timeout,
+        neighborhood_size,
+        show_progress,
+        threaded,
     )
     # Rename stats
     double_stats = merge(feasibility_stats, optimality_stats)

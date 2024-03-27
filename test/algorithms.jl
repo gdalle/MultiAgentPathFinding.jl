@@ -1,20 +1,21 @@
 using Graphs
+using JET
 using MultiAgentPathFinding
 using Random
 using Test
 
 Random.seed!(63)
 
-L = 10
+show_progress = get(ENV, "CI", "false") == "false"
+
+L = 20
 g = Graphs.grid([L, L])
 
-A = 10
+A = 20
 departures = 1:A;
 arrivals = (nv(g) + 1) .- (1:A);
 
 mapf = MAPF(g; departures, arrivals);
-
-show_progress = true
 
 sol_indep = independent_dijkstra(mapf; show_progress);
 sol_coop = cooperative_astar(mapf; show_progress);
