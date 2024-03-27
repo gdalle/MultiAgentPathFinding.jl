@@ -40,6 +40,7 @@ EdgeConflict
 ## Basic algorithms
 
 ```@docs
+dijkstra_by_arrival
 independent_dijkstra
 cooperative_astar
 ```

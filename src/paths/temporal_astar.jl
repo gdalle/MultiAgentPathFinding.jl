@@ -1,3 +1,7 @@
+abstract type ConflictHandling end
+struct HardConflicts <: ConflictHandling end
+struct SoftConflicts <: ConflictHandling end
+
 """
 $(TYPEDSIGNATURES)
 
@@ -30,7 +34,8 @@ Apply temporal A* to graph `g`, with specified edge costs.
 - `max_nodes`: maximum number of nodes in the search tree, defaults to `nv(g)^3`
 """
 function temporal_astar(
-    g::AbstractGraph{V},
+    ::HardConflicts,
+    g::AbstractGraph,
     edge_costs;
     a::Integer,
     dep::Integer,
@@ -39,11 +44,12 @@ function temporal_astar(
     reservation::Reservation,
     heuristic,
     max_nodes::Integer=nv(g)^3,
-) where {V}
-    W = eltype(edge_costs)
-    timed_path = TimedPath(tdep)
-    # Init storage
+)
+    V = Int
     T = Int
+    W = eltype(edge_costs)
+    # Init storage
+    timed_path = TimedPath(tdep)
     heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},W}[])
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     dists = Dict{Tuple{T,V},W}()
@@ -96,8 +102,9 @@ The objective is to minimize a weighted combination of (1) the number of conflic
 - `a`, `dep`, `arr`, `tdep`, `reservation`, `heuristic`, `max_nodes`: see `temporal_astar`.
 - `conflict_price`: price given to the number of conflicts in the objective
 """
-function temporal_astar_soft(
-    g::AbstractGraph{V},
+function temporal_astar(
+    ::SoftConflicts,
+    g::AbstractGraph,
     edge_costs;
     a::Integer,
     dep::Integer,
@@ -107,11 +114,12 @@ function temporal_astar_soft(
     heuristic::AbstractVector,
     conflict_price::Real,
     max_nodes::Integer=nv(g)^3,
-) where {V}
-    W = eltype(edge_costs)
-    timed_path = TimedPath(tdep)
-    # Init storage
+)
+    V = Int
     T = Int
+    W = eltype(edge_costs)
+    # Init storage
+    timed_path = TimedPath(tdep)
     P = promote_type(W, typeof(conflict_price))
     heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},P}[])
     dists = Dict{Tuple{T,V},W}()

@@ -7,9 +7,9 @@ Storage for the result of Dijkstra's algorithm run backwards.
 
 $(TYPEDFIELDS)
 """
-struct ShortestPathTree{T,W}
+struct ShortestPathTree{V,W}
     "successor of each vertex in a shortest path"
-    children::Vector{T}
+    children::Vector{V}
     "distance of each vertex to the arrival "
     dists::Vector{W}
 end
@@ -20,10 +20,10 @@ $(TYPEDSIGNATURES)
 Build a [`TimedPath`](@ref) from a [`ShortestPathTree`](@ref), going from `dep` to `arr` and starting at time `tdep`.
 """
 function build_path_from_tree(
-    spt::ShortestPathTree{T}, dep::Integer, arr::Integer, tdep::Integer
-) where {T}
+    spt::ShortestPathTree{V}, dep::Integer, arr::Integer, tdep::Integer
+) where {V}
     v = dep
-    path = T[v]
+    path = V[v]
     while v != arr
         v = spt.children[v]
         push!(path, v)
@@ -38,11 +38,12 @@ Run Dijkstra's algorithm backward on graph `g` from arrival vertex `arr`, with s
 
 Returns a [`ShortestPathTree`](@ref) where distances can be `nothing`.
 """
-function backward_dijkstra(g::AbstractGraph{T}, edge_costs; arr::Integer) where {T}
+function backward_dijkstra(g::AbstractGraph, edge_costs; arr::Integer)
+    V = Int
     W = eltype(edge_costs)
     # Init storage
-    heap = BinaryHeap(Base.By(last), Pair{T,W}[])
-    children = zeros(T, nv(g))
+    heap = BinaryHeap(Base.By(last), Pair{V,W}[])
+    children = zeros(V, nv(g))
     dists = Vector{Union{Nothing,W}}(undef, nv(g))
     # Add source
     dists[arr] = zero(W)
@@ -63,7 +64,7 @@ function backward_dijkstra(g::AbstractGraph{T}, edge_costs; arr::Integer) where 
             end
         end
     end
-    return ShortestPathTree{T,Union{Nothing,W}}(children, dists)
+    return ShortestPathTree{V,Union{Nothing,W}}(children, dists)
 end
 
 """
@@ -73,18 +74,24 @@ Run [`backward_dijkstra`](@ref) from each arrival vertex of `mapf`.
 
 Returns a dictionary of [`ShortestPathTree`](@ref), one by arrival vertex.
 """
-function dijkstra_by_arrival(mapf::MAPF{W}; show_progress=false) where {W}
+function dijkstra_by_arrival(mapf::MAPF; show_progress=false, threaded=true)
+    V = Int
+    W = eltype(mapf.edge_costs)
     unique_arrivals = unique(mapf.arrivals)
     K = length(unique_arrivals)
-    spt_by_arr_vec = Vector{ShortestPathTree{Int,Union{Nothing,W}}}(undef, K)
     prog = Progress(K; desc="Dijkstra by destination: ", enabled=show_progress)
-    @threads for k in 1:K
-        next!(prog)
-        spt_by_arr_vec[k] = backward_dijkstra(
-            mapf.g, mapf.edge_costs; arr=unique_arrivals[k]
-        )
+    spt_by_arr_vec = if threaded
+        tmap(1:K) do k
+            next!(prog)
+            backward_dijkstra(mapf.g, mapf.edge_costs; arr=unique_arrivals[k])
+        end
+    else
+        map(1:K) do k
+            next!(prog)
+            backward_dijkstra(mapf.g, mapf.edge_costs; arr=unique_arrivals[k])
+        end
     end
-    spt_by_arr = Dict{Int,ShortestPathTree{Int,Union{Nothing,W}}}(
+    spt_by_arr = Dict{V,ShortestPathTree{V,Union{Nothing,W}}}(
         unique_arrivals[k] => spt_by_arr_vec[k] for k in 1:K
     )
     return spt_by_arr
@@ -93,12 +100,15 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Compute independent shortest paths for each agent of `mapf` based on the output `spt_by_arr` of [`dijkstra_by_arrival`](@ref).
-
+Compute independent shortest paths for each agent of `mapf`.
+    
 Returns a [`Solution`](@ref).
 """
-function independent_dijkstra_from_trees(
-    mapf::MAPF, spt_by_arr::Dict{<:Integer,<:ShortestPathTree}
+function independent_dijkstra(
+    mapf::MAPF;
+    show_progress=false,
+    threaded=true,
+    spt_by_arr=dijkstra_by_arrival(mapf; show_progress, threaded),
 )
     A = nb_agents(mapf)
     timed_paths = Dict{Int,TimedPath}()
@@ -109,17 +119,4 @@ function independent_dijkstra_from_trees(
         timed_paths[a] = timed_path
     end
     return Solution(timed_paths)
-end
-
-"""
-$(TYPEDSIGNATURES)
-
-Compute independent shortest paths for each agent of `mapf`.
-    
-Returns a [`Solution`](@ref).
-"""
-function independent_dijkstra(mapf::MAPF; show_progress=false)
-    spt_by_arr = dijkstra_by_arrival(mapf; show_progress)
-    solution = independent_dijkstra_from_trees(mapf, spt_by_arr)
-    return solution
 end

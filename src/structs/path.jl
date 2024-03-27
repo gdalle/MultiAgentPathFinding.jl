@@ -101,11 +101,12 @@ $(TYPEDSIGNATURES)
 Sum the costs of all the edges in `timed_path`.
 Costs are computed within `mapf` for agent `a`.
 """
-function path_cost(timed_path::TimedPath, a::Integer, mapf::MAPF{W}) where {W}
-    c = zero(W)
+function path_cost(timed_path::TimedPath, a::Integer, mapf::MAPF)
+    (; edge_costs) = mapf
+    c = zero(eltype(edge_costs))
     for t in departure_time(timed_path):(arrival_time(timed_path) - 1)
         u, v = edge_at_time(timed_path, t)
-        c += edge_cost(mapf.edge_costs, u, v, a, t)
+        c += edge_cost(edge_costs, u, v, a, t)
     end
     return c
 end
