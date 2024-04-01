@@ -42,6 +42,7 @@ EdgeConflict
 ```@docs
 dijkstra_by_arrival
 independent_dijkstra
+independent_astar
 cooperative_astar
 ```
 
