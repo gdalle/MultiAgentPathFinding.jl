@@ -35,7 +35,7 @@ using Graphs:
     add_edge!,
     weights,
     dijkstra_shortest_paths
-using OhMyThreads: tmap
+using OhMyThreads: tforeach, tmap
 using ProgressMeter: Progress, ProgressUnknown, next!, @showprogress
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedGraph
@@ -49,8 +49,9 @@ include("structs/solution.jl")
 include("structs/reservation.jl")
 include("structs/feasibility.jl")
 
-include("paths/temporal_astar.jl")
 include("paths/independent_dijkstra.jl")
+include("paths/temporal_astar.jl")
+include("paths/independent_astar.jl")
 include("paths/cooperative_astar.jl")
 
 include("local_search/neighborhoods.jl")
@@ -67,7 +68,7 @@ include("benchmarks/combine.jl")
 export MAPF, TimedPath, Solution, Reservation, VertexConflict, EdgeConflict
 export nb_agents, select_agents
 export solution_cost, path_cost, find_conflict, is_feasible
-export dijkstra_by_arrival, independent_dijkstra, cooperative_astar
+export dijkstra_by_arrival, independent_dijkstra, independent_astar, cooperative_astar
 export feasibility_search, optimality_search, double_search
 export read_benchmark, list_map_names, list_scenario_names
 

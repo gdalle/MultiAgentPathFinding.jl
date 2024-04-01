@@ -1,6 +1,7 @@
 abstract type ConflictHandling end
 struct HardConflicts <: ConflictHandling end
 struct SoftConflicts <: ConflictHandling end
+struct IgnoredConflicts <: ConflictHandling end
 
 """
 $(TYPEDSIGNATURES)
@@ -34,7 +35,7 @@ Apply temporal A* to graph `g`, with specified edge costs.
 - `max_nodes`: maximum number of nodes in the search tree, defaults to `nv(g)^3`
 """
 function temporal_astar(
-    ::HardConflicts,
+    conflict_handling::Union{HardConflicts,IgnoredConflicts},
     g::AbstractGraph,
     edge_costs;
     a::Integer,
@@ -54,7 +55,7 @@ function temporal_astar(
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     dists = Dict{Tuple{T,V},W}()
     # Add source
-    if !is_occupied_vertex(reservation, tdep, dep)
+    if conflict_handling isa IgnoredConflicts || !is_occupied_vertex(reservation, tdep, dep)
         dists[tdep, dep] = zero(W)
         push!(heap, (tdep, dep) => heuristic[dep])
     end
@@ -73,8 +74,10 @@ function temporal_astar(
         else
             for v in outneighbors(g, u)
                 isnothing(heuristic[v]) && continue
-                is_occupied_vertex(reservation, t + 1, v) && continue
-                is_occupied_edge(reservation, t, u, v) && continue
+                if conflict_handling isa HardConflicts
+                    is_occupied_vertex(reservation, t + 1, v) && continue
+                    is_occupied_edge(reservation, t, u, v) && continue
+                end
                 Δ_v = get(dists, (t + 1, v), nothing)
                 Δ_v_through_u = Δ_u + edge_cost(edge_costs, u, v, a, t)
                 if isnothing(Δ_v) || (Δ_v_through_u < Δ_v)
@@ -95,12 +98,7 @@ $(TYPEDSIGNATURES)
 
 Apply a bi-objective variant of temporal A* to graph `g` with specified `edge_costs`.
 
-The objective is to minimize a weighted combination of (1) the number of conflicts and (2) the path cost.
-
-# Keyword arguments
-
-- `a`, `dep`, `arr`, `tdep`, `reservation`, `heuristic`, `max_nodes`: see `temporal_astar`.
-- `conflict_price`: price given to the number of conflicts in the objective
+The objective is to minimize a weighted combination of (1) the number of conflicts, each weighted by `conflict_price` and (2) the path cost.
 """
 function temporal_astar(
     ::SoftConflicts,
