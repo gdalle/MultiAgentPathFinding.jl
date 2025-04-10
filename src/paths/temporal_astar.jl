@@ -72,7 +72,7 @@ function temporal_astar(
             break
         else
             for v in outneighbors(g, u)
-                isnothing(heuristic[v]) && continue
+                heuristic[v] == typemax(W) && continue
                 is_occupied_vertex(reservation, t + 1, v) && continue
                 is_occupied_edge(reservation, t, u, v) && continue
                 Δ_v = get(dists, (t + 1, v), nothing)
@@ -145,7 +145,7 @@ function temporal_astar(
             break
         else
             for v in outneighbors(g, u)
-                isnothing(heuristic[v]) && continue
+                heuristic[v] == typemax(W) && continue
                 c_v = get(conflicts, (t + 1, v), nothing)
                 Δ_v = get(dists, (t + 1, v), nothing)
                 c_v_after_u = is_occupied_vertex(reservation, t + 1, v)

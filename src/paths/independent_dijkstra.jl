@@ -36,7 +36,7 @@ $(TYPEDSIGNATURES)
 
 Run Dijkstra's algorithm backward on graph `g` from arrival vertex `arr`, with specified `edge_costs`.
 
-Returns a [`ShortestPathTree`](@ref) where distances can be `nothing`.
+Returns a [`ShortestPathTree`](@ref).
 """
 function backward_dijkstra(g::AbstractGraph, edge_costs; arr::Integer)
     V = Int
@@ -44,7 +44,7 @@ function backward_dijkstra(g::AbstractGraph, edge_costs; arr::Integer)
     # Init storage
     heap = BinaryHeap(Base.By(last), Pair{V,W}[])
     children = zeros(V, nv(g))
-    dists = Vector{Union{Nothing,W}}(undef, nv(g))
+    dists = fill(typemax(W), nv(g))
     # Add source
     dists[arr] = zero(W)
     push!(heap, arr => zero(W))
@@ -56,7 +56,7 @@ function backward_dijkstra(g::AbstractGraph, edge_costs; arr::Integer)
             for u in inneighbors(g, v)
                 Δ_u = dists[u]
                 Δ_u_through_v = edge_cost(edge_costs, u, v) + Δ_v
-                if isnothing(Δ_u) || (Δ_u_through_v < Δ_u)
+                if Δ_u_through_v < Δ_u
                     children[u] = v
                     dists[u] = Δ_u_through_v
                     push!(heap, u => Δ_u_through_v)
@@ -64,7 +64,7 @@ function backward_dijkstra(g::AbstractGraph, edge_costs; arr::Integer)
             end
         end
     end
-    return ShortestPathTree{V,Union{Nothing,W}}(children, dists)
+    return ShortestPathTree(children, dists)
 end
 
 """
@@ -91,7 +91,7 @@ function dijkstra_by_arrival(mapf::MAPF; show_progress=false, threaded=true)
             backward_dijkstra(mapf.g, mapf.edge_costs; arr=unique_arrivals[k])
         end
     end
-    spt_by_arr = Dict{V,ShortestPathTree{V,Union{Nothing,W}}}(
+    spt_by_arr = Dict{V,ShortestPathTree{V,W}}(
         unique_arrivals[k] => spt_by_arr_vec[k] for k in 1:K
     )
     return spt_by_arr
