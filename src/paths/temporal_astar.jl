@@ -50,7 +50,7 @@ function temporal_astar(
     W = eltype(edge_costs)
     # Init storage
     timed_path = TimedPath(tdep)
-    heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},W}[])
+    heap = BinaryHeap(Base.By(last), Pair{Tuple{T,V},Union{Nothing,W}}[])
     parents = Dict{Tuple{T,V},Tuple{T,V}}()
     dists = Dict{Tuple{T,V},W}()
     # Add source
