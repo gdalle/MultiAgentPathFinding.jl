@@ -25,8 +25,12 @@ function build_path_from_tree(
     v = dep
     path = V[v]
     while v != arr
-        v = spt.children[v]
-        push!(path, v)
+        if v == 0
+            return TimedPath(tdep, V[])
+        else
+            v = spt.children[v]
+            push!(path, v)
+        end
     end
     return TimedPath(tdep, path)
 end
@@ -102,7 +106,7 @@ $(TYPEDSIGNATURES)
 
 Compute independent shortest paths for each agent of `mapf`.
     
-Returns a [`Solution`](@ref).
+Returns a [`Solution`](@ref) where some paths may be empty if the vertices are not connected.
 """
 function independent_dijkstra(
     mapf::MAPF;

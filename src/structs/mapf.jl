@@ -43,6 +43,8 @@ struct MAPF{G<:AbstractGraph{Int},M,VC,EC}
         edge_conflicts::EC,
     ) where {G,M,VC,EC}
         @assert length(departures) == length(arrivals) == length(departure_times)
+        @assert all(Base.Fix1(has_vertex, g), departures)
+        @assert all(Base.Fix1(has_vertex, g), arrivals)
         # TODO: add more checks
         return new{G,M,VC,EC}(
             g,
