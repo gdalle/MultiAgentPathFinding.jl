@@ -1,7 +1,7 @@
 name = "MultiAgentPathFinding"
 uuid = "1f5aa91a-953b-4f4c-bed6-d21f3af349fa"
 authors = ["Guillaume Dalle"]
-version = "0.4.0"
+version = "0.4.1"
 
 [deps]
 CPUTime = "a9c8d775-2e2e-55fc-8582-045d282d599e"

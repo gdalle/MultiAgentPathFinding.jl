@@ -43,7 +43,7 @@ $(TYPEDSIGNATURES)
 Solve a MAPF problem `mapf` for a set of `agents` with the cooperative A* algorithm of Silver (2005), see <https://ojs.aaai.org/index.php/AIIDE/article/view/18726>.
 The A* heuristic is given by [`independent_dijkstra`](@ref).
 
-Returns a `Solution`.
+Returns a `Solution` where some paths may be empty if the vertices are not connected.
 """
 function cooperative_astar(
     mapf::MAPF,
