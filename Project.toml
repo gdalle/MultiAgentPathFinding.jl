@@ -1,7 +1,7 @@
 name = "MultiAgentPathFinding"
 uuid = "1f5aa91a-953b-4f4c-bed6-d21f3af349fa"
 authors = ["Guillaume Dalle"]
-version = "0.4.1"
+version = "0.5.0"
 
 [deps]
 CPUTime = "a9c8d775-2e2e-55fc-8582-045d282d599e"
@@ -50,4 +50,13 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "Documenter", "Graphs", "JET", "JuliaFormatter", "ProgressMeter", "Random", "Test"]
+test = [
+    "Aqua",
+    "Documenter",
+    "Graphs",
+    "JET",
+    "JuliaFormatter",
+    "ProgressMeter",
+    "Random",
+    "Test",
+]
