@@ -111,22 +111,20 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Turn a scenario into vectors of departure and arrival vertices.
+Turn a scenario into vectors of departure coordinates and a vector of arrival coordinates.
 """
-function parse_benchmark_scenario(
-    scenario::Vector{MAPFBenchmarkProblem}, coord_to_vertex::Dict
-)
+function parse_benchmark_scenario(scenario::Vector{MAPFBenchmarkProblem})
     A = length(scenario)
-    departures = Vector{Int}(undef, A)
-    arrivals = Vector{Int}(undef, A)
+    departure_coords = Vector{Tuple{Int,Int}}(undef, A)
+    arrival_coords = Vector{Tuple{Int,Int}}(undef, A)
     for a in 1:A
         problem = scenario[a]
         is, js = problem.start_i, problem.start_j
         id, jd = problem.goal_i, problem.goal_j
-        departures[a] = coord_to_vertex[is, js]
-        arrivals[a] = coord_to_vertex[id, jd]
+        departure_coords[a] = (is, js)
+        arrival_coords[a] = (id, jd)
     end
-    @assert length(unique(departures)) == length(departures)
-    @assert length(unique(arrivals)) == length(arrivals)
-    return departures, arrivals
+    @assert length(unique(departure_coords)) == length(departure_coords)
+    @assert length(unique(arrival_coords)) == length(arrival_coords)
+    return departure_coords, arrival_coords
 end

@@ -45,14 +45,6 @@ independent_dijkstra
 cooperative_astar
 ```
 
-## Local search
-
-```@docs
-feasibility_search
-optimality_search
-double_search
-```
-
 ## Benchmarks
 
 ```@docs
