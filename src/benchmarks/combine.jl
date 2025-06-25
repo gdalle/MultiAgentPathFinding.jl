@@ -13,12 +13,13 @@ For the coordinates, `(0, 0)` is the upper left corner of the grid.
 function MAPF(
     map_matrix::AbstractMatrix,
     departure_coords::Vector{Tuple{Int,Int}},
-    arrival_coords::Vector{Tuple{Int,Int}},
+    arrival_coords::Vector{Tuple{Int,Int}};
+    kwargs...,
 )
     g, coord_to_vertex = parse_benchmark_map(map_matrix)
     departures = [coord_to_vertex[is, js] for (is, js) in departure_coords]
     arrivals = [coord_to_vertex[is, js] for (is, js) in arrival_coords]
-    return MAPF(g, departures, arrivals; vertex_conflicts, edge_conflicts)
+    return MAPF(g, departures, arrivals; kwargs...)
 end
 
 """

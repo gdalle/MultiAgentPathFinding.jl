@@ -6,7 +6,7 @@ Instance of a Multi-Agent Path Finding problem with custom conflict rules.
 # Constructors
 
     MAPF(
-        g, departures, arrivals;
+        g::AbstractGraph, departures::Vector{Int}, arrivals::Vector{Int};
         vertex_conflicts=LazyVertexConflicts(), edge_conflicts=LazyEdgeConflicts()
     )
 
@@ -30,17 +30,20 @@ struct MAPF{W,VC,EC}
     edge_conflicts::EC
 
     function MAPF(
-        g::SimpleWeightedGraph{Int,W},
+        g::AbstractGraph,
         departures::Vector{Int},
         arrivals::Vector{Int};
         vertex_conflicts::VC=LazyVertexConflicts(),
         edge_conflicts::EC=LazySwappingConflicts(),
-    ) where {W,VC,EC}
+    ) where {VC,EC}
+        @assert !is_directed(g)
         @assert length(departures) == length(arrivals)
         @assert all(Base.Fix1(has_vertex, g), departures)
         @assert all(Base.Fix1(has_vertex, g), arrivals)
         # TODO: add more checks
-        return new{W,VC,EC}(g, departures, arrivals, vertex_conflicts, edge_conflicts)
+        gw = SimpleWeightedGraph(g)
+        W = weighttype(gw)
+        return new{W,VC,EC}(gw, departures, arrivals, vertex_conflicts, edge_conflicts)
     end
 end
 

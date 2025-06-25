@@ -21,7 +21,18 @@ function reset!(storage::TemporalAstarStorage{W,V}) where {W,V}
     return nothing
 end
 
-struct AstarConvergenceError <: Exception end
+struct AstarConvergenceError <: Exception
+    max_nodes::Int
+    nv::Int
+    ne::Int
+end
+
+function Base.showerror(io::IO, e::AstarConvergenceError)
+    return print(
+        io,
+        "Temporal A* explored more than $(e.max_nodes) nodes on a graph with $(e.nv) vertices and $(e.ne) edges",
+    )
+end
 
 function temporal_astar!(
     storage::TemporalAstarStorage,
@@ -64,10 +75,10 @@ function temporal_astar!(
         end
         nodes_explored += 1
         if nodes_explored > max_nodes
-            throw(AstarConvergenceError())
+            throw(AstarConvergenceError(max_nodes, nv(g), ne(g)))
         end
     end
-    return nothing
+    throw(NonExistentPathError(dep, arr))
 end
 
 function temporal_astar(
@@ -78,7 +89,7 @@ function temporal_astar(
     reservation::Reservation,
     max_nodes::Integer=nv(g)^3,
 )
-    storage = init_temporal_astar(g)
+    storage = TemporalAstarStorage(g)
     temporal_astar!(storage, g, dep, arr; heuristic, reservation, max_nodes)
     return storage
 end

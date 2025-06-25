@@ -1,3 +1,15 @@
+struct NonExistentPathError <: Exception
+    dep::Int
+    arr::Int
+end
+
+function Base.showerror(io::IO, e::NonExistentPathError)
+    return print(
+        io,
+        "NonExistentPathError: There is no path from vertex $(e.dep) to vertex $(e.arr) in the graph",
+    )
+end
+
 struct DijkstraStorage{V,W,H<:BinaryHeap}
     parents::Vector{V}
     dists::Vector{W}
@@ -45,7 +57,7 @@ function dijkstra!(storage::DijkstraStorage, g::SimpleWeightedGraph, dep::Intege
 end
 
 function dijkstra(g::SimpleWeightedGraph, dep::Integer)
-    storage = init_dijkstra(g)
+    storage = DijkstraStorage(g)
     dijkstra!(storage, g, dep)
     return storage
 end
@@ -58,7 +70,9 @@ function reconstruct_path(storage::DijkstraStorage, dep::Integer, arr::Integer)
         v = parents[v]
         push!(path, v)
     end
-    @assert last(path) == dep
+    if last(path) != dep
+        throw(NonExistentPathError(dep, arr))
+    end
     return reverse(path)
 end
 
