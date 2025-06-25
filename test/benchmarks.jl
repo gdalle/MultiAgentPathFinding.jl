@@ -45,18 +45,18 @@ end
 @testset "Coherent lists" begin
     list1 = sort([
         (map_name, scenario_name) for map_name in list_map_names() for
-        scenario_name in scenarios_from_map(map_name)
+        scenario_name in scenarios_from_map(map_name, "even")
     ])
     list2 = sort([
         (map_from_scenario(scenario_name), scenario_name) for
-        scenario_name in list_scenario_names()
+        scenario_name in list_scenario_names("even")
     ])
     @test list1 == list2
 end
 
 @testset "Reading benchmarks" begin
     @testset for map_name in list_map_names()
-        for scenario_name in scenarios_from_map(map_name)
+        for scenario_name in scenarios_from_map(map_name, "even")
             MAPF(map_name, scenario_name)
         end
     end
