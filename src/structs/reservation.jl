@@ -22,8 +22,10 @@ struct Reservation
     multi_occupied_vertices::Dict{Tuple{Int,Int},Vector{Int}}
     "`(t, u, v) -> [a1, a2]` where `a1, a2` are the multiple agents occupying `(u, v)` at time `t`"
     multi_occupied_edges::Dict{Tuple{Int,Int,Int},Vector{Int}}
-    "`v -> (t, a)` where `a` is the agent whose arrival vertex is `v` and who occupies it starting at time `t` (necessary for stay-at-target behavior)"
+    "`v -> (t, a)` where `a` is the agent whose arrival vertex is `v` and who owns it starting at time `t` (necessary for stay-at-target behavior)"
     arrival_vertices::Dict{Int,Tuple{Int,Int}}
+    "`v -> [(t2, a1), (t2, a2)]` where the `ai` are additional agents visiting vertex `v` at times `ti`, once it is already owned as an arrival vertex"
+    arrival_vertices_crossings::Dict{Int,Vector{Tuple{Int,Int}}}
 end
 
 """
@@ -37,12 +39,14 @@ function Reservation()
     multi_occupied_vertices = Dict{Tuple{Int,Int},Vector{Int}}()
     multi_occupied_edges = Dict{Tuple{Int,Int,Int},Vector{Int}}()
     arrival_vertices = Dict{Int,Tuple{Int,Int}}()
+    arrival_vertices_crossings = Dict{Int,Vector{Tuple{Int,Int}}}()
     return Reservation(
         single_occupied_vertices,
         single_occupied_edges,
         multi_occupied_vertices,
         multi_occupied_edges,
         arrival_vertices,
+        arrival_vertices_crossings,
     )
 end
 
@@ -52,7 +56,12 @@ $(TYPEDSIGNATURES)
 Update `reservation` so that agent `a` occupies vertex `v` at time `t`.
 """
 function occupy!(reservation::Reservation, a::Integer, t::Integer, v::Integer)
-    (; single_occupied_vertices, multi_occupied_vertices) = reservation
+    (;
+        single_occupied_vertices,
+        multi_occupied_vertices,
+        arrival_vertices,
+        arrival_vertices_crossings,
+    ) = reservation
     if haskey(multi_occupied_vertices, (t, v))
         others = multi_occupied_vertices[(t, v)]
         if !(a in others)
@@ -64,6 +73,14 @@ function occupy!(reservation::Reservation, a::Integer, t::Integer, v::Integer)
         delete!(single_occupied_vertices, (t, v))
     else
         single_occupied_vertices[(t, v)] = a
+    end
+    # relies on the fact that occupy! will be called before arrive!
+    if haskey(arrival_vertices, v) && arrival_vertices[v][1] <= t
+        if haskey(arrival_vertices_crossings, v)
+            push!(arrival_vertices_crossings[v], (t, a))
+        else
+            arrival_vertices_crossings[v] = [(t, a)]
+        end
     end
     return nothing
 end
