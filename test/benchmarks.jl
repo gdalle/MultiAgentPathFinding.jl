@@ -73,6 +73,6 @@ end
     A[2, 3] = 1
     departure_coords = [(1, 1)]
     arrival_coords = [(10, 10)]
-    mapf = MAPF(A, departures, arrivals)
+    mapf = MAPF(A, departure_coords, departure_coords)
     @test nv(mapf.g) == 99
 end
