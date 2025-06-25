@@ -28,6 +28,9 @@ struct MAPF{W,VC,EC}
     vertex_conflicts::VC
     "indexable object linking edges (as tuples) to their incompatibility set"
     edge_conflicts::EC
+    # Grid-related
+    "mapping from integer vertices to coordinate tuples"
+    vertex_to_coord::Union{Missing,Vector{Tuple{Int,Int}}}
 
     function MAPF(
         g::AbstractGraph,
@@ -35,6 +38,7 @@ struct MAPF{W,VC,EC}
         arrivals::Vector{Int};
         vertex_conflicts::VC=LazyVertexConflicts(),
         edge_conflicts::EC=LazySwappingConflicts(),
+        vertex_to_coord=missing,
     ) where {VC,EC}
         @assert !is_directed(g)
         @assert length(departures) == length(arrivals)
@@ -43,7 +47,9 @@ struct MAPF{W,VC,EC}
         # TODO: add more checks
         gw = SimpleWeightedGraph(g)
         W = weighttype(gw)
-        return new{W,VC,EC}(gw, departures, arrivals, vertex_conflicts, edge_conflicts)
+        return new{W,VC,EC}(
+            gw, departures, arrivals, vertex_conflicts, edge_conflicts, vertex_to_coord
+        )
     end
 end
 

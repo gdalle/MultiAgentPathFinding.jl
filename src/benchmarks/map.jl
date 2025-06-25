@@ -81,7 +81,11 @@ function parse_benchmark_map(map_matrix::AbstractMatrix)
     end
 
     g = SimpleWeightedGraph(sources, destinations, weights)
-    return g, coord_to_vertex
+    vertex_to_coord = Vector{Tuple{Int,Int}}(undef, nv(g))
+    for ((i, j), v) in pairs(coord_to_vertex)
+        vertex_to_coord[v] = (i, j)
+    end
+    return g, coord_to_vertex, vertex_to_coord
 end
 
 """

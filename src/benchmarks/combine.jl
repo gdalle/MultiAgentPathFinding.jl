@@ -16,10 +16,10 @@ function MAPF(
     arrival_coords::Vector{Tuple{Int,Int}};
     kwargs...,
 )
-    g, coord_to_vertex = parse_benchmark_map(map_matrix)
+    g, coord_to_vertex, vertex_to_coord = parse_benchmark_map(map_matrix)
     departures = [coord_to_vertex[is, js] for (is, js) in departure_coords]
     arrivals = [coord_to_vertex[is, js] for (is, js) in arrival_coords]
-    return MAPF(g, departures, arrivals; kwargs...)
+    return MAPF(g, departures, arrivals; vertex_to_coord, kwargs...)
 end
 
 """

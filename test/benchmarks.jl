@@ -76,3 +76,12 @@ end
     mapf = MAPF(A, departure_coords, arrival_coords)
     @test nv(mapf.g) == 99
 end
+
+@testset "Coordinates" begin
+    map_name = "Berlin_1_256.map"
+    scenario_name = "Berlin_1_256-even-1.scen"
+    mapf = MAPF(map_name, scenario_name)
+
+    @test mapf.vertex_to_coord[1] == (1, 1)
+    @test mapf.vertex_to_coord[end] == (256, 256)
+end
