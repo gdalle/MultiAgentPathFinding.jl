@@ -62,8 +62,8 @@ end
     @test !is_feasible(sol_indep, mapf; verbose=false)
     @test is_feasible(sol_coop, mapf, verbose=true)
 
-    f_indep = solution_cost(sol_indep, mapf)
-    f_coop = solution_cost(sol_coop, mapf)
+    f_indep = sum_of_costs(sol_indep, mapf)
+    f_coop = sum_of_costs(sol_coop, mapf)
     @test f_indep <= f_coop
 end
 

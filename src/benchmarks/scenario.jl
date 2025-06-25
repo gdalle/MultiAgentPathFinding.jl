@@ -60,14 +60,11 @@ Read a scenario from a text file, and check that it corresponds to a given map.
 Returns a `Vector{MAPFBenchmarkAgent}`.
 """
 function read_benchmark_scenario(scenario_name::AbstractString, map_name::AbstractString)
-    scenario_path = ""
     scenario_type = split(scenario_name, '-')[end - 1]
-    if scenario_type == "random"
-        scenario_path = joinpath(datadep"mapf-scen-random", "scen-random", scenario_name)
-    elseif scenario_type == "even"
-        scenario_path = joinpath(datadep"mapf-scen-even", "scen-even", scenario_name)
+    scenario_path = if scenario_type == "random"
+        joinpath(datadep"mapf-scen-random", "scen-random", scenario_name)
     else
-        error("Invalid scenario")
+        joinpath(datadep"mapf-scen-even", "scen-even", scenario_name)
     end
     lines = open(scenario_path, "r") do file
         readlines(file)

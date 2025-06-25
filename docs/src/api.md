@@ -29,7 +29,7 @@ select_agents
 
 ```@docs
 path_cost
-solution_cost
+sum_of_costs
 is_feasible
 find_conflict
 VertexConflict

@@ -52,6 +52,6 @@ $(TYPEDSIGNATURES)
 Sum the costs of all the paths in `solution`.
 Costs are computed within `mapf` for each agent.
 """
-function solution_cost(solution::Solution, mapf::MAPF)
+function sum_of_costs(solution::Solution, mapf::MAPF)
     return sum(path_cost(path, mapf.g) for path in solution.paths)
 end

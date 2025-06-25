@@ -58,7 +58,7 @@ export MAPF
 export nb_agents, select_agents
 export Solution, Reservation
 export VertexConflict, EdgeConflict
-export solution_cost, path_cost, find_conflict, is_feasible
+export sum_of_costs, path_cost, find_conflict, is_feasible
 export independent_dijkstra, cooperative_astar
 export list_map_names, list_scenario_names
 

@@ -24,6 +24,8 @@ using Test
     departure_coords, arrival_coords = parse_benchmark_scenario(scenario)
     mapf = MAPF(map_name, scenario_name; check=true)
 
+    string(mapf)
+
     @test size(map_matrix) == (256, 256)
     @test nv(g) == 47540
     @test nb_agents(mapf) == 950
@@ -36,8 +38,8 @@ using Test
     @test !is_feasible(sol_indep, mapf)
     @test is_feasible(sol_coop, mapf)
 
-    f_indep = solution_cost(sol_indep, mapf)
-    f_coop = solution_cost(sol_coop, mapf)
+    f_indep = sum_of_costs(sol_indep, mapf)
+    f_coop = sum_of_costs(sol_coop, mapf)
     @test f_indep <= f_coop
 end
 
@@ -84,4 +86,12 @@ end
 
     @test mapf.vertex_to_coord[1] == (1, 1)
     @test mapf.vertex_to_coord[end] == (256, 256)
+end
+
+@testset "Agent subset" begin
+    map_name = "Berlin_1_256.map"
+    scenario_name = "Berlin_1_256-even-1.scen"
+    mapf = MAPF(map_name, scenario_name)
+    small_mapf = select_agents(mapf, 1:100)
+    @test nb_agents(small_mapf) == 100
 end
