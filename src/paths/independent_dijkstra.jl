@@ -1,12 +1,12 @@
-struct NonExistentPathError <: Exception
+struct NoPathError <: Exception
     dep::Int
     arr::Int
 end
 
-function Base.showerror(io::IO, e::NonExistentPathError)
+function Base.showerror(io::IO, e::NoPathError)
     return print(
         io,
-        "NonExistentPathError: There is no path from vertex $(e.dep) to vertex $(e.arr) in the graph",
+        "NoPathError: There is no path from vertex $(e.dep) to vertex $(e.arr) in the graph",
     )
 end
 
@@ -71,7 +71,7 @@ function reconstruct_path(storage::DijkstraStorage, dep::Integer, arr::Integer)
         push!(path, v)
     end
     if last(path) != dep
-        throw(NonExistentPathError(dep, arr))
+        throw(NoPathError(dep, arr))
     end
     return reverse(path)
 end

@@ -1,3 +1,15 @@
+struct NoConflictFreePathError <: Exception
+    dep::Int
+    arr::Int
+end
+
+function Base.showerror(io::IO, e::NoConflictFreePathError)
+    return print(
+        io,
+        "NoConflictFreePathError: No conflict-free path was found from vertex $(e.dep) to vertex $(e.arr) in the graph",
+    )
+end
+
 struct TemporalAstarStorage{T,V,W,H<:BinaryHeap}
     parents::Dict{Tuple{T,V},Tuple{T,V}}
     dists::Dict{Tuple{T,V},W}
@@ -78,7 +90,7 @@ function temporal_astar!(
             throw(AstarConvergenceError(max_nodes, nv(g), ne(g)))
         end
     end
-    throw(NonExistentPathError(dep, arr))
+    throw(NoConflictFreePathError(dep, arr))
 end
 
 function temporal_astar(

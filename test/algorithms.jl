@@ -2,7 +2,12 @@ using Graphs
 using LinearAlgebra
 using MultiAgentPathFinding
 using MultiAgentPathFinding:
-    NonExistentPathError, dijkstra, temporal_astar, reconstruct_path
+    AstarConvergenceError,
+    NoConflictFreePathError,
+    NoPathError,
+    dijkstra,
+    temporal_astar,
+    reconstruct_path
 using Random
 using SimpleWeightedGraphs
 using SparseArrays
@@ -63,25 +68,80 @@ end
 end
 
 @testset "Infeasible" begin
-    g = Graph(2)
-    departures = [1]
-    arrivals = [2]
-    mapf = MAPF(g, departures, arrivals)
-    @test_throws NonExistentPathError independent_dijkstra(mapf)
-    @test_throws NonExistentPathError cooperative_astar(mapf)
+    @testset "Disconnected" begin
+        g = Graph(2)
+        departures = [1]
+        arrivals = [2]
+        mapf = MAPF(g, departures, arrivals)
+        @test_throws NoPathError independent_dijkstra(mapf)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf)
 
-    g = Graph(4)
-    add_edge!(g, 1, 2)
-    add_edge!(g, 3, 4)
-    departures = [2, 1]
-    arrivals = [4, 2]
-    mapf = MAPF(g, departures, arrivals)
-    @test_throws NonExistentPathError independent_dijkstra(mapf)
-    @test_throws NonExistentPathError cooperative_astar(mapf)
+        g = Graph(4)
+        add_edge!(g, 1, 2)
+        add_edge!(g, 3, 4)
+        departures = [2, 1]
+        arrivals = [4, 2]
+        mapf = MAPF(g, departures, arrivals)
+        @test_throws NoPathError independent_dijkstra(mapf)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf)
+    end
+
+    @testset "Vertex conflict" begin
+        g = path_graph(4)
+        departures = [1, 3]
+        arrivals = [3, 1]
+        mapf = MAPF(g, departures, arrivals)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf)
+    end
+
+    @testset "Swapping conflict" begin
+        g = path_graph(4)
+        departures = [1, 4]
+        arrivals = [4, 1]
+        mapf = MAPF(g, departures, arrivals)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf)
+    end
+
+    @testset "Arrival conflict" begin
+        # blocked by arrival
+        g = path_graph(4)
+        departures = [3, 4]
+        arrivals = [3, 1]
+        mapf = MAPF(g, departures, arrivals)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf)
+
+        # zig-zag
+        g = path_graph(4)
+        departures = [1, 4]
+        arrivals = [2, 1]
+        mapf = MAPF(g, departures, arrivals)
+        @test_throws AstarConvergenceError cooperative_astar(mapf)
+    end
+
+    @testset "Infinite loop" begin
+        g = path_graph(4)
+        for v in 1:4
+            add_edge!(g, v, v)
+        end
+        departures = [1, 4]
+        arrivals = [2, 1]
+        mapf = MAPF(g, departures, arrivals)
+        @test_throws AstarConvergenceError cooperative_astar(mapf)
+    end
 end
 
 @testset "Inconsistent graphs" begin
     @test_throws AssertionError MAPF(Graph(3), [3, 2], [1])
     @test_throws AssertionError MAPF(Graph(3), [3], [4])
     @test_throws AssertionError MAPF(Graph(3), [4], [3])
+end
+
+@testset "Error printing" begin
+    e = NoPathError(1, 2)
+    @test sprint(showerror, e) ==
+        "NoPathError: There is no path from vertex 1 to vertex 2 in the graph"
+
+    e = AstarConvergenceError(1000, 2, 3)
+    @test sprint(showerror, e) ==
+        "Temporal A* explored more than 1000 nodes on a graph with 2 vertices and 3 edges"
 end
