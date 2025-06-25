@@ -1,9 +1,46 @@
 using Graphs
+using LinearAlgebra
 using MultiAgentPathFinding
-using MultiAgentPathFinding: NonExistentPathError
+using MultiAgentPathFinding:
+    NonExistentPathError, dijkstra, temporal_astar, reconstruct_path
 using Random
 using SimpleWeightedGraphs
+using SparseArrays
+using StableRNGs
 using Test
+
+@testset "Shortest paths" begin
+    @testset "Dijkstra" begin
+        for k in 1:10
+            A = sprand(StableRNG(k), 100, 100, k / 20)
+            g = SimpleWeightedGraph(Symmetric(A))
+            dep, arr = 1, nv(g)
+
+            result = dijkstra(g, dep)
+            result_ref = Graphs.dijkstra_shortest_paths(g, dep)
+            @test result.dists == result_ref.dists
+            @test result.parents == result_ref.parents
+            path = reconstruct_path(result, dep, arr)
+            path_ref = Graphs.path_from_parents(arr, result_ref.parents)
+            @test path == path_ref
+        end
+    end
+
+    @testset "A*" begin
+        for k in 1:10
+            A = sprand(StableRNG(k), 100, 100, k / 20)
+            g = SimpleWeightedGraph(Symmetric(A))
+            dep, arr = 1, nv(g)
+
+            heuristic = zeros(nv(g))
+            reservation = Reservation()
+            path = temporal_astar(g, dep, arr; reservation, heuristic)
+            result_ref = Graphs.a_star(g, dep, arr)
+            path_ref = vcat(Graphs.src.(result_ref), arr)
+            @test path == path_ref
+        end
+    end
+end
 
 @testset "Grid" begin
     L = 20

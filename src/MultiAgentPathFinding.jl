@@ -35,6 +35,7 @@ using Graphs:
     dijkstra_shortest_paths
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedGraph, weighttype, get_weight
+using StableRNGs: StableRNG
 
 ## Includes
 

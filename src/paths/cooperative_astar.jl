@@ -90,8 +90,7 @@ function temporal_astar(
     max_nodes::Integer=nv(g)^3,
 )
     storage = TemporalAstarStorage(g)
-    temporal_astar!(storage, g, dep, arr; heuristic, reservation, max_nodes)
-    return storage
+    return temporal_astar!(storage, g, dep, arr; heuristic, reservation, max_nodes)
 end
 
 function reconstruct_path(

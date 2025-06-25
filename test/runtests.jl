@@ -16,6 +16,9 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = get(ENV, "CI", "false") == "true"
     @testset "Code linting (JET)" begin
         JET.test_package(MultiAgentPathFinding; target_defined_modules=true)
     end
+    @testset verbose = true "Feasibility" begin
+        include("feasibility.jl")
+    end
     @testset verbose = true "Algorithms" begin
         include("algorithms.jl")
     end

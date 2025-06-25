@@ -81,7 +81,7 @@ Lazy dict-like storage for the mapping `(u, v) -> [(v, u)]`.
 """
 struct LazySwappingConflicts end
 
-Base.getindex(::LazySwappingConflicts, (u, v)::Tuple{Integer,Integer}) = ((v, u),)
+Base.getindex(::LazySwappingConflicts, (u, v)::Tuple{Integer,Integer}) = ((u, v), (v, u))
 
 ## Modifiers
 
