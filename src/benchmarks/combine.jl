@@ -8,7 +8,7 @@ For the map, each element of the grid can be either
 - a `Bool`, in which case `false` denotes passable terrain and `true` denotes an obstacle
 - a `Char`, in which case `'.'` denotes passable terrain and `'@'` denotes an obstacle
 
-For the coordinates, `(0, 0)` is the upper left corner of the grid.
+For the coordinates, `(1, 1)` is the upper left corner of the grid.
 """
 function MAPF(
     map_matrix::AbstractMatrix,

@@ -9,6 +9,7 @@ using MultiAgentPathFinding:
     scenarios_from_map
 using MultiAgentPathFinding: cooperative_astar
 using Graphs
+using SparseArrays
 using Test
 
 ## Test one scenario
@@ -60,4 +61,18 @@ end
             MAPF(map_name, scenario_name)
         end
     end
+end
+
+@testset "Colors" begin
+    map_name = "brc202d.map"
+    @test length(unique(cell_color.(read_benchmark_map(map_name)))) == 3
+end
+
+@testset "Boolean matrix" begin
+    A = zeros(Bool, 10, 10)
+    A[2, 3] = 1
+    departure_coords = [(1, 1)]
+    arrival_coords = [(10, 10)]
+    mapf = MAPF(A, departures, arrivals)
+    @test nv(mapf.g) == 99
 end

@@ -15,6 +15,8 @@ using Test
 
     @test find_conflict(solution, mapf) == VertexConflict(; t=2, v=2, a1=2, a2=1)
     @test !is_feasible(solution, mapf)
+
+    string(VertexConflict(; t=2, v=2, a1=2, a2=1))
 end
 
 @testset "Edge conflict" begin
@@ -30,6 +32,8 @@ end
 
     @test find_conflict(solution, mapf) == EdgeConflict(; t=2, u=2, v=3, a1=1, a2=2)
     @test !is_feasible(solution, mapf)
+
+    string(EdgeConflict(; t=2, u=2, v=3, a1=1, a2=2))
 end
 
 @testset "Arrival conflict" begin

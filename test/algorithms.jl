@@ -141,6 +141,10 @@ end
     @test sprint(showerror, e) ==
         "NoPathError: There is no path from vertex 1 to vertex 2 in the graph"
 
+    e = NoConflictFreePathError(1, 2)
+    @test sprint(showerror, e) ==
+        "NoConflictFreePathError: No conflict-free path was found from vertex 1 to vertex 2 in the graph"
+
     e = AstarConvergenceError(1000, 2, 3)
     @test sprint(showerror, e) ==
         "Temporal A* explored more than 1000 nodes on a graph with 2 vertices and 3 edges"
