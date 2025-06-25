@@ -31,26 +31,23 @@ struct MAPF{W,VC,EC}
     # Grid-related
     "mapping from integer vertices to coordinate tuples"
     vertex_to_coord::Union{Missing,Vector{Tuple{Int,Int}}}
+end
 
-    function MAPF(
-        g::AbstractGraph,
-        departures::Vector{Int},
-        arrivals::Vector{Int};
-        vertex_conflicts::VC=LazyVertexConflicts(),
-        edge_conflicts::EC=LazySwappingConflicts(),
-        vertex_to_coord=missing,
-    ) where {VC,EC}
-        @assert !is_directed(g)
-        @assert length(departures) == length(arrivals)
-        @assert all(Base.Fix1(has_vertex, g), departures)
-        @assert all(Base.Fix1(has_vertex, g), arrivals)
-        # TODO: add more checks
-        gw = SimpleWeightedGraph(g)
-        W = weighttype(gw)
-        return new{W,VC,EC}(
-            gw, departures, arrivals, vertex_conflicts, edge_conflicts, vertex_to_coord
-        )
-    end
+function MAPF(
+    g::AbstractGraph,
+    departures::Vector{Int},
+    arrivals::Vector{Int};
+    vertex_conflicts=LazyVertexConflicts(),
+    edge_conflicts=LazySwappingConflicts(),
+    vertex_to_coord=missing,
+)
+    @assert !is_directed(g)
+    @assert length(departures) == length(arrivals)
+    @assert all(Base.Fix1(has_vertex, g), departures)
+    @assert all(Base.Fix1(has_vertex, g), arrivals)
+    # TODO: add more checks
+    gw = SimpleWeightedGraph(g)
+    return MAPF(gw, departures, arrivals, vertex_conflicts, edge_conflicts, vertex_to_coord)
 end
 
 function Base.show(io::IO, mapf::MAPF{G}) where {G}
@@ -101,12 +98,13 @@ function select_agents(mapf::MAPF, agents::AbstractVector{<:Integer})
     return MAPF(
         # Graph-related
         mapf.g,
-        mapf.edge_costs,
         # Agents-related
-        view(mapf.departures, agents),
-        view(mapf.arrivals, agents),
+        mapf.departures[agents],
+        mapf.arrivals[agents],
         # Constraints-related
         mapf.vertex_conflicts,
         mapf.edge_conflicts,
+        # Grid-related
+        mapf.vertex_to_coord,
     )
 end
