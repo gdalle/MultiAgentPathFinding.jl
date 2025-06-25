@@ -33,6 +33,7 @@ function read_benchmark_map(map_name::AbstractString)
     return map_matrix
 end
 
+passable_cell(c::Bool) = !c
 passable_cell(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 
 """
@@ -40,7 +41,7 @@ $(TYPEDSIGNATURES)
 
 Create a sparse grid graph from a map specified as a matrix of characters.
 """
-function parse_benchmark_map(map_matrix::Matrix{Char};)
+function parse_benchmark_map(map_matrix::AbstractMatrix)
     h, w = size(map_matrix)
     passable = passable_cell.(map_matrix)
 
@@ -80,8 +81,11 @@ function parse_benchmark_map(map_matrix::Matrix{Char};)
     end
 
     g = SimpleWeightedGraph(sources, destinations, weights)
-
-    return g, coord_to_vertex
+    vertex_to_coord = Vector{Tuple{Int,Int}}(undef, nv(g))
+    for ((i, j), v) in pairs(coord_to_vertex)
+        vertex_to_coord[v] = (i, j)
+    end
+    return g, coord_to_vertex, vertex_to_coord
 end
 
 """
@@ -91,7 +95,7 @@ Give a color object corresponding to the type of cell.
 
 To visualize a map in VSCode, just run `cell_color.(map_matrix)` in the REPL.
 """
-function benchmark_cell_color(c::Char)
+function cell_color(c::Char)
     if c == '.'  # empty => white
         return colorant"white"
     elseif c == 'G'  # empty => white

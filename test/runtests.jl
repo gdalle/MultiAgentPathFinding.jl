@@ -1,20 +1,14 @@
-using Aqua
-using JET
-using JuliaFormatter
 using MultiAgentPathFinding
 using Test
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = get(ENV, "CI", "false") == "true"
 
 @testset verbose = true "MultiAgentPathFinding.jl" begin
-    @testset "Code quality (Aqua)" begin
-        Aqua.test_all(MultiAgentPathFinding; ambiguities=false)
+    @testset verbose = true "Formalities" begin
+        include("formalities.jl")
     end
-    @testset "Code formatting (JuliaFormatter)" begin
-        @test format(MultiAgentPathFinding; verbose=false, overwrite=false)
-    end
-    @testset "Code linting (JET)" begin
-        JET.test_package(MultiAgentPathFinding; target_defined_modules=true)
+    @testset verbose = true "Feasibility" begin
+        include("feasibility.jl")
     end
     @testset verbose = true "Algorithms" begin
         include("algorithms.jl")

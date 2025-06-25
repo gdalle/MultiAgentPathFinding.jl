@@ -1,4 +1,3 @@
-
 """
 $(TYPEDEF)
 
@@ -17,6 +16,12 @@ $(TYPEDFIELDS)
     a1::Int
     "second agent"
     a2::Int
+end
+
+function Base.:(==)(vc1::VertexConflict, vc2::VertexConflict)
+    return (vc1.t == vc2.t) &&
+           (vc1.v == vc2.v) &&
+           extrema((vc1.a1, vc1.a2)) == extrema((vc2.a1, vc2.a2))
 end
 
 function Base.show(io::IO, vc::VertexConflict)
@@ -46,9 +51,15 @@ $(TYPEDFIELDS)
     a2::Int
 end
 
+function Base.:(==)(ec1::EdgeConflict, ec2::EdgeConflict)
+    return (ec1.t == ec2.t) &&
+           extrema((ec1.a1, ec1.a2)) == extrema((ec2.a1, ec2.a2)) &&
+           extrema((ec1.u, ec1.v)) == extrema((ec2.u, ec2.v))
+end
+
 function Base.show(io::IO, ec::EdgeConflict)
     (; t, u, v, a1, a2) = ec
-    return print(io, "Conflict at time $t on edge $((u, v)) between agents $a1 and $a2")
+    return print(io, "Conflict at time $t on edge {$u, $v} between agents $a1 and $a2")
 end
 
 """
@@ -58,28 +69,25 @@ Find a conflict in `solution` for `mapf`.
 """
 function find_conflict(solution::Solution, mapf::MAPF)
     reservation = Reservation(solution, mapf)
-    if !isempty(reservation.multi_occupied_vertices)
-        ((t, v), agents) = first(reservation.multi_occupied_vertices)
+    (;
+        multi_occupied_vertices,
+        multi_occupied_edges,
+        arrival_vertices,
+        arrival_vertices_crossings,
+    ) = reservation
+    if !isempty(multi_occupied_vertices)
+        ((t, v), agents) = first(multi_occupied_vertices)
         return VertexConflict(; t, v, a1=agents[1], a2=agents[2])
-    elseif !isempty(reservation.multi_occupied_edges)
-        ((t, u, v), agents) = first(reservation.multi_occupied_edges)
+    elseif !isempty(multi_occupied_edges)
+        ((t, u, v), agents) = first(multi_occupied_edges)
         return EdgeConflict(; t, u, v, a1=agents[1], a2=agents[2])
-    else
-        return nothing
+    elseif !isempty(arrival_vertices_crossings)
+        (v, crossings) = first(arrival_vertices_crossings)
+        _, a1 = arrival_vertices[v]
+        t, a2 = first(crossings)
+        return VertexConflict(; t, v, a1, a2)
     end
-end
-
-"""
-$(TYPEDSIGNATURES)
-
-Count the number of conflicts in `solution` for `mapf`.
-"""
-function count_conflicts(solution::Solution, mapf::MAPF)
-    reservation = Reservation(solution, mapf)
-    # TODO: define formula
-    nb_vertex_conflicts = sum(length, values(reservation.multi_occupied_vertices); init=0)
-    nb_edge_conflicts = sum(length, values(reservation.multi_occupied_edges); init=0)
-    return nb_vertex_conflicts + nb_edge_conflicts
+    return nothing
 end
 
 """
@@ -88,25 +96,23 @@ $(TYPEDSIGNATURES)
 Check whether `solution` is feasible when agents are considered separately.
 """
 function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
+    (; g, departures, arrivals) = mapf
+    (; paths) = solution
     for a in 1:nb_agents(mapf)
-        if !haskey(solution.timed_paths, a)
+        if !(a in eachindex(paths))
             verbose && @warn "No path for agent $a"
             return false
         end
-        timed_path = solution.timed_paths[a]
-        if isempty(timed_path)
+        if isempty(paths[a])
             verbose && @warn "Empty path for agent $a"
             return false
-        elseif departure_time(timed_path) != mapf.departure_times[a]
-            verbose && @warn "Wrong departure time for agent $a"
-            return false
-        elseif departure_vertex(timed_path) != mapf.departures[a]
+        elseif first(paths[a]) != departures[a]
             verbose && @warn "Wrong departure vertex for agent $a"
             return false
-        elseif arrival_vertex(timed_path) != mapf.arrivals[a]
+        elseif last(paths[a]) != arrivals[a]
             verbose && @warn "Wrong arrival vertex for agent $a"
             return false
-        elseif !exists_in_graph(timed_path, mapf.g)
+        elseif !exists_in_graph(paths[a], g)
             verbose && @warn "Path of agent $a does not exist in graph"
             return false
         end
