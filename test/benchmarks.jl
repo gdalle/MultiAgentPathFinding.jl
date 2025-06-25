@@ -24,6 +24,8 @@ using Test
     departure_coords, arrival_coords = parse_benchmark_scenario(scenario)
     mapf = MAPF(map_name, scenario_name; check=true)
 
+    string(mapf)
+
     @test size(map_matrix) == (256, 256)
     @test nv(g) == 47540
     @test nb_agents(mapf) == 950
