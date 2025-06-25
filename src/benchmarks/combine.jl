@@ -29,12 +29,20 @@ Create a `MAPF` instance by reading a map (`"something.map"`) and scenario (`"so
 
 See possible names at <https://movingai.com/benchmarks/mapf/index.html> (data will be downloaded automatically).
 """
-function MAPF(map_name::AbstractString, scenario_name::AbstractString)
+function MAPF(map_name::AbstractString, scenario_name::AbstractString; check::Bool=false)
     @assert endswith(map_name, ".map")
     @assert endswith(scenario_name, ".scen")
     map_matrix = read_benchmark_map(map_name)
     scenario = read_benchmark_scenario(scenario_name, map_name)
     departure_coords, arrival_coords = parse_benchmark_scenario(scenario)
     mapf = MAPF(map_matrix, departure_coords, arrival_coords)
+    if check
+        (; g, departures, arrivals) = mapf
+        for a in eachindex(scenario, departures, arrivals)
+            result = dijkstra(g, departures[a])
+            optimal_length_computed = result.dists[arrivals[a]]
+            @assert isapprox(optimal_length_computed, scenario[a].optimal_length, rtol=1e-5)
+        end
+    end
     return mapf
 end

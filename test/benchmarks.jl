@@ -22,7 +22,7 @@ using Test
     g, coord_to_vertex = parse_benchmark_map(map_matrix)
     scenario = read_benchmark_scenario(scenario_name, map_name)
     departure_coords, arrival_coords = parse_benchmark_scenario(scenario)
-    mapf = MAPF(map_name, scenario_name)
+    mapf = MAPF(map_name, scenario_name; check=true)
 
     @test size(map_matrix) == (256, 256)
     @test nv(g) == 47540
