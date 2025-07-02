@@ -1,12 +1,6 @@
 using MultiAgentPathFinding
 using MultiAgentPathFinding:
-    read_benchmark_map,
-    read_benchmark_scenario,
-    parse_benchmark_map,
-    parse_benchmark_scenario,
-    cell_color,
-    map_from_scenario,
-    scenarios_from_map
+    read_benchmark_map, read_benchmark_scenario, parse_benchmark_map, cell_color
 using MultiAgentPathFinding: cooperative_astar
 using Graphs
 using SparseArrays
