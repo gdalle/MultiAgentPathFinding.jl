@@ -8,7 +8,8 @@ If `video_path isa String`, the entire animation will be recorded and saved ther
 function visualize_solution(
     scen::BenchmarkScenario, solution::Solution, time=1; video_path=nothing
 )
-    (; instance, scen_type, type_id, agents) = scen
+    (; instance, scen_type, type_id) = scen
+    agents = length(solution.paths)
     grid = read_benchmark_map(instance)
     (; graph, coord_to_vertex, vertex_to_coord) = parse_benchmark_map(grid)
 
@@ -58,7 +59,7 @@ function visualize_solution(
         y;
         text=string.(1:agents),
         background_color=agent_colors,
-        shape=Circle(Point2f(0), 0.75),
+        shape=Circle(Point2f(0), 0.65),
         shape_limits=Rect2f(-sqrt(0.5), -sqrt(0.5), sqrt(2), sqrt(2)),
         keep_aspect=true,
     )
