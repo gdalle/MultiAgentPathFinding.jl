@@ -6,6 +6,8 @@ using Graphs
 using SparseArrays
 using Test
 
+@test length(list_instances()) == 33
+
 @testset "Berlin" begin
     instance = "Berlin_1_256"
     scen_type = "even"
@@ -13,7 +15,7 @@ using Test
     agents = 100
     scen = BenchmarkScenario(; instance, scen_type, type_id, agents)
 
-    mapf = MAPF(scen; check=true)
+    mapf = MAPF(scen; allow_diagonal_moves=true, check=true)
     grid = read_benchmark_map(instance)
     string(mapf)
 
