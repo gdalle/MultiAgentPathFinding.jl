@@ -70,6 +70,7 @@ instance = "Berlin_1_256"
 scen_type = "even"
 type_id = 1
 agents = 100
+scen = BenchmarkScenario(; instance, scen_type, type_id, agents)
 bench_mapf = MAPF(scen; allow_diagonal_moves=true)
 ```
 

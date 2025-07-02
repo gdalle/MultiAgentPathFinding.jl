@@ -6,12 +6,13 @@ Visualize a solution for one of the grid benchmark instances at a given time ste
 If `video_path isa String`, the entire animation will be recorded and saved there.
 """
 function visualize_solution(
-    scen::BenchmarkScenario, solution::Solution, time=1; video_path=nothing
+    scen::BenchmarkScenario, solution::Solution, time=1; video_path=nothing, framerate=10
 )
     (; instance, scen_type, type_id) = scen
     agents = length(solution.paths)
     grid = read_benchmark_map(instance)
     (; graph, coord_to_vertex, vertex_to_coord) = parse_benchmark_map(grid)
+    grid_binary = passable_cell.(grid)
 
     h, w = size(grid)
     T = maximum(length, solution.paths)
@@ -40,23 +41,26 @@ function visualize_solution(
         agents,
         [colorant"white", colorant"black"];
         dropseed=true,
-        lchoices=range(70; stop=90, length=15),
+        lchoices=range(60; stop=100, length=15),
     )
 
     fig = Figure()
     ax = Axis(
         fig[1, 1];
-        title="MAPF instance $instance\nScenario $scen_type-$type_id, $agents agents",
+        title="MAPF instance $instance\nScenario $scen_type-$type_id with $agents agents",
         subtitle,
         aspect=1.0,
-        xticks=1:w,
-        yticks=(1:h, string.(reverse(1:h))),
-        limits=((0, w + 1), (0, h + 1)),
+        limits=((0, w), (0, h)),
     )
+
+    if sum(grid_binary) < prod(size(grid_binary))
+        image!(ax, rotr90(grid_binary); interpolate=false)
+    end
+
     tl = textlabel!(
         ax,
-        x,
-        y;
+        @lift($x .- 0.5),
+        @lift($y .- 0.5);
         text=string.(1:agents),
         background_color=agent_colors,
         shape=Circle(Point2f(0), 0.65),
@@ -64,8 +68,7 @@ function visualize_solution(
         keep_aspect=true,
     )
 
-    framerate = 20
-    timesteps = range(1, T; step=1 / framerate)
+    timesteps = range(1, T; step=1 / 10)
 
     if video_path !== nothing
         record(fig, video_path, timesteps; framerate) do _t

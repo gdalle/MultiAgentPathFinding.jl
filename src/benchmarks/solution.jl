@@ -18,15 +18,15 @@ function read_benchmark_solution(scen::BenchmarkScenario)
     agents = min(agents, maximum(sol_df[!, :agents]))
     right_agents = sol_df[!, :agents] .== agents
     sol_df = sol_df[right_agents, :]
-    if size(sol_df, 1) != 1
-        if size(sol_df, 1) == 0
-            error("No best known solution for scenario $scen")
-        else
-            error("More than one best known solution")
-        end
+    if size(sol_df, 1) == 0
+        error("No solution for scenario $scen")
     end
     sol = only(eachrow(sol_df))
-    paths_string_list = split(sol[:solution_plan], "\n")
+    plan = sol[:solution_plan]
+    if ismissing(plan)
+        error("No solution for scenario $scen")
+    end
+    paths_string_list = split(plan, "\n")
 
     agent_list = read_benchmark_scenario(scen)
 
