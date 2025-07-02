@@ -6,7 +6,12 @@ Visualize a solution for one of the grid benchmark instances at a given time ste
 If `video_path isa String`, the entire animation will be recorded and saved there.
 """
 function visualize_solution(
-    scen::BenchmarkScenario, solution::Solution, time=1; video_path=nothing, framerate=20
+    scen::BenchmarkScenario,
+    solution::Solution,
+    time=1;
+    video_path=nothing,
+    frames_per_move=20,
+    frames_per_second=20,
 )
     (; instance, scen_type, type_id) = scen
     agents = length(solution.paths)
@@ -68,10 +73,10 @@ function visualize_solution(
         keep_aspect=true,
     )
 
-    timesteps = range(1, T; step=1 / 20)
+    timesteps = range(1, T; step=1 / frames_per_move)
 
     if video_path !== nothing
-        record(fig, video_path, timesteps; framerate) do _t
+        record(fig, video_path, timesteps; frames_per_second) do _t
             t[] = _t
         end
     end
