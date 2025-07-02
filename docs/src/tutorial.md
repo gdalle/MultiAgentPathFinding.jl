@@ -11,10 +11,10 @@ A [`MAPF`](@ref) instance can be created from any undirected graph.
 Agents are specified by their departure and arrival vertex.
 
 ```@example tuto
-g = cycle_graph(10)
+graph = cycle_graph(10)
 departures = [1, 3]
 arrivals = [4, 1]
-mapf = MAPF(g, departures, arrivals)
+mapf = MAPF(graph, departures, arrivals)
 ```
 
 By default, vertex and swapping conflicts are forbidden, and the agents stay at their arrival vertex.
@@ -66,21 +66,21 @@ sum_of_costs(better_solution, mapf)
 To download and parse an instance from the standard [MAPF benchmarks](https://www.movingai.com/benchmarks/mapf.html), just specify the name of its map and scenario files:
 
 ```@example tuto
-map_name = "Berlin_1_256.map"
-scenario_name = "Berlin_1_256-even-1.scen"
-bench_mapf = MAPF(map_name, scenario_name)
+instance = "Berlin_1_256"
+scen_type = "even"
+type_id = 1
+agents = 100
+bench_mapf = MAPF(scen; allow_diagonal_moves=true)
 ```
 
 You can visualize it as follows:
 
 ```@example tuto
-using MultiAgentPathFinding: read_benchmark_map, cell_color
-
-cell_color.(read_benchmark_map(map_name))
+cell_color.(read_benchmark_map(instance))
 ```
 
 If the instance is too big, a subset of agents can be taken:
 
 ```@example tuto
-select_agents(bench_mapf, 1:100)
+select_agents(bench_mapf, 1:20)
 ```
