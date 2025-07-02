@@ -46,8 +46,12 @@ cooperative_astar
 ## Benchmarks
 
 ```@docs
-list_map_names
-list_scenario_names
+list_instances
+BenchmarkScenario
+read_benchmark_map
+parse_benchmark_map
+passable_cell
+cell_color
 ```
 
 ## Internals

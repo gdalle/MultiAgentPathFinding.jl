@@ -1,32 +1,27 @@
 """
-$(TYPEDSIGNATURES)
+    BenchmarkScenario
 
-List available scenarios from the benchmark set.
-"""
-function list_scenario_names(scen_type::String)
-    @assert scen_type in ("random", "even")
-    return readdir(joinpath(@datadep_str("mapf-scen-$scen_type"), "scen-$scen_type"))
-end
+Identify a specific benchmark map and scenario from the Sturtevant MAPF benchmarks.
 
-"""
-$(TYPEDSIGNATURES)
+# Fields
 
-Return the map associated with a benchmark scenario.
+$(TYPEDFIELDS)
 """
-function map_from_scenario(scenario_name::AbstractString)
-    name = join(split(split(scenario_name, '.')[1], '-')[begin:(end - 2)], '-')
-    return "$name.map"
-end
+struct BenchmarkScenario
+    "name of the instance"
+    instance::String
+    "type of scenario, random or even"
+    scen_type::String
+    "id of the scenario among those with the same type"
+    type_id::Int
+    "number of agents included"
+    agents::Int
 
-"""
-$(TYPEDSIGNATURES)
-
-List the scenarios associated with a benchmark map.
-"""
-function scenarios_from_map(map_name::AbstractString, scen_type::String)
-    name = split(map_name, '.')[1]
-    return filter(list_scenario_names(scen_type)) do scenario_name
-        startswith(scenario_name, name) && scenario_name[length(name) + 1] == '-'
+    function BenchmarkScenario(;
+        instance::String, scen_type::String, type_id::Int, agents::Int=typemax(Int)
+    )
+        @assert scen_type in ("random", "even")
+        return new(instance, scen_type, type_id, agents)
     end
 end
 
@@ -39,10 +34,9 @@ Encode one agent of a MAPF scenario.
 
 $(TYPEDFIELDS)
 """
-@kwdef struct MAPFBenchmarkAgent
-    index::Int
+@kwdef struct BenchmarkAgent
+    agent::Int
     bucket::Int
-    map_path::String
     width::Int
     height::Int
     start_i::Int
@@ -55,22 +49,21 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Read a scenario from a text file, and check that it corresponds to a given map.
+Read a scenario from an automatically downloaded text file.
 
-Returns a `Vector{MAPFBenchmarkAgent}`.
+Returns a `Vector{BenchmarkAgent}`.
 """
-function read_benchmark_scenario(scenario_name::AbstractString, map_name::AbstractString)
-    scenario_type = split(scenario_name, '-')[end - 1]
-    scenario_path = if scenario_type == "random"
-        joinpath(datadep"mapf-scen-random", "scen-random", scenario_name)
-    else
-        joinpath(datadep"mapf-scen-even", "scen-even", scenario_name)
-    end
+function read_benchmark_scenario(scen::BenchmarkScenario)
+    (; instance, scen_type, type_id, agents) = scen
+    scen_name = "$instance-$scen_type-$type_id"
+    scenario_path = joinpath(
+        @datadep_str("mapf-scen-$scen_type"), "scen-$scen_type", "$scen_name.scen"
+    )
     lines = open(scenario_path, "r") do file
         readlines(file)
     end
-    scenario = MAPFBenchmarkAgent[]
-    for (l, line) in enumerate(view(lines, 2:length(lines)))
+    scenario = BenchmarkAgent[]
+    for (agent, line) in enumerate(view(lines, 2:length(lines)))
         line_split = split(line, "\t")
         bucket = parse(Int, line_split[1]) + 1
         map_path = line_split[2]
@@ -81,45 +74,12 @@ function read_benchmark_scenario(scenario_name::AbstractString, map_name::Abstra
         goal_x = parse(Int, line_split[7])
         goal_y = parse(Int, line_split[8])
         optimal_length = parse(Float64, line_split[9])
-        @assert endswith(map_name, map_path)
-        start_i = start_y + 1
-        start_j = start_x + 1
-        goal_i = goal_y + 1
-        goal_j = goal_x + 1
-        problem = MAPFBenchmarkAgent(;
-            index=l,
-            bucket=bucket,
-            map_path=map_path,
-            width=width,
-            height=height,
-            start_i=start_i,
-            start_j=start_j,
-            goal_i=goal_i,
-            goal_j=goal_j,
-            optimal_length=optimal_length,
+        start_i, goal_i = start_y + 1, goal_y + 1  # y axis upside down
+        start_j, goal_j = start_x + 1, goal_x + 1
+        problem = BenchmarkAgent(;
+            agent, bucket, width, height, start_i, start_j, goal_i, goal_j, optimal_length
         )
         push!(scenario, problem)
     end
-    return scenario
-end
-
-"""
-$(TYPEDSIGNATURES)
-
-Turn a scenario into vectors of departure coordinates and a vector of arrival coordinates.
-"""
-function parse_benchmark_scenario(scenario::Vector{MAPFBenchmarkAgent})
-    A = length(scenario)
-    departure_coords = Vector{Tuple{Int,Int}}(undef, A)
-    arrival_coords = Vector{Tuple{Int,Int}}(undef, A)
-    for a in 1:A
-        problem = scenario[a]
-        is, js = problem.start_i, problem.start_j
-        id, jd = problem.goal_i, problem.goal_j
-        departure_coords[a] = (is, js)
-        arrival_coords[a] = (id, jd)
-    end
-    @assert length(unique(departure_coords)) == length(departure_coords)
-    @assert length(unique(arrival_coords)) == length(arrival_coords)
-    return departure_coords, arrival_coords
+    return scenario[1:min(agents, length(scenario))]
 end

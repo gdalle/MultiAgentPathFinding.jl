@@ -15,24 +15,22 @@ using Test
 ## Test one scenario
 
 @testset "Berlin" begin
-    map_name = "Berlin_1_256.map"
-    scenario_name = "Berlin_1_256-even-1.scen"
+    instance = "Berlin_1_256"
+    scen_type = "even"
+    type_id = 1
+    agents = 950
+    scen = BenchmarkScenario(; instance, scen_type, type_id, agents)
 
-    map_matrix = read_benchmark_map(map_name)
-    g, coord_to_vertex = parse_benchmark_map(map_matrix)
-    scenario = read_benchmark_scenario(scenario_name, map_name)
-    departure_coords, arrival_coords = parse_benchmark_scenario(scenario)
-    mapf = MAPF(map_name, scenario_name; check=true)
-
+    mapf = MAPF(scen; check=true)
+    grid, _, _ = read_benchmark_map(instance)
     string(mapf)
 
-    @test size(map_matrix) == (256, 256)
-    @test nv(g) == 47540
+    @test size(grid) == (256, 256)
+    @test nv(mapf.graph) == 47540
     @test nb_agents(mapf) == 950
     A = nb_agents(mapf)
 
     sol_indep = independent_dijkstra(mapf)
-
     sol_coop = cooperative_astar(mapf, 1:A)
 
     @test !is_feasible(sol_indep, mapf)

@@ -8,41 +8,74 @@ For the map, each element of the grid can be either
 - a `Bool`, in which case `false` denotes passable terrain and `true` denotes an obstacle
 - a `Char`, in which case `'.'` denotes passable terrain and `'@'` denotes an obstacle
 
-For the coordinates, `(1, 1)` is the upper left corner of the grid.
+Regarding the coordinates, `(i, j)` corresponds to row `i` and column `j`, with `(1, 1)` as the upper-left corner.
 """
 function MAPF(
-    map_matrix::AbstractMatrix,
+    grid::AbstractMatrix,
     departure_coords::Vector{Tuple{Int,Int}},
     arrival_coords::Vector{Tuple{Int,Int}};
+    allow_diagonal_moves::Bool=false,
     kwargs...,
 )
-    g, coord_to_vertex, vertex_to_coord = parse_benchmark_map(map_matrix)
+    g, coord_to_vertex, vertex_to_coord = parse_benchmark_map(grid; allow_diagonal_moves)
     departures = [coord_to_vertex[is, js] for (is, js) in departure_coords]
     arrivals = [coord_to_vertex[is, js] for (is, js) in arrival_coords]
-    return MAPF(g, departures, arrivals; vertex_to_coord, kwargs...)
+    return MAPF(g, departures, arrivals; kwargs...)
 end
 
 """
 $(TYPEDSIGNATURES)
 
-Create a `MAPF` instance by reading a map (`"something.map"`) and scenario (`"something.scen"`) from files.
+Create a `MAPF` instance by reading a map and scenario from automatically downloaded benchmark files.
 
-See possible names at <https://movingai.com/benchmarks/mapf/index.html> (data will be downloaded automatically).
+# See also
+
+- [`BenchmarkScenario`](@ref)
 """
-function MAPF(map_name::AbstractString, scenario_name::AbstractString; check::Bool=false)
-    @assert endswith(map_name, ".map")
-    @assert endswith(scenario_name, ".scen")
-    map_matrix = read_benchmark_map(map_name)
-    scenario = read_benchmark_scenario(scenario_name, map_name)
-    departure_coords, arrival_coords = parse_benchmark_scenario(scenario)
-    mapf = MAPF(map_matrix, departure_coords, arrival_coords)
-    if check
-        (; g, departures, arrivals) = mapf
-        for a in eachindex(scenario, departures, arrivals)
-            result = dijkstra(g, departures[a])
+function MAPF(scen::BenchmarkScenario; allow_diagonal_moves::Bool=false, check::Bool=false)
+    grid = read_benchmark_map(scen.instance)
+    agent_list = read_benchmark_scenario(scen)
+    departure_coords = map(agent -> (agent.start_i, agent.start_j), agent_list)
+    arrival_coords = map(agent -> (agent.goal_i, agent.goal_j), agent_list)
+    mapf = MAPF(grid, departure_coords, arrival_coords; allow_diagonal_moves)
+    if check && allow_diagonal_moves
+        (; graph, departures, arrivals) = mapf
+        for a in eachindex(agent_list, departures, arrivals)
+            result = dijkstra(graph, departures[a])
             optimal_length_computed = result.dists[arrivals[a]]
-            @assert isapprox(optimal_length_computed, scenario[a].optimal_length, rtol=1e-5)
+            @assert isapprox(
+                optimal_length_computed, agent_list[a].optimal_length, rtol=1e-5
+            )
         end
     end
     return mapf
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Create a `MAPF` instance by reading a map and solution from automatically downloaded benchmark files.
+
+!!! warning
+    The downloaded files can be large (up to tens of GB).
+    By default, DataDeps.jl will ask for permission in the REPL before downloading.
+
+# See also
+
+- [`BenchmarkScenario`](@ref)
+"""
+function Solution(scen::BenchmarkScenario; check::Bool=false)
+    grid = read_benchmark_map(scen.instance)
+    _, coord_to_vertex, _ = parse_benchmark_map(grid; allow_diagonal_moves=false)
+    lower_cost, solution_cost, paths_coord_list = read_benchmark_solution(scen)
+    solution = Solution(
+        map(path_coord -> getindex.(Ref(coord_to_vertex), path_coord), paths_coord_list)
+    )
+    @show lower_cost, solution_cost
+    if check
+        mapf = MAPF(scen)
+        @assert is_feasible(solution, mapf; verbose=true)
+        @assert lower_cost <= sum_of_costs(solution, mapf) == solution_cost
+    end
+    return solution
 end

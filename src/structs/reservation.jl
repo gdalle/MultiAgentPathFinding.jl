@@ -1,9 +1,11 @@
 """
 $(TYPEDEF)
 
-Keep track of which vertices and edges are known to be occupied and by whom.
+Keep track of which vertices and edges are known to be occupied and by which agent.
 
-It does not have to be a physical occupation: some agent might be occupying a related vertex or edge which generates a conflict.
+It does not have to be a physical occupation: some agent might be occupying a related vertex or edge which generates a conflict according to the rules of a `MAPF`.
+
+Each undirected edge `(u, v)` is represented as `(min(u, v), max(u, v))` in the dictionary keys.
 
 # Fields
 
@@ -11,7 +13,7 @@ $(TYPEDFIELDS)
 
 # Note
 
-The split between `single` and `multi` is done for efficiency reasons: there will be many more `single_occupied` than `multi_occupied`, so allocating a set for all of these would be wasteful (and using `Union{Int, Set{Int}}` would be type-unstable).
+The split between `single` and `multi` is done for efficiency reasons: there will be many more `single_occupied` than `multi_occupied`, so allocating a set for all of these would be wasteful (and using `Union{Int, Set{Int}}` would be type-unstable). Same for arrival crossings.
 """
 struct Reservation
     "`(t, v) -> a` where `a` is the only agent occupying `v` at time `t`"
@@ -91,18 +93,19 @@ $(TYPEDSIGNATURES)
 Update `reservation` so that agent `a` occupies edge `(u, v)` at time `t`.
 """
 function occupy!(reservation::Reservation, a::Integer, t::Integer, u::Integer, v::Integer)
+    e = (min(u, v), max(u, v))
     (; single_occupied_edges, multi_occupied_edges) = reservation
-    if haskey(multi_occupied_edges, (t, u, v))
-        others = multi_occupied_edges[(t, u, v)]
+    if haskey(multi_occupied_edges, (t, e...))
+        others = multi_occupied_edges[(t, e...)]
         if !(a in others)
             push!(others, a)
         end
-    elseif haskey(single_occupied_edges, (t, u, v))
-        b = single_occupied_edges[(t, u, v)]
-        multi_occupied_edges[(t, u, v)] = [b, a]
-        delete!(single_occupied_edges, (t, u, v))
+    elseif haskey(single_occupied_edges, (t, e...))
+        b = single_occupied_edges[(t, e...)]
+        multi_occupied_edges[(t, e...)] = [b, a]
+        delete!(single_occupied_edges, (t, e...))
     else
-        reservation.single_occupied_edges[(t, u, v)] = a
+        reservation.single_occupied_edges[(t, e...)] = a
     end
     return nothing
 end
@@ -137,9 +140,10 @@ $(TYPEDSIGNATURES)
 Check whether edge `(u, v)` is occupied at time `t` in a reservation.
 """
 function is_occupied_edge(reservation::Reservation, t::Integer, u::Integer, v::Integer)
+    e = (min(u, v), max(u, v))
     (; single_occupied_edges, multi_occupied_edges) = reservation
-    return haskey(single_occupied_edges, (t, u, v)) ||
-           haskey(multi_occupied_edges, (t, u, v))
+    return haskey(single_occupied_edges, (t, e...)) ||
+           haskey(multi_occupied_edges, (t, e...))
 end
 
 """
@@ -155,7 +159,8 @@ function update_reservation!(reservation::Reservation, path::Path, a::Integer, m
             occupy!(reservation, a, t, uu)
         end
         for (uu, vv) in edge_conflicts[(u, v)]
-            occupy!(reservation, a, t, uu, vv)
+            ee = (min(uu, vv), max(uu, vv))
+            occupy!(reservation, a, t, ee...)
         end
     end
     u_arrival, t_arrival = last(path), length(path)
@@ -169,6 +174,7 @@ end
 $(TYPEDSIGNATURES)
 
 Compute a `Reservation` based on the vertices and edges occupied by `solution`.
+
 Conflicts are computed within `mapf`.
 """
 function Reservation(solution::Solution, mapf::MAPF)

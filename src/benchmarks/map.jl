@@ -3,19 +3,19 @@ $(TYPEDSIGNATURES)
 
 List available maps from the benchmark set.
 """
-function list_map_names()
-    return readdir(datadep"mapf-map")
+function list_instances()
+    return map(s -> chopsuffix(s, ".map"), readdir(datadep"mapf-map"))
 end
 
 """
 $(TYPEDSIGNATURES)
 
-Read a map matrix from a text file.
+Read a map from an automatically downloaded text file.
 
-Returns a `Matrix{Char}`.
+Return a `Matrix{Char}`.
 """
-function read_benchmark_map(map_name::AbstractString)
-    map_path = joinpath(datadep"mapf-map", map_name)
+function read_benchmark_map(instance_name::AbstractString)
+    map_path = joinpath(datadep"mapf-map", "$instance_name.map")
     lines = open(map_path, "r") do file
         readlines(file)
     end
@@ -23,16 +23,21 @@ function read_benchmark_map(map_name::AbstractString)
     height = parse(Int, height_line[2])
     width_line = split(lines[3])
     width = parse(Int, width_line[2])
-    map_matrix = Matrix{Char}(undef, height, width)
+    grid = Matrix{Char}(undef, height, width)
     for i in 1:height
         line = lines[4 + i]
         for j in 1:width
-            map_matrix[i, j] = line[j]
+            grid[i, j] = line[j]
         end
     end
-    return map_matrix
+    return grid
 end
 
+"""
+    passable_cell(c::Char)
+
+Determine if a cell is passable terrain or not.
+"""
 passable_cell(c::Bool) = !c
 passable_cell(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 
@@ -40,10 +45,12 @@ passable_cell(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 $(TYPEDSIGNATURES)
 
 Create a sparse grid graph from a map specified as a matrix of characters.
+
+Return a tuple `(graph, coord_to_vertex, vertex_to_coord)`, where the last two items map between integer graph vertices `v` and coordinate tuples `(i, j)`.
 """
-function parse_benchmark_map(map_matrix::AbstractMatrix)
-    h, w = size(map_matrix)
-    passable = passable_cell.(map_matrix)
+function parse_benchmark_map(grid::AbstractMatrix; allow_diagonal_moves::Bool=false)
+    h, w = size(grid)
+    passable = passable_cell.(grid)
 
     coord_to_vertex = Dict{Tuple{Int,Int},Int}()
     v = 1
@@ -70,22 +77,29 @@ function parse_benchmark_map(map_matrix::AbstractMatrix)
                 s = coord_to_vertex[i, j]
                 d = coord_to_vertex[i + Δi, j + Δj]
                 diag = Δi != 0 && Δj != 0
-                weight = diag ? sqrt(2.0) : 1.0
-                if s <= d
-                    push!(sources, s)
-                    push!(destinations, d)
-                    push!(weights, weight)
+                if diag && !allow_diagonal_moves
+                    continue
+                else
+                    weight = diag ? sqrt(2.0) : 1.0
+                    if s <= d
+                        if s == 21 && d == 21
+                            @show s, d, weight
+                        end
+                        push!(sources, s)
+                        push!(destinations, d)
+                        push!(weights, weight)
+                    end
                 end
             end
         end
     end
 
-    g = SimpleWeightedGraph(sources, destinations, weights)
-    vertex_to_coord = Vector{Tuple{Int,Int}}(undef, nv(g))
+    graph = SimpleWeightedGraph(sources, destinations, weights; combine=max)
+    vertex_to_coord = Vector{Tuple{Int,Int}}(undef, nv(graph))
     for ((i, j), v) in pairs(coord_to_vertex)
         vertex_to_coord[v] = (i, j)
     end
-    return g, coord_to_vertex, vertex_to_coord
+    return graph, coord_to_vertex, vertex_to_coord
 end
 
 """
@@ -93,7 +107,7 @@ $(TYPEDSIGNATURES)
 
 Give a color object corresponding to the type of cell.
 
-To visualize a map in VSCode, just run `cell_color.(map_matrix)` in the REPL.
+To visualize a map in VSCode, just run `cell_color.(grid)` in the REPL.
 """
 function cell_color(c::Char)
     if c == '.'  # empty => white
