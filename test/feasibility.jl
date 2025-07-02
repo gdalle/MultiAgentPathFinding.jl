@@ -45,7 +45,7 @@ end
 
     reservation = Reservation(solution, mapf)
     @test isempty(reservation.multi_occupied_vertices)
-    @test reservation.multi_occupied_edges == Dict((2, 2, 3) => [1, 2], (2, 3, 2) => [1, 2])
+    @test reservation.multi_occupied_edges == Dict((2, 2, 3) => [1, 2])
 
     @test find_conflict(solution, mapf) == EdgeConflict(; t=2, u=2, v=3, a1=1, a2=2)
     @test !is_feasible(solution, mapf)

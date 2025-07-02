@@ -2,7 +2,7 @@ module MultiAgentPathFinding
 
 ## Dependencies
 
-using Colors: @colorant_str
+using Colors: @colorant_str, distinguishable_colors
 using CSV
 using DataDeps: DataDep, @datadep_str, unpack, register
 using DataFrames
@@ -26,6 +26,8 @@ using Graphs:
     add_edge!,
     weights,
     dijkstra_shortest_paths
+using Makie
+using Printf
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedGraph, weighttype, get_weight
 using StableRNGs: StableRNG
@@ -45,6 +47,7 @@ include("benchmarks/map.jl")
 include("benchmarks/scenario.jl")
 include("benchmarks/solution.jl")
 include("benchmarks/combine.jl")
+include("benchmarks/plot.jl")
 
 ## Exports
 
@@ -57,6 +60,7 @@ export independent_dijkstra, cooperative_astar
 export list_instances
 export BenchmarkScenario
 export read_benchmark_map, parse_benchmark_map, passable_cell, cell_color
+export visualize_solution
 
 include("init.jl")
 

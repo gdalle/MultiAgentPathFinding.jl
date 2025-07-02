@@ -46,7 +46,7 @@ $(TYPEDSIGNATURES)
 
 Create a sparse grid graph from a map specified as a matrix of characters.
 
-Return a tuple `(graph, coord_to_vertex, vertex_to_coord)`, where the last two items map between integer graph vertices `v` and coordinate tuples `(i, j)`.
+Return a named tuple `(; graph, coord_to_vertex, vertex_to_coord)`, where the last two items map between integer graph vertices `v` and coordinate tuples `(i, j)`.
 """
 function parse_benchmark_map(grid::AbstractMatrix; allow_diagonal_moves::Bool=false)
     h, w = size(grid)
@@ -82,9 +82,6 @@ function parse_benchmark_map(grid::AbstractMatrix; allow_diagonal_moves::Bool=fa
                 else
                     weight = diag ? sqrt(2.0) : 1.0
                     if s <= d
-                        if s == 21 && d == 21
-                            @show s, d, weight
-                        end
                         push!(sources, s)
                         push!(destinations, d)
                         push!(weights, weight)
@@ -99,7 +96,7 @@ function parse_benchmark_map(grid::AbstractMatrix; allow_diagonal_moves::Bool=fa
     for ((i, j), v) in pairs(coord_to_vertex)
         vertex_to_coord[v] = (i, j)
     end
-    return graph, coord_to_vertex, vertex_to_coord
+    return (; graph, coord_to_vertex, vertex_to_coord)
 end
 
 """

@@ -67,10 +67,11 @@ function temporal_astar!(
     nodes_explored = 0
     while !isempty(heap)
         (t, u), (du, hu) = pop!(heap)
-        if u == arr
+        if u == arr && is_safe_vertex_to_stop(reservation, t, u)
             path = reconstruct_path(storage, dep, arr, t)
             return path
-        elseif du <= dists[t, u]
+        end
+        if du <= dists[t, u]
             dists[t, u] = du
             for (v, w_uv) in neighbors_and_weights(g, u)
                 heuristic[v] == typemax(W) && continue

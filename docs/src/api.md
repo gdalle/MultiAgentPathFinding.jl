@@ -51,6 +51,12 @@ BenchmarkScenario
 read_benchmark_map
 parse_benchmark_map
 passable_cell
+```
+
+## Visualization
+
+```@docs
+visualize_solution
 cell_color
 ```
 

@@ -71,7 +71,6 @@ function Solution(scen::BenchmarkScenario; check::Bool=false)
     solution = Solution(
         map(path_coord -> getindex.(Ref(coord_to_vertex), path_coord), paths_coord_list)
     )
-    @show lower_cost, solution_cost
     if check
         mapf = MAPF(scen)
         @assert is_feasible(solution, mapf; verbose=true)

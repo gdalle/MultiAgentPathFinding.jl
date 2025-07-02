@@ -112,10 +112,10 @@ end
 
         # zig-zag
         g = path_graph(4)
-        departures = [1, 4]
-        arrivals = [2, 1]
+        departures = [4, 1]
+        arrivals = [1, 2]
         mapf = MAPF(g, departures, arrivals)
-        @test_throws AstarConvergenceError cooperative_astar(mapf)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf)
     end
 
     @testset "Infinite loop" begin
