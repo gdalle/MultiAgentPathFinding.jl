@@ -52,6 +52,15 @@ end
     @test !is_feasible(solution, mapf)
 
     string(EdgeConflict(; t=2, u=2, v=3, a1=1, a2=2))
+
+    g = path_graph(6)
+    departures = [1, 1, 1]
+    arrivals = [6, 5, 4]
+    mapf = MAPF(g, departures, arrivals)
+    solution = Solution([[1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5], [1, 2, 3, 4]])
+
+    reservation = Reservation(solution, mapf)
+    @test reservation.multi_occupied_edges[1, 1, 2] == [1, 2, 3]
 end
 
 @testset "Arrival conflict" begin

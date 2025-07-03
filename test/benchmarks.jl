@@ -1,5 +1,6 @@
 using MultiAgentPathFinding
 using MultiAgentPathFinding: cell_color
+using MultiAgentPathFinding: MissingScenarioError, MissingSolutionError
 using Graphs
 using SparseArrays
 using Test
@@ -36,7 +37,7 @@ end
     instance = "empty-8-8"
     scen_type = "even"
     @testset for type_id in 1:2
-        @testset for agents in 10:10:100
+        @testset for agents in 10:5:32
             scen = BenchmarkScenario(; instance, scen_type, type_id, agents)
 
             mapf = MAPF(scen; check=true)
@@ -81,11 +82,40 @@ end
 end
 
 @testset "Agent subset" begin
+    scen = BenchmarkScenario(; instance="Berlin_1_256", scen_type="even", type_id=1)
+    mapf = MAPF(scen)
+    @test nb_agents(mapf) == 950
     scen = BenchmarkScenario(;
-        instance="Berlin_1_256", scen_type="even", type_id=2, agents=10
+        instance="Berlin_1_256", scen_type="even", type_id=1, agents=10
     )
     mapf = MAPF(scen)
     @test nb_agents(mapf) == 10
     smaller_mapf = select_agents(mapf, 1:6)
     @test nb_agents(smaller_mapf) == 6
+end
+
+@testset "Errors" begin
+    @test_throws AssertionError BenchmarkScenario(;
+        instance="empty-8-8", scen_type="plop", type_id=100, agents=10
+    )
+
+    scen = BenchmarkScenario(; instance="empty-8-9", scen_type="even", type_id=1, agents=1)
+    @test_throws SystemError MAPF(scen)
+    scen = BenchmarkScenario(;
+        instance="empty-8-8", scen_type="even", type_id=1000, agents=1
+    )
+    @test_throws SystemError MAPF(scen)
+    scen = BenchmarkScenario(;
+        instance="empty-8-8", scen_type="even", type_id=1, agents=1000
+    )
+    @test_throws MissingScenarioError MAPF(scen)
+
+    scen = BenchmarkScenario(;
+        instance="empty-8-8", scen_type="even", type_id=1000, agents=1
+    )
+    @test_throws MissingSolutionError Solution(scen)
+    scen = BenchmarkScenario(;
+        instance="empty-8-8", scen_type="even", type_id=1, agents=1000
+    )
+    @test_throws MissingSolutionError Solution(scen)
 end
