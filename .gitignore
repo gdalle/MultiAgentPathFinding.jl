@@ -6,3 +6,5 @@
 /docs/build/
 /docs/src/index.md
 playground.jl
+*.mp4
+*.png

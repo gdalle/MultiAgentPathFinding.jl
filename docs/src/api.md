@@ -4,18 +4,13 @@ CollapsedDocStrings = true
 
 # API reference
 
-Only exported names are part of the API.
-
-```@docs
-MultiAgentPathFinding
-```
+These symbols are part of the public API, their existence and behavior is guaranteed until the next breaking release.
 
 ## Structures
 
 ```@docs
 MAPF
 Solution
-Reservation
 ```
 
 ## Access
@@ -28,7 +23,6 @@ select_agents
 ## Feasibility and cost
 
 ```@docs
-path_cost
 sum_of_costs
 is_feasible
 find_conflict
@@ -46,18 +40,15 @@ cooperative_astar
 ## Benchmarks
 
 ```@docs
-list_map_names
-list_scenario_names
+list_instances
+BenchmarkScenario
+read_benchmark_map
+parse_benchmark_map
+passable_cell
 ```
 
-## Internals
+## Visualization
 
-```@autodocs
-Modules = [MultiAgentPathFinding]
-Public = false
-```
-
-## Index
-
-```@index
+```@docs
+plot_mapf
 ```

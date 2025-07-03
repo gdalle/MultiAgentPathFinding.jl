@@ -26,9 +26,11 @@ For now the documentation is a bit lacking, but take a look at the files in [`te
 
 ## Background
 
-MultiAgentPathFinding.jl contains basic optimization algorithms related to multi-agent pathfinding, as well as a parser for the standard benchmark instances described in
+MultiAgentPathFinding.jl contains basic optimization algorithms related to multi-agent pathfinding, as well as a parser for the standard benchmark instances and solutions described in
 
 > [*Multi-Agent Pathfinding: Definitions, Variants, and Benchmarks*](https://www.aaai.org/ocs/index.php/SOCS/SOCS19/paper/view/18341), Stern et al. (2019)
+
+> [*Tracking Progress in Multi-Agent Path Finding*](https://icaps23.icaps-conference.org/demos/papers/255_paper.pdf), Shen et al. (2023)
 
 If you use this package, please cite the following PhD dissertation:
 

@@ -67,10 +67,11 @@ function temporal_astar!(
     nodes_explored = 0
     while !isempty(heap)
         (t, u), (du, hu) = pop!(heap)
-        if u == arr
+        if u == arr && is_safe_vertex_to_stop(reservation, t, u)
             path = reconstruct_path(storage, dep, arr, t)
             return path
-        elseif du <= dists[t, u]
+        end
+        if du <= dists[t, u]
             dists[t, u] = du
             for (v, w_uv) in neighbors_and_weights(g, u)
                 heuristic[v] == typemax(W) && continue
@@ -127,17 +128,19 @@ Solve a MAPF problem `mapf` for a set of `agents` with the cooperative A* algori
 Returns a `Solution` where some paths may be empty if the vertices are not connected.
 """
 function cooperative_astar(mapf::MAPF, agents::AbstractVector{<:Integer}=1:nb_agents(mapf))
-    (; g, departures, arrivals) = mapf
-    dijkstra_storage = DijkstraStorage(g)
-    temporal_astar_storage = TemporalAstarStorage(g)
+    (; graph, departures, arrivals) = mapf
+    dijkstra_storage = DijkstraStorage(graph)
+    temporal_astar_storage = TemporalAstarStorage(graph)
     reservation = Reservation()
     A = nb_agents(mapf)
     paths = Vector{Path}(undef, A)
     for a in agents
         dep, arr = departures[a], arrivals[a]
-        dijkstra!(dijkstra_storage, g, arr)  # graph is undirected
+        dijkstra!(dijkstra_storage, graph, arr)  # graph is undirected
         heuristic = dijkstra_storage.dists
-        path = temporal_astar!(temporal_astar_storage, g, dep, arr; reservation, heuristic)
+        path = temporal_astar!(
+            temporal_astar_storage, graph, dep, arr; reservation, heuristic
+        )
         update_reservation!(reservation, path, a, mapf)
         paths[a] = path
     end

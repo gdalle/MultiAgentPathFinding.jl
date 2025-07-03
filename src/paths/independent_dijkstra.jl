@@ -84,13 +84,13 @@ Compute independent shortest paths for each agent of `mapf`.
 Returns a `Solution` where some paths may be empty if the vertices are not connected.
 """
 function independent_dijkstra(mapf::MAPF)
-    (; g, departures, arrivals) = mapf
-    storage = DijkstraStorage(g)
+    (; graph, departures, arrivals) = mapf
+    storage = DijkstraStorage(graph)
     A = nb_agents(mapf)
     paths = Vector{Path}(undef, A)
     for a in 1:A
         dep, arr = departures[a], arrivals[a]
-        dijkstra!(storage, g, dep)
+        dijkstra!(storage, graph, dep)
         paths[a] = reconstruct_path(storage, dep, arr)
     end
     return Solution(paths)

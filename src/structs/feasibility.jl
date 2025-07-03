@@ -96,7 +96,7 @@ $(TYPEDSIGNATURES)
 Check whether `solution` is feasible when agents are considered separately.
 """
 function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
-    (; g, departures, arrivals) = mapf
+    (; graph, departures, arrivals) = mapf
     (; paths) = solution
     for a in 1:nb_agents(mapf)
         if !(a in eachindex(paths))
@@ -112,7 +112,7 @@ function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
         elseif last(paths[a]) != arrivals[a]
             verbose && @warn "Wrong arrival vertex for agent $a"
             return false
-        elseif !exists_in_graph(paths[a], g)
+        elseif !exists_in_graph(paths[a], graph)
             verbose && @warn "Path of agent $a does not exist in graph"
             return false
         end

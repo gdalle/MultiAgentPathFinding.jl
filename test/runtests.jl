@@ -16,4 +16,7 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = get(ENV, "CI", "false") == "true"
     @testset verbose = true "Benchmarks" begin
         include("benchmarks.jl")
     end
+    @testset verbose = true "Plot" begin
+        include("plot.jl")
+    end
 end
