@@ -1,3 +1,9 @@
+function get_point(vertex_to_coord::Vector, v::Integer; h)
+    i, j = vertex_to_coord[v]
+    x, y = j, h - i + 1  # translate from matrix to plot system
+    return Point2d(x - 0.5, y - 0.5)  # align with heatmap
+end
+
 """
 $(TYPEDSIGNATURES)
 
@@ -15,12 +21,15 @@ function plot_mapf(
     video_path::Union{String,Nothing}=nothing,
     frames_per_move::Integer=20,
     frames_per_second::Integer=20,
+    display_targets::Bool=true,
 )
     (; instance, scen_type, type_id) = scen
     grid = read_benchmark_map(instance)
     h, w = size(grid)
     (; graph, coord_to_vertex, vertex_to_coord) = parse_benchmark_map(grid)
     grid_binary = passable_cell.(grid)
+    mapf = MAPF(scen)
+    (; departures, arrivals) = mapf
 
     fig = Figure()
     ax = Axis(
@@ -54,11 +63,10 @@ function plot_mapf(
     paths_extended = stack([
         vcat(path, fill(path[end], T - length(path))) for path in solution.paths
     ])
-    paths_extended_coord = map(paths_extended) do v
-        i, j = vertex_to_coord[v]
-        x, y = j, h - i + 1  # translate from matrix to plot system
-        Point2d(x - 0.5, y - 0.5)  # align with heatmap
-    end
+
+    get_point_partial(v) = get_point(vertex_to_coord, v; h)
+    paths_extended_coord = map(get_point_partial, paths_extended)
+    arrivals_coord = map(get_point_partial, arrivals)
 
     sl_t = Slider(fig[2, 1]; range=1:0.1:T, startvalue=time, update_while_dragging=true)
 
@@ -77,6 +85,26 @@ function plot_mapf(
         lchoices=range(60; stop=100, length=15),
     )
 
+    scatter!(
+        ax,
+        pos;  # 
+        color=agent_colors,
+        marker=Circle,
+        markersize=0.8,
+        markerspace=:data,
+    )
+    if display_targets
+        scatter!(
+            ax,
+            arrivals_coord;  # 
+            color=:white,
+            marker=Circle,
+            markersize=0.9,
+            markerspace=:data,
+            glowcolor=agent_colors,
+            glowwidth=2,
+        )
+    end
     scatter!(
         ax,
         pos;  # 
