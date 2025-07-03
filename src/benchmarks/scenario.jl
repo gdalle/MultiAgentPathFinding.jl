@@ -1,3 +1,7 @@
+struct MissingScenarioError <: Exception
+    msg::String
+end
+
 """
     BenchmarkScenario
 
@@ -15,10 +19,13 @@ struct BenchmarkScenario
     "id of the scenario among those with the same type"
     type_id::Int
     "number of agents included"
-    agents::Int
+    agents::Union{Nothing,Int}
 
     function BenchmarkScenario(;
-        instance::String, scen_type::String, type_id::Int, agents::Int=typemax(Int)
+        instance::String,
+        scen_type::String,
+        type_id::Int,
+        agents::Union{Nothing,Int}=nothing,
     )
         @assert scen_type in ("random", "even")
         return new(instance, scen_type, type_id, agents)
@@ -81,5 +88,15 @@ function read_benchmark_scenario(scen::BenchmarkScenario)
         )
         push!(scenario, problem)
     end
-    return scenario[1:min(agents, length(scenario))]
+    if isnothing(agents)
+        return scenario
+    elseif !(1 <= agents <= length(scenario))
+        throw(
+            MissingScenarioError(
+                "Scenario $scen_type-$type_id for instance $instance does not exist with $agents agents",
+            ),
+        )
+    else
+        return scenario[1:agents]
+    end
 end

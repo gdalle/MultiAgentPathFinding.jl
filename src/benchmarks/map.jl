@@ -111,6 +111,7 @@ function cell_color(c::Char)
         return colorant"white"
     elseif c == 'G'  # empty => white
         return colorant"white"
+        # COV_EXCL_START
     elseif c == 'S'  # shallow water => brown
         return colorant"brown"
     elseif c == 'W'  # water => blue
@@ -126,4 +127,5 @@ function cell_color(c::Char)
     else  # ? => black
         return colorant"black"
     end
+    # COV_EXCL_STOP
 end

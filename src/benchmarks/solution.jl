@@ -1,9 +1,13 @@
+struct MissingSolutionError <: Exception
+    msg::String
+end
+
 """
     read_benchmark_solution(scen::BenchmarkScenario)
 
 Read a solution from an automatically downloaded text file.
 
-Return a tuple `(lower_cost, solution_cost, paths_coord_list)` where:
+Return a named tuple `(; lower_cost, solution_cost, paths_coord_list)` where:
 
 - `lower_cost` is a (supposedly) proven lower bound on the optimal cost
 - `solution_cost` is the cost of the provided solution
@@ -15,16 +19,35 @@ function read_benchmark_solution(scen::BenchmarkScenario)
     sol_df = DataFrame(CSV.File(sol_path))
     right_scen = (sol_df[!, :scen_type] .== scen_type) .& (sol_df[!, :type_id] .== type_id)
     sol_df = sol_df[right_scen, :]
-    agents = min(agents, maximum(sol_df[!, :agents]))
+    if size(sol_df, 1) == 0
+        throw(
+            MissingSolutionError(
+                "Scenario $scen_type-$type_id does not exist for instance $instance"
+            ),
+        )
+    end
+    agents = if isnothing(agents)
+        maximum(sol_df[!, :agents])
+    else
+        agents
+    end
     right_agents = sol_df[!, :agents] .== agents
     sol_df = sol_df[right_agents, :]
     if size(sol_df, 1) == 0
-        error("No solution for scenario $scen")
+        throw(
+            MissingSolutionError(
+                "Scenario $scen_type-$type_id for instance $instance does not have a best known solution with $agents agents",
+            ),
+        )
     end
     sol = only(eachrow(sol_df))
     plan = sol[:solution_plan]
     if ismissing(plan)
-        error("No solution for scenario $scen")
+        throw(
+            MissingSolutionError(
+                "Scenario $scen_type-$type_id for instance $instance does not have a best known solution with $agents agents",
+            ),
+        )
     end
     paths_string_list = split(plan, "\n")
 
@@ -54,5 +77,9 @@ function read_benchmark_solution(scen::BenchmarkScenario)
         return path_coord
     end
 
-    return sol[:lower_cost], sol[:solution_cost], paths_coord_list
+    return (;
+        lower_cost=sol[:lower_cost],
+        solution_cost=sol[:solution_cost],
+        paths_coord_list=paths_coord_list,
+    )
 end
