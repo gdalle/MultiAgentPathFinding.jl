@@ -86,7 +86,7 @@ bench_mapf = MAPF(scen; allow_diagonal_moves=true)
 You can visualize an instance with [`plot_mapf`](@ref):
 
 ```@example tuto
-plot_mapf(scen)
+plot_mapf(scen; display_grid=false)
 ```
 
 Best known solutions are also available for some instances thanks to the website [Tracking Progress in MAPF](https://tracker.pathfinding.ai/).
@@ -103,7 +103,7 @@ benchmark_solution_best = Solution(small_scen)
 For these grid instances, solutions can be visualized at any point in their time span, or recorded as an animation:
 
 ```@example tuto
-plot_mapf(small_scen, benchmark_solution_best; video_path=joinpath(@__DIR__, "solution.mp4"))
+plot_mapf(small_scen, benchmark_solution_best; video_path=joinpath(@__DIR__, "solution.mp4"));
 ```
 
 ```@raw html
