@@ -4,6 +4,9 @@ $(TYPEDSIGNATURES)
 Visualize a solution for one of the grid benchmark instances at a given time step.
 
 If a `solution` and `video_path` are provided, the entire animation will be recorded and saved there.
+
+!!! warning
+    To use this function, first load a [Makie.jl](https://github.com/MakieOrg/Makie.jl) backend, like CairoMakie.jl (for static visualization / animation recording) or GLMakie.jl (for interactive exploration).
 """
 function plot_mapf(
     scen::BenchmarkScenario,
@@ -24,7 +27,7 @@ function plot_mapf(
         fig[1, 1];
         title="MAPF instance $instance",
         subtitle="Scenario $scen_type-$type_id",
-        aspect=1.0,
+        aspect=DataAspect(),
         limits=((0, w), (0, h)),
     )
 
@@ -35,32 +38,36 @@ function plot_mapf(
         image!(ax, rotr90(grid_binary); interpolate=false)
     end
 
+    grid_lims = vcat(
+        [(Point2d(0, y), Point2d(w, y)) for y in 0:h],
+        [(Point2d(x, 0), Point2d(x, h)) for x in 0:w],
+    )
+    linesegments!(ax, grid_lims; linewidth=0.5, color=:gray)
+
     if isnothing(solution)
         return fig
     end
 
     agents = length(solution.paths)
-
     T = maximum(length, solution.paths)
+
     paths_extended = stack([
         vcat(path, fill(path[end], T - length(path))) for path in solution.paths
     ])
     paths_extended_coord = map(paths_extended) do v
         i, j = vertex_to_coord[v]
-        x, y = j, h - i + 1
+        x, y = j, h - i + 1  # translate from matrix to plot system
+        Point2d(x - 0.5, y - 0.5)  # align with heatmap
     end
 
-    t = Observable(float(time))
+    sl_t = Slider(fig[2, 1]; range=1:0.1:T, startvalue=time, update_while_dragging=true)
+
+    t = sl_t.value
     t0 = @lift floor(Int, $t)
     t1 = @lift ifelse($t == $t0, $t0 + 1, ceil(Int, $t))
     pos0 = @lift paths_extended_coord[$t0, :]
     pos1 = @lift paths_extended_coord[min($t1, end), :]
-    x0 = @lift first.($pos0)
-    x1 = @lift first.($pos1)
-    y0 = @lift last.($pos0)
-    y1 = @lift last.($pos1)
-    x = @lift ($t - $t0) .* $x1 .+ ($t1 - $t) .* $x0
-    y = @lift ($t - $t0) .* $y1 .+ ($t1 - $t) .* $y0
+    pos = @lift ($t - $t0) .* $pos1 .+ ($t1 - $t) .* $pos0
     time_label = @lift string("Time: ", @sprintf("%.2f", $t))
 
     agent_colors = distinguishable_colors(
@@ -70,15 +77,21 @@ function plot_mapf(
         lchoices=range(60; stop=100, length=15),
     )
 
-    tl = textlabel!(
+    scatter!(
         ax,
-        @lift($x .- 0.5),
-        @lift($y .- 0.5);
-        text=string.(1:agents),
-        background_color=agent_colors,
-        shape=Circle(Point2f(0), 0.65),
-        shape_limits=Rect2f(-sqrt(0.5), -sqrt(0.5), sqrt(2), sqrt(2)),
-        keep_aspect=true,
+        pos;  # 
+        color=agent_colors,
+        marker=Circle,
+        markersize=0.8,
+        markerspace=:data,
+    )
+    text!(
+        ax,
+        pos;
+        text=map(string, 1:agents),
+        fontsize=0.4,
+        align=(:center, :center),
+        markerspace=:data,
     )
 
     Label(fig[2, 1], time_label; tellwidth=false, tellheight=true)
@@ -87,9 +100,10 @@ function plot_mapf(
 
     if !isnothing(video_path)
         record(fig, video_path, timesteps; frames_per_second) do _t
-            t[] = _t
+            sl_t.value = _t
         end
-    else
-        return fig
+        sl_t.value = time
     end
+
+    return fig
 end
