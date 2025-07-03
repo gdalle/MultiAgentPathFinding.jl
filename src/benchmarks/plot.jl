@@ -28,6 +28,9 @@ function plot_mapf(
         limits=((0, w), (0, h)),
     )
 
+    colsize!(fig.layout, 1, Aspect(1, 1.0))
+    resize_to_layout!(fig)
+
     if sum(grid_binary) < prod(size(grid_binary))
         image!(ax, rotr90(grid_binary); interpolate=false)
     end
