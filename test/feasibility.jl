@@ -1,5 +1,6 @@
 using Graphs
 using MultiAgentPathFinding
+using MultiAgentPathFinding: Reservation
 using Test
 
 @testset "Individually infeasible" begin

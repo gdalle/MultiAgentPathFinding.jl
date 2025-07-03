@@ -3,23 +3,41 @@ $(TYPEDSIGNATURES)
 
 Visualize a solution for one of the grid benchmark instances at a given time step.
 
-If `video_path isa String`, the entire animation will be recorded and saved there.
+If a `solution` and `video_path` are provided, the entire animation will be recorded and saved there.
 """
-function visualize_solution(
+function plot_mapf(
     scen::BenchmarkScenario,
-    solution::Solution,
-    time=1;
-    video_path=nothing,
-    frames_per_move=20,
-    frames_per_second=20,
+    solution::Union{Solution,Nothing}=nothing;
+    time::Integer=1,
+    video_path::Union{String,Nothing}=nothing,
+    frames_per_move::Integer=20,
+    frames_per_second::Integer=20,
 )
     (; instance, scen_type, type_id) = scen
-    agents = length(solution.paths)
     grid = read_benchmark_map(instance)
+    h, w = size(grid)
     (; graph, coord_to_vertex, vertex_to_coord) = parse_benchmark_map(grid)
     grid_binary = passable_cell.(grid)
 
-    h, w = size(grid)
+    fig = Figure()
+    ax = Axis(
+        fig[1, 1];
+        title="MAPF instance $instance",
+        subtitle="Scenario $scen_type-$type_id",
+        aspect=1.0,
+        limits=((0, w), (0, h)),
+    )
+
+    if sum(grid_binary) < prod(size(grid_binary))
+        image!(ax, rotr90(grid_binary); interpolate=false)
+    end
+
+    if isnothing(solution)
+        return fig
+    end
+
+    agents = length(solution.paths)
+
     T = maximum(length, solution.paths)
     paths_extended = stack([
         vcat(path, fill(path[end], T - length(path))) for path in solution.paths
@@ -40,7 +58,7 @@ function visualize_solution(
     y1 = @lift last.($pos1)
     x = @lift ($t - $t0) .* $x1 .+ ($t1 - $t) .* $x0
     y = @lift ($t - $t0) .* $y1 .+ ($t1 - $t) .* $y0
-    subtitle = @lift string("Time: ", @sprintf("%.2f", $t - 1))
+    time_label = @lift string("Time: ", @sprintf("%.2f", $t))
 
     agent_colors = distinguishable_colors(
         agents,
@@ -48,19 +66,6 @@ function visualize_solution(
         dropseed=true,
         lchoices=range(60; stop=100, length=15),
     )
-
-    fig = Figure()
-    ax = Axis(
-        fig[1, 1];
-        title="MAPF instance $instance\nScenario $scen_type-$type_id with $agents agents",
-        subtitle,
-        aspect=1.0,
-        limits=((0, w), (0, h)),
-    )
-
-    if sum(grid_binary) < prod(size(grid_binary))
-        image!(ax, rotr90(grid_binary); interpolate=false)
-    end
 
     tl = textlabel!(
         ax,
@@ -73,13 +78,15 @@ function visualize_solution(
         keep_aspect=true,
     )
 
+    Label(fig[2, 1], time_label; tellwidth=false, tellheight=true)
+
     timesteps = range(1, T; step=1 / frames_per_move)
 
-    if video_path !== nothing
+    if !isnothing(video_path)
         record(fig, video_path, timesteps; frames_per_second) do _t
             t[] = _t
         end
+    else
+        return fig
     end
-
-    return fig
 end

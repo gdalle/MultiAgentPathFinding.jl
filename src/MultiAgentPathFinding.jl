@@ -52,15 +52,15 @@ include("benchmarks/plot.jl")
 ## Exports
 
 export MAPF
+export Solution
 export nb_agents, select_agents
-export Solution, Reservation
+export sum_of_costs, is_feasible, find_conflict
 export VertexConflict, EdgeConflict
-export sum_of_costs, path_cost, find_conflict, is_feasible
 export independent_dijkstra, cooperative_astar
 export list_instances
 export BenchmarkScenario
-export read_benchmark_map, parse_benchmark_map, passable_cell, cell_color
-export visualize_solution
+export read_benchmark_map, parse_benchmark_map, passable_cell
+export plot_mapf
 
 include("init.jl")
 
