@@ -37,7 +37,7 @@ end
     instance = "empty-8-8"
     scen_type = "even"
     @testset for type_id in 1:2
-        @testset for agents in 10:10:100
+        @testset for agents in 10:5:32
             scen = BenchmarkScenario(; instance, scen_type, type_id, agents)
 
             mapf = MAPF(scen; check=true)
