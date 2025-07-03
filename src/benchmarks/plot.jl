@@ -21,6 +21,7 @@ function plot_mapf(
     video_path::Union{String,Nothing}=nothing,
     frames_per_move::Integer=20,
     frames_per_second::Integer=20,
+    display_grid::Bool=true,
     display_targets::Bool=true,
 )
     (; instance, scen_type, type_id) = scen
@@ -47,11 +48,13 @@ function plot_mapf(
         image!(ax, rotr90(grid_binary); interpolate=false)
     end
 
-    grid_lims = vcat(
-        [(Point2d(0, y), Point2d(w, y)) for y in 0:h],
-        [(Point2d(x, 0), Point2d(x, h)) for x in 0:w],
-    )
-    linesegments!(ax, grid_lims; linewidth=0.5, color=:gray)
+    if display_grid
+        grid_lims = vcat(
+            [(Point2d(0, y), Point2d(w, y)) for y in 0:h],
+            [(Point2d(x, 0), Point2d(x, h)) for x in 0:w],
+        )
+        linesegments!(ax, grid_lims; linewidth=0.5, color=:gray)
+    end
 
     if isnothing(solution)
         return fig
