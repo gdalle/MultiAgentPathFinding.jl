@@ -53,7 +53,7 @@ function temporal_astar!(
     arr::Integer;
     heuristic::Vector,
     reservation::Reservation,
-    max_nodes::Integer=nv(g)^3,
+    max_nodes::Integer=3 * nv(g),
 )
     reset!(storage)
     (; heap, parents, dists) = storage
@@ -126,8 +126,14 @@ $(TYPEDSIGNATURES)
 Solve a MAPF problem `mapf` for a set of `agents` with the cooperative A* algorithm of Silver (2005), see <https://ojs.aaai.org/index.php/AIIDE/article/view/18726>.
 
 Returns a `Solution` where some paths may be empty if the vertices are not connected.
+
+# Keyword arguments
+
+- `max_nodes::Integer`: controls the number of nodes explored before temporal A* gives up.
 """
-function cooperative_astar(mapf::MAPF, agents::AbstractVector{<:Integer}=1:nb_agents(mapf))
+function cooperative_astar(
+    mapf::MAPF, agents::AbstractVector{<:Integer}=1:nb_agents(mapf); kwargs...
+)
     (; graph, departures, arrivals) = mapf
     dijkstra_storage = DijkstraStorage(graph)
     temporal_astar_storage = TemporalAstarStorage(graph)
@@ -139,7 +145,7 @@ function cooperative_astar(mapf::MAPF, agents::AbstractVector{<:Integer}=1:nb_ag
         dijkstra!(dijkstra_storage, graph, arr)  # graph is undirected
         heuristic = dijkstra_storage.dists
         path = temporal_astar!(
-            temporal_astar_storage, graph, dep, arr; reservation, heuristic
+            temporal_astar_storage, graph, dep, arr; reservation, heuristic, kwargs...
         )
         update_reservation!(reservation, path, a, mapf)
         paths[a] = path
