@@ -33,19 +33,6 @@ function reset!(storage::TemporalAstarStorage{W,V}) where {W,V}
     return nothing
 end
 
-struct AstarConvergenceError <: Exception
-    max_nodes::Int
-    nv::Int
-    ne::Int
-end
-
-function Base.showerror(io::IO, e::AstarConvergenceError)
-    return print(
-        io,
-        "Temporal A* explored more than $(e.max_nodes) nodes on a graph with $(e.nv) vertices and $(e.ne) edges",
-    )
-end
-
 function temporal_astar!(
     storage::TemporalAstarStorage,
     g::SimpleWeightedGraph,
