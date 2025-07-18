@@ -2,12 +2,7 @@ using Graphs
 using LinearAlgebra
 using MultiAgentPathFinding
 using MultiAgentPathFinding:
-    AstarConvergenceError,
-    NoConflictFreePathError,
-    NoPathError,
-    dijkstra,
-    temporal_astar,
-    reconstruct_path
+    NoConflictFreePathError, NoPathError, dijkstra, temporal_astar, reconstruct_path
 using Random
 using SimpleWeightedGraphs
 using SparseArrays
@@ -126,7 +121,7 @@ end
         departures = [1, 4]
         arrivals = [2, 1]
         mapf = MAPF(g, departures, arrivals)
-        @test_throws AstarConvergenceError cooperative_astar(mapf)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf)
     end
 end
 
@@ -143,9 +138,5 @@ end
 
     e = NoConflictFreePathError(1, 2)
     @test sprint(showerror, e) ==
-        "NoConflictFreePathError: No conflict-free path was found from vertex 1 to vertex 2 in the graph"
-
-    e = AstarConvergenceError(1000, 2, 3)
-    @test sprint(showerror, e) ==
-        "Temporal A* explored more than 1000 nodes on a graph with 2 vertices and 3 edges"
+        "NoConflictFreePathError: No conflict-free path was found from vertex 1 to vertex 2 in the graph, given the provided reservation."
 end
