@@ -24,6 +24,7 @@ select_agents
 
 ```@docs
 sum_of_costs
+sum_of_conflicts
 is_feasible
 find_conflict
 VertexConflict
