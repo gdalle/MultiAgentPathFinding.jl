@@ -1,5 +1,5 @@
 """
-$(TYPEDEF)
+    MAPF
 
 Instance of a Multi-Agent Path Finding problem with custom conflict rules.
 
@@ -10,7 +10,7 @@ Instance of a Multi-Agent Path Finding problem with custom conflict rules.
         departures::Vector{Int},
         arrivals::Vector{Int};
         vertex_conflicts=LazyVertexConflicts(),
-        edge_conflicts=LazyEdgeConflicts()
+        edge_conflicts=LazySwappingConflicts()
     )
 
 # Fields
@@ -42,6 +42,8 @@ function MAPF(
 )
     @assert !is_directed(graph)
     @assert length(departures) == length(arrivals)
+    @assert length(unique(departures)) == length(departures)
+    @assert length(unique(arrivals)) == length(arrivals)
     @assert all(Base.Fix1(has_vertex, graph), departures)
     @assert all(Base.Fix1(has_vertex, graph), arrivals)
     # TODO: add more checks
@@ -59,7 +61,7 @@ end
 ## Access
 
 """
-$(TYPEDSIGNATURES)
+    nb_agents(mapf::MAPF)
 
 Count the number of agents in `mapf`.
 """
@@ -68,7 +70,7 @@ nb_agents(mapf::MAPF) = length(mapf.departures)
 ## Default conflicts
 
 """
-$(TYPEDEF)
+    LazyVertexConflicts()
 
 Lazy dict-like storage for the mapping `v -> [v]`.
 """
@@ -77,7 +79,7 @@ struct LazyVertexConflicts end
 Base.getindex(::LazyVertexConflicts, v::Integer) = (v,)
 
 """
-$(TYPEDEF)
+    LazySwappingConflicts()
 
 Lazy dict-like storage for the mapping `(u, v) -> [(u, v),]` (which also forbids `(v, u)` since the graph is undirected).
 """
@@ -90,7 +92,7 @@ end
 ## Modifiers
 
 """
-$(TYPEDSIGNATURES)
+    select_agents(mapf::MAPF, agents::AbstractVector{<:Integer})
 
 Select a subset of agents in `mapf` and return a new `MAPF`.
 """

@@ -1,14 +1,19 @@
 """
-$(TYPEDSIGNATURES)
+    MAPF(
+        grid::AbstractMatrix,
+        departure_coords::Vector{Tuple{Int,Int}},
+        arrival_coords::Vector{Tuple{Int,Int}};
+        allow_diagonal_moves::Bool=false,
+    )
 
 Construct a `MAPF` instance from a grid map and a list of departure and arrival coordinates.
 
-For the map, each element of the grid can be either
+Each element of the grid can be either
 
 - a `Bool`, in which case `false` denotes passable terrain and `true` denotes an obstacle
 - a `Char`, in which case `'.'` denotes passable terrain and `'@'` denotes an obstacle
 
-Regarding the coordinates, `(i, j)` corresponds to row `i` and column `j`, with `(1, 1)` as the upper-left corner.
+Regarding the coordinates, `(i, j)` corresponds to row `i` and column `j` (with `(1, 1)` as the upper-left corner).
 """
 function MAPF(
     grid::AbstractMatrix,
@@ -24,13 +29,9 @@ function MAPF(
 end
 
 """
-$(TYPEDSIGNATURES)
+    MAPF(scen::BenchmarkScenario; allow_diagonal_moves::Bool=false)
 
 Create a `MAPF` instance by reading a map and scenario from automatically downloaded benchmark files.
-
-# See also
-
-- [`BenchmarkScenario`](@ref)
 """
 function MAPF(scen::BenchmarkScenario; allow_diagonal_moves::Bool=false, check::Bool=false)
     grid = read_benchmark_map(scen.instance)
@@ -52,17 +53,13 @@ function MAPF(scen::BenchmarkScenario; allow_diagonal_moves::Bool=false, check::
 end
 
 """
-$(TYPEDSIGNATURES)
+    Solution(scen::BenchmarkScenario)
 
 Create a `MAPF` instance by reading a map and solution from automatically downloaded benchmark files.
 
 !!! warning
     The downloaded files can be large (up to tens of GB).
     By default, DataDeps.jl will ask for permission in the REPL before downloading.
-
-# See also
-
-- [`BenchmarkScenario`](@ref)
 """
 function Solution(scen::BenchmarkScenario; check::Bool=false)
     grid = read_benchmark_map(scen.instance)

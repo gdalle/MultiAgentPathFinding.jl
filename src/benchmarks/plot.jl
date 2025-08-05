@@ -5,7 +5,11 @@ function get_point(vertex_to_coord::Vector, v::Integer; h)
 end
 
 """
-$(TYPEDSIGNATURES)
+    plot_mapf(
+        scen::BenchmarkScenario,
+        scolution::Union{Solution,Nothing}=nothing;
+        kwargs...
+    )
 
 Visualize a solution for one of the grid benchmark instances at a given time step.
 
@@ -13,6 +17,16 @@ If a `solution` and `video_path` are provided, the entire animation will be reco
 
 !!! warning
     To use this function, first load a [Makie.jl](https://github.com/MakieOrg/Makie.jl) backend, like CairoMakie.jl (for static visualization / animation recording) or GLMakie.jl (for interactive exploration).
+
+# Keyword arguments
+
+The default values of keyword arguments are not part of the public API.
+
+- `video_path::Union{String,Nothing}`
+- `frames_per_move::Integer`
+- `frames_per_second::Integer`
+- `display_grid::Bool`
+- `display_targets::Bool`
 """
 function plot_mapf(
     scen::BenchmarkScenario,

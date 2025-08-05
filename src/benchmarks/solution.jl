@@ -11,7 +11,7 @@ Return a named tuple `(; lower_cost, solution_cost, paths_coord_list)` where:
 
 - `lower_cost` is a (supposedly) proven lower bound on the optimal cost
 - `solution_cost` is the cost of the provided solution
-- `paths_coord_list` is a vector of agent trajectories, each one being encoded as a vector of coordinate tuples `(i, j)` 
+- `paths_coord_list` is a vector of agent trajectories, each one being encoded as a vector of coordinate tuples `(i, j)` (with `(1, 1)` as the upper-left corner)
 """
 function read_benchmark_solution(scen::BenchmarkScenario)
     (; instance, scen_type, type_id, agents) = scen

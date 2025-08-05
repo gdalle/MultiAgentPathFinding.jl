@@ -1,5 +1,16 @@
+"""
+    NoConflictFreePathError
+
+Exception to return when no conflict-free path is found.
+
+# Fields
+
+$(TYPEDFIELDS)
+"""
 struct NoConflictFreePathError <: Exception
+    "path departure vertex"
     dep::Int
+    "path arrival vertex"
     arr::Int
 end
 
@@ -10,6 +21,13 @@ function Base.showerror(io::IO, e::NoConflictFreePathError)
     )
 end
 
+"""
+    TemporalAstarStorage
+
+# Fields
+
+$(TYPEDFIELDS)
+"""
 struct TemporalAstarStorage{T,V,W,H<:BinaryHeap}
     parents::Dict{Tuple{T,V},Tuple{T,V}}
     dists::Dict{Tuple{T,V},W}
@@ -40,6 +58,7 @@ function temporal_astar!(
     arr::Integer;
     heuristic::Vector,
     reservation::Reservation,
+    conflict_price::Union{Nothing,Real}=nothing,
 )
     reset!(storage)
     (; heap, parents, dists) = storage
@@ -62,8 +81,15 @@ function temporal_astar!(
             dists[t, u] = du
             for (v, w_uv) in neighbors_and_weights(g, u)
                 heuristic[v] == typemax(W) && continue
-                is_occupied_vertex(reservation, t + 1, v) && continue
-                is_occupied_edge(reservation, t, u, v) && continue
+                vertex_conflict = is_occupied_vertex(reservation, t + 1, v)
+                edge_conflict = is_occupied_edge(reservation, t, u, v)
+                if vertex_conflict || edge_conflict
+                    if isnothing(conflict_price)  # conflict forbidden
+                        continue
+                    else  # conflict penalized
+                        w_uv += conflict_price
+                    end
+                end
                 dv = get(dists, (t + 1, v), typemax(W))
                 if du + w_uv < dv
                     parents[t + 1, v] = (t, u)
@@ -99,11 +125,18 @@ function reconstruct_path(
 end
 
 """
-$(TYPEDSIGNATURES)
+    cooperative_astar(
+        mapf::MAPF,
+        agents::AbstractVector{<:Integer}=1:nb_agents(mapf);
+        conflict_price::Union{Nothing,Real}=nothing,
+    )
 
 Solve a MAPF problem `mapf` for a set of `agents` with the cooperative A* algorithm of Silver (2005), see <https://ojs.aaai.org/index.php/AIIDE/article/view/18726>.
 
-Returns a `Solution` where some paths may be empty if the vertices are not connected.
+Return a `Solution` while handling conflicts in a soft or hard way:
+
+- If `isnothing(conflict_price)`, an error will be thrown whenever A* fails to find a conflict-free path given the reservation of previous agents.
+- If `conflict_price isa Real`, each move where an agent encounters a vertex or edge conflict with previous agents will be penalized with the provided price and added to the path cost. The arrival vertex must still be feasible.
 """
 function cooperative_astar(
     mapf::MAPF, agents::AbstractVector{<:Integer}=1:nb_agents(mapf); kwargs...

@@ -33,7 +33,7 @@ struct BenchmarkScenario
 end
 
 """
-$(TYPEDEF)
+    BenchmarkAgent
 
 Encode one agent of a MAPF scenario.
 
@@ -54,11 +54,11 @@ $(TYPEDFIELDS)
 end
 
 """
-$(TYPEDSIGNATURES)
+    read_benchmark_scenario(scen::BenchmarkScenario)
 
 Read a scenario from an automatically downloaded text file.
 
-Returns a `Vector{BenchmarkAgent}`.
+Return a `Vector{BenchmarkAgent}`.
 """
 function read_benchmark_scenario(scen::BenchmarkScenario)
     (; instance, scen_type, type_id, agents) = scen
