@@ -1,6 +1,6 @@
 using Graphs
 using SimpleWeightedGraphs
-using SparseArrays0
+using SparseArrays
 using MultiAgentPathFinding: neighbors_and_weights, replace_weights, vectorize_weights
 using Test
 
