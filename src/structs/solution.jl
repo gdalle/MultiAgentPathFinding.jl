@@ -89,9 +89,6 @@ function sum_of_conflicts(solution::Solution, mapf::MAPF)
             else
                 false
             end
-            if vertex_conflict || edge_conflict
-                @info "conflict" a t vertex_conflict edge_conflict
-            end
             s += vertex_conflict || edge_conflict
         end
         for t in (length(path) + 1):reservation.max_time[]
