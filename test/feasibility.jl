@@ -53,14 +53,15 @@ end
 
     string(EdgeConflict(; t=2, u=2, v=3, a1=1, a2=2))
 
-    g = path_graph(6)
-    departures = [1, 1, 1]
-    arrivals = [6, 5, 4]
+    g = blockdiag(star_graph(4), star_graph(4))
+    add_edge!(g, 1, 5)
+    departures = [2, 3, 4]
+    arrivals = [6, 7, 8]
     mapf = MAPF(g, departures, arrivals)
-    solution = Solution([[1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5], [1, 2, 3, 4]])
+    solution = Solution([[2, 1, 5, 6], [3, 1, 5, 7], [4, 1, 5, 8]])
 
     reservation = Reservation(solution, mapf)
-    @test reservation.multi_occupied_edges[1, 1, 2] == [1, 2, 3]
+    @test reservation.multi_occupied_edges[2, 1, 5] == [1, 2, 3]
 end
 
 @testset "Arrival conflict" begin
@@ -72,7 +73,6 @@ end
     reservation = Reservation(solution, mapf)
 
     @test length(reservation.arrival_vertices) == 2
-    @test reservation.arrival_vertices_crossings == Dict(2 => [(3, 2)])
 
     @test !is_feasible(solution, mapf)
     @test find_conflict(solution, mapf) == VertexConflict(; t=3, v=2, a1=1, a2=2)

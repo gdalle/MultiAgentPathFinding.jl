@@ -1,5 +1,16 @@
+"""
+    NoPathError
+
+Exception to return when no path is found.
+
+# Fields
+
+$(TYPEDFIELDS)
+"""
 struct NoPathError <: Exception
+    "path departure vertex"
     dep::Int
+    "path arrival vertex"
     arr::Int
 end
 
@@ -10,6 +21,13 @@ function Base.showerror(io::IO, e::NoPathError)
     )
 end
 
+"""
+    DijkstraStorage
+
+# Fields
+
+$(TYPEDFIELDS)
+"""
 struct DijkstraStorage{V,W,H<:BinaryHeap}
     parents::Vector{V}
     dists::Vector{W}
@@ -77,11 +95,11 @@ function reconstruct_path(storage::DijkstraStorage, dep::Integer, arr::Integer)
 end
 
 """
-$(TYPEDSIGNATURES)
+    independent_dijkstra(mapf::MAPF)
 
 Compute independent shortest paths for each agent of `mapf`.
     
-Returns a `Solution` where some paths may be empty if the vertices are not connected.
+Return a `Solution` or error if one of the paths doesn't exist.
 """
 function independent_dijkstra(mapf::MAPF)
     (; graph, departures, arrivals) = mapf

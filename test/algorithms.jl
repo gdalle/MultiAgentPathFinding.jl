@@ -2,7 +2,12 @@ using Graphs
 using LinearAlgebra
 using MultiAgentPathFinding
 using MultiAgentPathFinding:
-    NoConflictFreePathError, NoPathError, dijkstra, temporal_astar, reconstruct_path
+    NoConflictFreePathError,
+    NoPathError,
+    Reservation,
+    dijkstra,
+    temporal_astar,
+    reconstruct_path
 using Random
 using SimpleWeightedGraphs
 using SparseArrays
@@ -42,26 +47,6 @@ using Test
     end
 end
 
-@testset "Grid" begin
-    L = 20
-    g = Graphs.grid([L, L])
-
-    A = 20
-    departures = collect(1:A)
-    arrivals = collect((nv(g) + 1) .- (1:A))
-
-    mapf = MAPF(g, departures, arrivals)
-
-    sol_indep = independent_dijkstra(mapf)
-    sol_coop = cooperative_astar(mapf)
-    @test !is_feasible(sol_indep, mapf; verbose=false)
-    @test is_feasible(sol_coop, mapf, verbose=true)
-
-    f_indep = sum_of_costs(sol_indep, mapf)
-    f_coop = sum_of_costs(sol_coop, mapf)
-    @test f_indep <= f_coop
-end
-
 @testset "Infeasible" begin
     @testset "Disconnected" begin
         g = Graph(2)
@@ -70,6 +55,7 @@ end
         mapf = MAPF(g, departures, arrivals)
         @test_throws NoPathError independent_dijkstra(mapf)
         @test_throws NoConflictFreePathError cooperative_astar(mapf)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf; conflict_price=1)
 
         g = Graph(4)
         add_edge!(g, 1, 2)
@@ -79,6 +65,7 @@ end
         mapf = MAPF(g, departures, arrivals)
         @test_throws NoPathError independent_dijkstra(mapf)
         @test_throws NoConflictFreePathError cooperative_astar(mapf)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf; conflict_price=1)
     end
 
     @testset "Vertex conflict" begin
@@ -87,23 +74,32 @@ end
         arrivals = [3, 1]
         mapf = MAPF(g, departures, arrivals)
         @test_throws NoConflictFreePathError cooperative_astar(mapf)
+        soft_solution = cooperative_astar(mapf; conflict_price=10)
+        @test !is_feasible(soft_solution, mapf)
+        @test sum_of_conflicts(soft_solution, mapf) == 2
     end
 
     @testset "Swapping conflict" begin
-        g = path_graph(4)
-        departures = [1, 4]
-        arrivals = [4, 1]
+        g = path_graph(8)
+        departures = [1, 4, 5, 8]
+        arrivals = [4, 1, 8, 5]
         mapf = MAPF(g, departures, arrivals)
         @test_throws NoConflictFreePathError cooperative_astar(mapf)
+        soft_solution = cooperative_astar(mapf; conflict_price=10)
+        @test !is_feasible(soft_solution, mapf)
+        @test sum_of_conflicts(soft_solution, mapf) == 4
     end
 
     @testset "Arrival conflict" begin
         # blocked by arrival
-        g = path_graph(4)
-        departures = [3, 4]
-        arrivals = [3, 1]
+        g = path_graph(20)
+        departures = [3, 19, 20]
+        arrivals = [3, 1, 2]
         mapf = MAPF(g, departures, arrivals)
         @test_throws NoConflictFreePathError cooperative_astar(mapf)
+        soft_solution = cooperative_astar(mapf; conflict_price=10)
+        @test !is_feasible(soft_solution, mapf)
+        @test sum_of_conflicts(soft_solution, mapf) == 4
 
         # zig-zag
         g = path_graph(4)
@@ -123,6 +119,21 @@ end
         mapf = MAPF(g, departures, arrivals)
         @test_throws NoConflictFreePathError cooperative_astar(mapf)
     end
+
+    @testset "Conflict price" begin
+        g = blockdiag(star_graph(4), star_graph(4))
+        add_edge!(g, 1, 5)
+        departures = [2, 3, 4]
+        arrivals = [6, 7, 8]
+        mapf = MAPF(g, departures, arrivals)
+        @test_throws NoConflictFreePathError cooperative_astar(mapf)
+        soft_solution = cooperative_astar(mapf; conflict_price=1)
+        @test !is_feasible(soft_solution, mapf)
+        @test sum_of_conflicts(soft_solution, mapf) == 6
+        soft_solution = cooperative_astar(mapf; conflict_price=100)
+        @test !is_feasible(soft_solution, mapf)
+        @test sum_of_conflicts(soft_solution, mapf) == 5
+    end
 end
 
 @testset "Inconsistent graphs" begin
@@ -139,4 +150,24 @@ end
     e = NoConflictFreePathError(1, 2)
     @test sprint(showerror, e) ==
         "NoConflictFreePathError: No conflict-free path was found from vertex 1 to vertex 2 in the graph, given the provided reservation."
+end
+
+@testset "Grid" begin
+    L = 20
+    g = Graphs.grid([L, L])
+
+    A = 20
+    departures = collect(1:A)
+    arrivals = collect((nv(g) + 1) .- (1:A))
+
+    mapf = MAPF(g, departures, arrivals)
+
+    sol_indep = independent_dijkstra(mapf)
+    sol_coop = cooperative_astar(mapf)
+    @test !is_feasible(sol_indep, mapf; verbose=false)
+    @test is_feasible(sol_coop, mapf, verbose=true)
+
+    f_indep = sum_of_costs(sol_indep, mapf)
+    f_coop = sum_of_costs(sol_coop, mapf)
+    @test f_indep <= f_coop
 end

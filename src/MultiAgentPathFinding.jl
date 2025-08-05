@@ -26,10 +26,12 @@ using Graphs:
     add_edge!,
     weights,
     dijkstra_shortest_paths
+using LinearAlgebra: triu
 using Makie
 using Printf
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedGraph, weighttype, get_weight
+using SparseArrays: SparseMatrixCSC
 using StableRNGs: StableRNG
 
 ## Includes
@@ -54,7 +56,8 @@ include("benchmarks/plot.jl")
 export MAPF
 export Solution
 export nb_agents, select_agents
-export sum_of_costs, is_feasible, find_conflict
+export is_feasible, find_conflict
+export sum_of_costs, sum_of_conflicts
 export VertexConflict, EdgeConflict
 export independent_dijkstra, cooperative_astar
 export list_instances

@@ -1,5 +1,5 @@
 """
-$(TYPEDEF)
+    Reservation
 
 Keep track of which vertices and edges are known to be occupied and by which agent.
 
@@ -14,7 +14,6 @@ $(TYPEDFIELDS)
 # Note
 
 The split between `single` and `multi` is done for efficiency reasons: there will be many more `single_occupied` than `multi_occupied`, so allocating a set for all of these would be wasteful (and using `Union{Int, Set{Int}}` would be type-unstable).
-The same goes for arrival crossings.
 """
 struct Reservation
     "the maximum time of an occupation inside"
@@ -29,12 +28,10 @@ struct Reservation
     multi_occupied_edges::Dict{Tuple{Int,Int,Int},Vector{Int}}
     "`v -> (t, a)` where `a` is the agent whose arrival vertex is `v` and who owns it starting at time `t` (necessary for stay-at-target behavior)"
     arrival_vertices::Dict{Int,Tuple{Int,Int}}
-    "`v -> [(t2, a1), (t2, a2)]` where the `ai` are additional agents visiting vertex `v` at times `ti`, once it is already owned as an arrival vertex"
-    arrival_vertices_crossings::Dict{Int,Vector{Tuple{Int,Int}}}
 end
 
 """
-$(TYPEDSIGNATURES)
+    Reservation()
 
 Create an empty `Reservation`.
 """
@@ -45,7 +42,6 @@ function Reservation()
     multi_occupied_vertices = Dict{Tuple{Int,Int},Vector{Int}}()
     multi_occupied_edges = Dict{Tuple{Int,Int,Int},Vector{Int}}()
     arrival_vertices = Dict{Int,Tuple{Int,Int}}()
-    arrival_vertices_crossings = Dict{Int,Vector{Tuple{Int,Int}}}()
     return Reservation(
         max_time,
         single_occupied_vertices,
@@ -53,24 +49,35 @@ function Reservation()
         multi_occupied_vertices,
         multi_occupied_edges,
         arrival_vertices,
-        arrival_vertices_crossings,
     )
 end
 
 """
-$(TYPEDSIGNATURES)
+    extend!(reservation::Reservation, new_max_time::Integer)
+
+Extend `reservation` so that it stretches until `new_max_time`.
+"""
+function extend!(reservation::Reservation, new_max_time::Integer)
+    (; max_time, single_occupied_vertices, arrival_vertices) = reservation
+    if new_max_time > max_time[]
+        for (v, (_, a)) in pairs(arrival_vertices)
+            for t in (max_time[] + 1):new_max_time
+                single_occupied_vertices[t, v] = a
+            end
+        end
+        max_time[] = new_max_time
+    end
+    return nothing
+end
+
+"""
+    occupy!(reservation::Reservation, a::Integer, t::Integer, v::Integer)
 
 Update `reservation` so that agent `a` occupies vertex `v` at time `t`.
 """
 function occupy!(reservation::Reservation, a::Integer, t::Integer, v::Integer)
-    (;
-        max_time,
-        single_occupied_vertices,
-        multi_occupied_vertices,
-        arrival_vertices,
-        arrival_vertices_crossings,
-    ) = reservation
-    max_time[] = max(max_time[], t)
+    (; single_occupied_vertices, multi_occupied_vertices) = reservation
+    extend!(reservation, t)
     if haskey(multi_occupied_vertices, (t, v))
         others = multi_occupied_vertices[(t, v)]
         if !(a in others)
@@ -83,25 +90,17 @@ function occupy!(reservation::Reservation, a::Integer, t::Integer, v::Integer)
     else
         single_occupied_vertices[(t, v)] = a
     end
-    # relies on the fact that occupy! will be called before arrive!
-    if haskey(arrival_vertices, v) && arrival_vertices[v][1] <= t
-        if haskey(arrival_vertices_crossings, v)
-            push!(arrival_vertices_crossings[v], (t, a))
-        else
-            arrival_vertices_crossings[v] = [(t, a)]
-        end
-    end
     return nothing
 end
 
 """
-$(TYPEDSIGNATURES)
+    occupy!(reservation::Reservation, a::Integer, t::Integer, u::Integer, v::Integer)
 
 Update `reservation` so that agent `a` occupies edge `(u, v)` at time `t`.
 """
 function occupy!(reservation::Reservation, a::Integer, t::Integer, u::Integer, v::Integer)
-    (; max_time, single_occupied_edges, multi_occupied_edges) = reservation
-    max_time[] = max(max_time[], t)
+    (; single_occupied_edges, multi_occupied_edges) = reservation
+    extend!(reservation, t)
     e = (min(u, v), max(u, v))
     if haskey(multi_occupied_edges, (t, e...))
         others = multi_occupied_edges[(t, e...)]
@@ -119,63 +118,78 @@ function occupy!(reservation::Reservation, a::Integer, t::Integer, u::Integer, v
 end
 
 """
-$(TYPEDSIGNATURES)
+    arrive!(reservation::Reservation, a::Integer, t::Integer, v::Integer)
 
 Update `reservation` so that agent `a` arrives vertex `v` at time `t` and never moves again.
 """
 function arrive!(reservation::Reservation, a::Integer, t::Integer, v::Integer)
     (; max_time, arrival_vertices) = reservation
-    max_time[] = max(max_time[], t)
+    extend!(reservation, t)
     @assert !haskey(arrival_vertices, v)
     arrival_vertices[v] = (t, a)
+    for t_stay in (t + 1):max_time[]
+        occupy!(reservation, a, t_stay, v)
+    end
     return nothing
 end
 
 """
-$(TYPEDSIGNATURES)
+    is_occupied_vertex(reservation::Reservation, t::Integer, v::Integer)
 
 Check whether vertex `v` is occupied at time `t` in a reservation.
 """
 function is_occupied_vertex(reservation::Reservation, t::Integer, v::Integer)
-    (; single_occupied_vertices, multi_occupied_vertices, arrival_vertices) = reservation
-    return haskey(single_occupied_vertices, (t, v)) ||
-           haskey(multi_occupied_vertices, (t, v)) ||
-           (haskey(arrival_vertices, v) && arrival_vertices[v][1] <= t)
+    (; max_time, single_occupied_vertices, multi_occupied_vertices, arrival_vertices) =
+        reservation
+    if t <= max_time[]
+        return haskey(single_occupied_vertices, (t, v)) ||
+               haskey(multi_occupied_vertices, (t, v))
+    else
+        return haskey(arrival_vertices, v)
+    end
 end
 
 """
-$(TYPEDSIGNATURES)
+    is_occupied_edge(reservation::Reservation, t::Integer, u::Integer, v::Integer)
 
 Check whether edge `(u, v)` is occupied at time `t` in a reservation.
 """
 function is_occupied_edge(reservation::Reservation, t::Integer, u::Integer, v::Integer)
+    (; max_time, single_occupied_edges, multi_occupied_edges) = reservation
     e = (min(u, v), max(u, v))
-    (; single_occupied_edges, multi_occupied_edges) = reservation
-    return haskey(single_occupied_edges, (t, e...)) ||
-           haskey(multi_occupied_edges, (t, e...))
+    if t <= max_time[]
+        return haskey(single_occupied_edges, (t, e...)) ||
+               haskey(multi_occupied_edges, (t, e...))
+    else
+        return false
+    end
 end
 
 """
-$(TYPEDSIGNATURES)
+    is_safe_vertex_to_stop(reservation::Reservation, t::Integer, v::Integer)
 
 Check whether vertex `v` is safe to stop time `t` in a reservation, which means that no one else crosses it afterwards.
 """
 function is_safe_vertex_to_stop(reservation::Reservation, t::Integer, v::Integer)
-    return !any(is_occupied_vertex(reservation, s, v) for s in t:reservation.max_time[])
+    (; max_time, arrival_vertices) = reservation
+    return !haskey(arrival_vertices, v) &&
+           !any(is_occupied_vertex(reservation, s, v) for s in t:max_time[])
 end
 
 """
-$(TYPEDSIGNATURES)
+    update_reservation!(reservation::Reservation, path::Path, a::Integer, mapf::MAPF)
 
 Add the vertices and edges occupied by a path to a reservation.
 """
 function update_reservation!(reservation::Reservation, path::Path, a::Integer, mapf::MAPF)
     (; vertex_conflicts, edge_conflicts) = mapf
-    for t in 1:(length(path) - 1)
-        u, v = path[t], path[t + 1]
+    for (t, u) in enumerate(path)
         for uu in vertex_conflicts[u]
             occupy!(reservation, a, t, uu)
         end
+    end
+    for t in 1:(length(path) - 1)
+        u, v = path[t], path[t + 1]
         for (uu, vv) in edge_conflicts[(u, v)]
             ee = (min(uu, vv), max(uu, vv))
             occupy!(reservation, a, t, ee...)
@@ -189,7 +203,7 @@ function update_reservation!(reservation::Reservation, path::Path, a::Integer, m
 end
 
 """
-$(TYPEDSIGNATURES)
+    Reservation(solution::Solution, mapf::MAPF)
 
 Compute a `Reservation` based on the vertices and edges occupied by `solution`.
 

@@ -1,5 +1,5 @@
 """
-$(TYPEDSIGNATURES)
+    list_instances()
 
 List available maps from the benchmark set.
 """
@@ -8,11 +8,11 @@ function list_instances()
 end
 
 """
-$(TYPEDSIGNATURES)
+    read_benchmark_map(instance_name::AbstractString)
 
 Read a map from an automatically downloaded text file.
 
-Return a `Matrix{Char}`.
+Return a `Matrix{Char}` where each character describes the type of one cell.
 """
 function read_benchmark_map(instance_name::AbstractString)
     map_path = joinpath(datadep"mapf-map", "$instance_name.map")
@@ -42,11 +42,15 @@ passable_cell(c::Bool) = !c
 passable_cell(c::Char) = (c == '.') || (c == 'G') || (c == 'S')
 
 """
-$(TYPEDSIGNATURES)
+    parse_benchmark_map(grid::AbstractMatrix)
 
-Create a sparse grid graph from a map specified as a matrix of characters.
+Create a sparse grid graph from a map specified as a matrix (e.g. obtained from `read_benchmark_map`).
+Each element of the grid can be either
 
-Return a named tuple `(; graph, coord_to_vertex, vertex_to_coord)`, where the last two items map between integer graph vertices `v` and coordinate tuples `(i, j)`.
+- a `Bool`, in which case `false` denotes passable terrain and `true` denotes an obstacle
+- a `Char`, in which case `'.'` denotes passable terrain and `'@'` denotes an obstacle
+
+Return a named tuple `(; graph, coord_to_vertex, vertex_to_coord)`, where the last two items map between integer graph vertices `v` and coordinate tuples `(i, j)` (with `(1, 1)` as the upper-left corner).
 """
 function parse_benchmark_map(grid::AbstractMatrix; allow_diagonal_moves::Bool=false)
     h, w = size(grid)
@@ -100,7 +104,7 @@ function parse_benchmark_map(grid::AbstractMatrix; allow_diagonal_moves::Bool=fa
 end
 
 """
-$(TYPEDSIGNATURES)
+    cell_color(c::Char)
 
 Give a color object corresponding to the type of cell.
 

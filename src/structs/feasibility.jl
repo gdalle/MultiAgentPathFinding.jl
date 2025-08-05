@@ -1,5 +1,5 @@
 """
-$(TYPEDEF)
+    VertexConflict
 
 Temporal vertex conflict between two agents (for debugging purposes).
 
@@ -30,7 +30,7 @@ function Base.show(io::IO, vc::VertexConflict)
 end
 
 """
-$(TYPEDEF)
+    EdgeConflict
 
 Temporal edge conflict between two agents (for debugging purposes).
 
@@ -63,37 +63,32 @@ function Base.show(io::IO, ec::EdgeConflict)
 end
 
 """
-$(TYPEDSIGNATURES)
+    find_conflict(solution::Solution, mapf::MAPF)
 
 Find a conflict in `solution` for `mapf`.
+
+Return either `nothing`, a `VertexConflict` or an `EdgeConflict`.
 """
 function find_conflict(solution::Solution, mapf::MAPF)
     reservation = Reservation(solution, mapf)
-    (;
-        multi_occupied_vertices,
-        multi_occupied_edges,
-        arrival_vertices,
-        arrival_vertices_crossings,
-    ) = reservation
+    (; multi_occupied_vertices, multi_occupied_edges) = reservation
     if !isempty(multi_occupied_vertices)
         ((t, v), agents) = first(multi_occupied_vertices)
         return VertexConflict(; t, v, a1=agents[1], a2=agents[2])
     elseif !isempty(multi_occupied_edges)
         ((t, u, v), agents) = first(multi_occupied_edges)
         return EdgeConflict(; t, u, v, a1=agents[1], a2=agents[2])
-    elseif !isempty(arrival_vertices_crossings)
-        (v, crossings) = first(arrival_vertices_crossings)
-        _, a1 = arrival_vertices[v]
-        t, a2 = first(crossings)
-        return VertexConflict(; t, v, a1, a2)
+    else
+        return nothing
     end
-    return nothing
 end
 
 """
-$(TYPEDSIGNATURES)
+    is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
 
-Check whether `solution` is feasible when agents are considered separately.
+Check whether `solution` is feasible when agents are considered separately (i.e. whether each individual path is correct).
+
+Return a `Bool`.
 """
 function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
     (; graph, departures, arrivals) = mapf
@@ -121,9 +116,11 @@ function is_individually_feasible(solution::Solution, mapf::MAPF; verbose=false)
 end
 
 """
-$(TYPEDSIGNATURES)
+    is_collectively_feasible(solution::Solution, mapf::MAPF; verbose=false)
 
 Check whether `solution` contains any conflicts between agents.
+
+Return a `Bool`.
 """
 function is_collectively_feasible(solution::Solution, mapf::MAPF; verbose=false)
     conflict = find_conflict(solution, mapf)
@@ -136,9 +133,11 @@ function is_collectively_feasible(solution::Solution, mapf::MAPF; verbose=false)
 end
 
 """
-$(TYPEDSIGNATURES)
+    is_feasible(solution::Solution, mapf::MAPF; verbose=false)
 
 Check whether `solution` is both individually and collectively feasible (correct paths and no conflicts).
+
+Return a `Bool`.
 """
 function is_feasible(solution::Solution, mapf::MAPF; verbose=false)
     return is_individually_feasible(solution, mapf; verbose) &&
