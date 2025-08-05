@@ -7,6 +7,9 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = get(ENV, "CI", "false") == "true"
     @testset verbose = true "Formalities" begin
         include("formalities.jl")
     end
+    @testset verbose = true "Graph" begin
+        include("graph.jl")
+    end
     @testset verbose = true "Feasibility" begin
         include("feasibility.jl")
     end

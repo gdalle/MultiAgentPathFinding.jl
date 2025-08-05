@@ -26,10 +26,12 @@ using Graphs:
     add_edge!,
     weights,
     dijkstra_shortest_paths
+using LinearAlgebra: triu
 using Makie
 using Printf
 using Random: randperm, shuffle
 using SimpleWeightedGraphs: SimpleWeightedGraph, weighttype, get_weight
+using SparseArrays: SparseMatrixCSC
 using StableRNGs: StableRNG
 
 ## Includes
