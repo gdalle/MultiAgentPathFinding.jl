@@ -1,34 +1,36 @@
-_SOLUTION_SIZES = Dict(
-    "Berlin_1_256" => "762.95 MB",
-    "Boston_0_256" => "921.70 MB",
-    "Paris_1_256" => "1013.86 MB",
-    "brc202d" => "6.30 GB",
-    "den312d" => "196.84 MB",
-    "den520d" => "642.26 MB",
-    "empty-32-32" => "41.25 MB",
-    "empty-48-48" => "286.19 MB",
-    "empty-8-8" => "37.89 MB",
-    "ht_chantry" => "311.30 MB",
-    "ht_mansion_n" => "421.75 MB",
-    "lak303d" => "1.14 GB",
-    "lt_gallowstemplar_n" => "499.80 MB",
-    "maze-128-128-1" => "27.16 MB",
-    "maze-128-128-10" => "1.25 GB",
-    "maze-128-128-2" => "677.25 MB",
-    "maze-32-32-4" => "14.97 MB",
-    "orz900d" => "54.03 GB",
-    "ost003d" => "762.52 MB",
-    "random-32-32-20" => "22.06 MB",
-    "random-64-64-10" => "132.79 MB",
-    "random-64-64-20" => "177.50 MB",
-    "room-32-32-4" => "28.29 MB",
-    "room-64-64-16" => "725.42 MB",
-    "room-64-64-8" => "643.67 MB",
-    "w_woundedcoast" => "6.79 GB",
-    "warehouse-10-20-10-2-1" => "138.14 MB",
-    "warehouse-10-20-10-2-2" => "190.49 MB",
-    "warehouse-20-40-10-2-1" => "415.00 MB",
-    "warehouse-20-40-10-2-2" => "565.16 MB",
+_SOLUTION_IDS = Dict(
+    "Berlin_1_256" => "63761f255d814f08ecdbf3af",
+    "Paris_1_256" => "63761f255d814f08ecdbf3b1",
+    "Boston_0_256" => "63761f265d814f08ecdbf3ba",
+    "empty-32-32" => "63761f245d814f08ecdbf3a2",
+    "empty-8-8" => "63761f255d814f08ecdbf3a6",
+    "empty-48-48" => "63761f255d814f08ecdbf3ad",
+    "empty-16-16" => "63761f265d814f08ecdbf3c2",
+    "lak303d" => "63761f255d814f08ecdbf3a4",
+    "brc202d" => "63761f255d814f08ecdbf3a5",
+    "ost003d" => "63761f255d814f08ecdbf3a8",
+    "den520d" => "63761f255d814f08ecdbf3a9",
+    "ht_mansion_n" => "63761f255d814f08ecdbf3ab",
+    "w_woundedcoast" => "63761f255d814f08ecdbf3ae",
+    "ht_chantry" => "63761f255d814f08ecdbf3b3",
+    "den312d" => "63761f265d814f08ecdbf3b8",
+    "lt_gallowstemplar_n" => "63761f265d814f08ecdbf3be",
+    "orz900d" => "63761f265d814f08ecdbf3bf",
+    "maze-128-128-10" => "63761f255d814f08ecdbf3aa",
+    "maze-128-128-1" => "63761f255d814f08ecdbf3b2",
+    "maze-128-128-2" => "63761f265d814f08ecdbf3b6",
+    "maze-32-32-4" => "63761f265d814f08ecdbf3bb",
+    "random-32-32-20" => "63761f255d814f08ecdbf3a3",
+    "random-64-64-10" => "63761f255d814f08ecdbf3a7",
+    "random-64-64-20" => "63761f265d814f08ecdbf3b7",
+    "random-32-32-10" => "63761f265d814f08ecdbf3c0",
+    "room-64-64-8" => "63761f255d814f08ecdbf3ac",
+    "room-32-32-4" => "63761f265d814f08ecdbf3bc",
+    "room-64-64-16" => "63761f265d814f08ecdbf3bd",
+    "warehouse-20-40-10-2-1" => "63761f255d814f08ecdbf3b0",
+    "warehouse-10-20-10-2-1" => "63761f255d814f08ecdbf3b4",
+    "warehouse-20-40-10-2-2" => "63761f255d814f08ecdbf3b5",
+    "warehouse-10-20-10-2-2" => "63761f265d814f08ecdbf3b9",
 )
 
 function __init__()
@@ -69,17 +71,17 @@ function __init__()
         ),
     )
 
-    for (instance_name, download_size) in pairs(_SOLUTION_SIZES)
-        download_link = "https://tracker.pathfinding.ai/quickDownload/results/$(instance_name).zip"
+    for (instance_name, instance_id) in pairs(_SOLUTION_IDS)
+        download_link = "https://fe2410d1.pathfinding.ai/api/instance/DownloadMapByID/$(instance_id)"
         register(
             DataDep(
                 "mapf-sol-$instance_name",
                 """
-                Best known solutions for the $instance_name instance of the Sturtevant MAPF benchmarks (size: $download_size)
+                Best known solutions for the $instance_name instance of the Sturtevant MAPF benchmarks
                 Source: https://tracker.pathfinding.ai/
                 """,
                 download_link;
-                post_fetch_method=unpack,
+                post_fetch_method=path -> mv(path, "solution.json"),
             ),
         )
     end

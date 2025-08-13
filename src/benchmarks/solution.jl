@@ -15,8 +15,8 @@ Return a named tuple `(; lower_cost, solution_cost, paths_coord_list)` where:
 """
 function read_benchmark_solution(scen::BenchmarkScenario)
     (; instance, scen_type, type_id, agents) = scen
-    sol_path = joinpath(@datadep_str("mapf-sol-$instance"), "$instance.csv")
-    sol_df = DataFrame(CSV.File(sol_path))
+    sol_path = joinpath(@datadep_str("mapf-sol-$instance"), "solution.json")
+    sol_df = DataFrame(jsontable(sol_path))  # TODO: this df doesn't contain paths...
     right_scen = (sol_df[!, :scen_type] .== scen_type) .& (sol_df[!, :type_id] .== type_id)
     sol_df = sol_df[right_scen, :]
     if size(sol_df, 1) == 0

@@ -26,6 +26,7 @@ using Graphs:
     add_edge!,
     weights,
     dijkstra_shortest_paths
+using JSONTables: jsontable
 using LinearAlgebra: triu
 using Makie
 using Printf
