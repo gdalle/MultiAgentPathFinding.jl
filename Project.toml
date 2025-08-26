@@ -1,7 +1,7 @@
 name = "MultiAgentPathFinding"
 uuid = "1f5aa91a-953b-4f4c-bed6-d21f3af349fa"
 authors = ["Guillaume Dalle"]
-version = "0.5.3"
+version = "0.5.4"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -26,7 +26,7 @@ CairoMakie = "0.15.2"
 Colors = "0.12, 0.13"
 DataDeps = "0.7"
 DataFrames = "1.7.0"
-DataStructures = "0.18.12"
+DataStructures = "0.18.12, 0.19"
 DocStringExtensions = "0.9"
 Documenter = "1"
 Graphs = "1.7"
