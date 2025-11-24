@@ -70,13 +70,13 @@ function __init__()
     )
 
     for (instance_name, download_size) in pairs(_SOLUTION_SIZES)
-        download_link = "https://tracker.pathfinding.ai/quickDownload/results/$(instance_name).zip"
+        download_link = "https://tracker-legacy.pathfinding.ai/quickDownload/results/$(instance_name).zip"
         register(
             DataDep(
                 "mapf-sol-$instance_name",
                 """
                 Best known solutions for the $instance_name instance of the Sturtevant MAPF benchmarks (size: $download_size)
-                Source: https://tracker.pathfinding.ai/
+                Source: https://tracker-legacy.pathfinding.ai/
                 """,
                 download_link;
                 post_fetch_method=unpack,
