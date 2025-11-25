@@ -11,5 +11,5 @@ end
     @test format(MultiAgentPathFinding; verbose=false, overwrite=false)
 end
 @testset "Code linting (JET)" begin
-    JET.test_package(MultiAgentPathFinding; target_defined_modules=true)
+    JET.test_package(MultiAgentPathFinding; target_modules=(MultiAgentPathFinding,))
 end
