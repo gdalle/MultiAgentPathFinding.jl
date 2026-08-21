@@ -98,7 +98,7 @@ benchmark_solution_best = Solution(small_scen)
 ```
 
 !!! warning
-    The solution files for some instances can be very large (tens of GBs), so think before you validate the download.
+    Downloading the solutions for an instance queries every known scenario for it, which can take a while for maps with many scenarios.
 
 For these grid instances, solutions can be visualized at any point in their time span, or recorded as an animation:
 

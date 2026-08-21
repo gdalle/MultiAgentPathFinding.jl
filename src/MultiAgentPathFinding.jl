@@ -8,6 +8,7 @@ using DataDeps: DataDep, @datadep_str, unpack, register
 using DataFrames
 using DataStructures: BinaryHeap, FasterForward
 using DocStringExtensions
+using Downloads
 using Graphs:
     Graphs,
     AbstractGraph,
@@ -26,6 +27,7 @@ using Graphs:
     add_edge!,
     weights,
     dijkstra_shortest_paths
+using JSON
 using LinearAlgebra: triu
 using Makie
 using Printf

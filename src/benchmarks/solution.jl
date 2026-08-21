@@ -2,6 +2,120 @@ struct MissingSolutionError <: Exception
     msg::String
 end
 
+const _TRACKER_API_URL = "https://fe2410d1.pathfinding.ai/api"
+
+const _SOLUTION_COLUMNS = [
+    :scen_type, :type_id, :agents, :lower_cost, :solution_cost, :solution_plan
+]
+
+"""
+    _tracker_scenarios(instance)
+
+List the scenario records for `instance` (e.g. `"empty-8-8"`) from the MAPF tracker API, each
+one containing (among other things) its Mongo `"id"`, `"scen_type"` and `"type_id"`.
+"""
+function _tracker_scenarios(instance::AbstractString)
+    io = IOBuffer()
+    Downloads.download("$_TRACKER_API_URL/scenario", io)
+    all_scenarios = JSON.parse(String(take!(io)))
+    return filter(s -> s["map_name"] == instance, all_scenarios)
+end
+
+"""
+    _tracker_results(scenario_id; page_size)
+
+Fetch every instance (agent count) of a tracker scenario, together with its best known
+solution, handling the API's pagination transparently.
+"""
+function _tracker_results(scenario_id::AbstractString; page_size::Integer=500)
+    results = Dict{String,Any}[]
+    skip = 0
+    while true
+        body = JSON.json(
+            Dict(
+                "scenario" => scenario_id,
+                "solutions" => true,
+                "limit" => page_size,
+                "skip" => skip,
+            ),
+        )
+        io = IOBuffer()
+        Downloads.request(
+            "$_TRACKER_API_URL/bulk/results";
+            method="POST",
+            headers=["Content-Type" => "application/json"],
+            input=IOBuffer(body),
+            output=io,
+        )
+        page = JSON.parse(String(take!(io)))
+        append!(results, page)
+        length(page) < page_size && break
+        skip += page_size
+    end
+    return results
+end
+
+"""
+    _expand_plan(plan)
+
+Expand a run-length encoded solution plan such as `"2rdr2d2r"`, as returned by the MAPF tracker
+API, into one character per move (`"rrdrddrr"`), as expected when parsing solution plans.
+"""
+function _expand_plan(plan::AbstractString)
+    expanded = IOBuffer()
+    repeats = 0
+    for c in plan
+        if isdigit(c)
+            repeats = 10 * repeats + (c - '0')
+        else
+            write(expanded, repeat(c, max(repeats, 1)))
+            repeats = 0
+        end
+    end
+    return String(take!(expanded))
+end
+
+_expand_plans(plan::AbstractString) = join(_expand_plan.(split(plan, "\n")), "\n")
+_expand_plans(::Missing) = missing
+
+"""
+    _download_tracker_solutions(instance)
+
+Download every known best solution for `instance` from the MAPF tracker API and assemble them
+into a `DataFrame` with the same columns as the discontinued per-instance solution CSV files.
+"""
+function _download_tracker_solutions(instance::AbstractString)
+    scenarios = _tracker_scenarios(instance)
+    records = Dict{String,Any}[]
+    for scenario in scenarios
+        append!(records, _tracker_results(scenario["id"]))
+    end
+    table = DataFrame()
+    for col in _SOLUTION_COLUMNS
+        table[!, col] = [something(get(r, string(col), missing), missing) for r in records]
+    end
+    table.solution_plan = _expand_plans.(table.solution_plan)
+    sort!(table, [:scen_type, :type_id, :agents])
+    return table
+end
+
+"""
+    _fetch_tracker_solutions(instance)
+
+Return a `DataDeps.DataDep` `fetch_method` closure that downloads the best known solutions for
+`instance` from the MAPF tracker API and writes them to `localdir/instance.csv`. This replaces
+the `quickDownload` zip endpoint, which the tracker has discontinued in favor of a JSON API (see
+[ShortestPathLab/mapf-tracker#35](https://github.com/ShortestPathLab/mapf-tracker/issues/35)).
+"""
+function _fetch_tracker_solutions(instance::AbstractString)
+    return function (_remotepath, localdir)
+        table = _download_tracker_solutions(instance)
+        path = joinpath(localdir, "$instance.csv")
+        CSV.write(path, table)
+        return path
+    end
+end
+
 """
     read_benchmark_solution(scen::BenchmarkScenario)
 
