@@ -119,3 +119,18 @@ end
     )
     @test_throws MissingSolutionError Solution(scen)
 end
+
+@testset "Tracker API" begin
+    scenario_id = only(
+        s["id"] for s in MultiAgentPathFinding._tracker_scenarios("empty-8-8") if
+        s["scen_type"] == "even" && s["type_id"] == 1
+    )
+    # a small page size forces `_tracker_results` to actually paginate
+    paginated = MultiAgentPathFinding._tracker_results(scenario_id; page_size=5)
+    single_page = MultiAgentPathFinding._tracker_results(scenario_id; page_size=500)
+    @test length(paginated) == length(single_page) > 5
+
+    @test MultiAgentPathFinding._expand_plan("2rdr2d2r") == "rrdrddrr"
+    @test MultiAgentPathFinding._expand_plans("2rdr2d2r\nuu") == "rrdrddrr\nuu"
+    @test MultiAgentPathFinding._expand_plans(missing) === missing
+end
