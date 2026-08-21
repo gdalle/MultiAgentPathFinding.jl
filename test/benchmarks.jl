@@ -133,4 +133,17 @@ end
     @test MultiAgentPathFinding._expand_plan("2rdr2d2r") == "rrdrddrr"
     @test MultiAgentPathFinding._expand_plans("2rdr2d2r\nuu") == "rrdrddrr\nuu"
     @test MultiAgentPathFinding._expand_plans(missing) === missing
+
+    # Call the DataDeps `fetch_method` directly, instead of just relying on `Solution(scen)`, so
+    # that the download-and-assemble pipeline (_download_tracker_solutions and friends) is always
+    # exercised — even when CI's DataDeps cache already has "empty-8-8" from a previous run and
+    # `Solution(scen)` therefore triggers no fresh download.
+    mktempdir() do dir
+        fetch = MultiAgentPathFinding._fetch_tracker_solutions("empty-8-8")
+        path = fetch("unused-remotepath", dir)
+        @test path == joinpath(dir, "empty-8-8.csv")
+        lines = readlines(path)
+        @test lines[1] == "scen_type,type_id,agents,lower_cost,solution_cost,solution_plan"
+        @test any(startswith(l, "even,1,10,") for l in lines)
+    end
 end
