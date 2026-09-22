@@ -23,7 +23,7 @@ StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 
 [compat]
 Aqua = "0.8"
-CSV = "0.10.15"
+CSV = "0.10.15, 1.1"
 CairoMakie = "0.15.2"
 Colors = "0.12, 0.13"
 DataDeps = "1.0"
